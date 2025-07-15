@@ -5,6 +5,47 @@ struct ContentView: View {
     @State private var animationScale: CGFloat = 1.0
     
     var body: some View {
+        TabView {
+            // 主页面 - 原有内容
+            MainDashboardView(recordingState: recordingState, animationScale: $animationScale)
+                .tabItem {
+                    Image(systemName: "house.fill")
+                    Text("主页")
+                }
+            
+            // 识别服务页面
+            ASRServiceView()
+                .tabItem {
+                    Image(systemName: "waveform.and.mic")
+                    Text("识别服务")
+                }
+        }
+        .onAppear {
+            animationScale = 1.2
+            checkPermissionStatus()
+            startPeriodicStatusCheck()
+        }
+    }
+    
+    // MARK: - 权限检查方法
+    private func checkPermissionStatus() {
+        recordingState.refreshPermissionStatus()
+    }
+    
+    private func startPeriodicStatusCheck() {
+        // 每2秒检查一次权限状态
+        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+            checkPermissionStatus()
+        }
+    }
+}
+
+// MARK: - 主仪表盘视图
+struct MainDashboardView: View {
+    @ObservedObject var recordingState: RecordingState
+    @Binding var animationScale: CGFloat
+    
+    var body: some View {
         VStack(spacing: 30) {
             // 应用图标区域
             Image(systemName: "doc.text.magnifyingglass")
@@ -151,7 +192,7 @@ struct ContentView: View {
                     }
                     
                     // 录音提示
-                    Text("按住右 Shift 键进行语音输入")
+                    Text("连击3下 O 键进行语音输入")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -194,7 +235,7 @@ struct ContentView: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    Text("按住右 Shift 键开始录音")
+                    Text("连击3下 O 键开始录音")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
