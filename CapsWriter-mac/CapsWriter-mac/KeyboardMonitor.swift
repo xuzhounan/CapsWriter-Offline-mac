@@ -53,17 +53,17 @@ class KeyboardMonitor {
         // 创建事件回调
         let eventMask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
         
-        eventTap = CGEventTapCreate(
-            .cgSessionEventTap,
-            .headInsertEventTap,
-            .defaultTap,
-            CGEventMask(eventMask),
-            { (proxy, type, event, refcon) -> Unmanaged<CGEvent>? in
+        eventTap = CGEvent.tapCreate(
+            tap: .cgSessionEventTap,
+            place: .headInsertEventTap,
+            options: .defaultTap,
+            eventsOfInterest: CGEventMask(eventMask),
+            callback: { (proxy, type, event, refcon) -> Unmanaged<CGEvent>? in
                 guard let refcon = refcon else { return Unmanaged.passUnretained(event) }
                 let monitor = Unmanaged<KeyboardMonitor>.fromOpaque(refcon).takeUnretainedValue()
                 return monitor.handleKeyEvent(proxy: proxy, type: type, event: event)
             },
-            UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+            userInfo: UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
         )
         
         guard let eventTap = eventTap else {
@@ -82,7 +82,7 @@ class KeyboardMonitor {
         CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
         
         // 启用事件监听
-        CGEventTapEnable(eventTap, true)
+        CGEvent.tapEnable(tap: eventTap, enable: true)
         
         isRunning = true
         print("✅ 键盘监听器已启动")
@@ -142,7 +142,7 @@ class KeyboardMonitor {
         
         // 停止事件监听
         if let eventTap = eventTap {
-            CGEventTapEnable(eventTap, false)
+            CGEvent.tapEnable(tap: eventTap, enable: false)
             CFMachPortInvalidate(eventTap)
             self.eventTap = nil
         }
