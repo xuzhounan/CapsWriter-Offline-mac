@@ -15,9 +15,12 @@ class KeyboardMonitor {
     private let alternativeOKeyCodes: [CGKeyCode] = [31]
     
     // 状态跟踪
-    private var oKeyPressed = false
-    private var lastKeyDownTime: TimeInterval = 0
+    private var isRecording = false
+    private var clickCount = 0
+    private var lastClickTime: TimeInterval = 0
+    private let clickInterval: TimeInterval = 0.8 // 800ms 连击间隔
     private let debounceInterval: TimeInterval = 0.1 // 100ms 防抖间隔
+    private let requiredClicks = 3 // 需要连击3次
     
     // 回调函数
     var startRecordingCallback: (() -> Void)?
@@ -135,7 +138,7 @@ class KeyboardMonitor {
         isRunning = true
         print("✅ 键盘监听器已完全启动")
         print("📝 监听 O 键 (键码: \(oKeyCode))")
-        print("🎤 按住 O 键开始录音，释放结束录音")
+        print("🎤 连击3下 O 键开始/结束录音")
         
         // 确保状态更新在主线程
         DispatchQueue.main.async {
@@ -166,32 +169,44 @@ class KeyboardMonitor {
             case .keyDown:
                 let currentTime = Date().timeIntervalSince1970
                 
-                if !oKeyPressed {
-                    // 检查防抖间隔
-                    if (currentTime - lastKeyDownTime) > debounceInterval {
-                        oKeyPressed = true
-                        lastKeyDownTime = currentTime
-                        print("🟢 O 键按下 - 开始识别")
+                // 防抖检查
+                if (currentTime - lastClickTime) < debounceInterval {
+                    print("⏱️ O 键按下过快，防抖忽略 (间隔: \(String(format: "%.3f", currentTime - lastClickTime))s)")
+                    break
+                }
+                
+                // 检查连击间隔
+                if (currentTime - lastClickTime) > clickInterval {
+                    // 超过间隔时间，重置计数
+                    clickCount = 0
+                }
+                
+                clickCount += 1
+                lastClickTime = currentTime
+                
+                print("🔢 O 键第 \(clickCount) 次点击")
+                
+                if clickCount >= requiredClicks {
+                    // 连击3次，切换录音状态
+                    clickCount = 0
+                    isRecording = !isRecording
+                    
+                    if isRecording {
+                        print("🟢 连击3次 - 开始识别")
                         DispatchQueue.main.async { [weak self] in
-                            self?.handleOKeyPressed()
+                            self?.handleStartRecording()
                         }
                     } else {
-                        print("⏱️ O 键按下过快，防抖忽略 (间隔: \(String(format: "%.3f", currentTime - lastKeyDownTime))s)")
+                        print("🔴 连击3次 - 停止识别")
+                        DispatchQueue.main.async { [weak self] in
+                            self?.handleStopRecording()
+                        }
                     }
-                } else {
-                    print("⚠️ O 键重复按下事件")
                 }
                 
             case .keyUp:
-                if oKeyPressed {
-                    oKeyPressed = false
-                    print("🔴 O 键松开 - 停止识别")
-                    DispatchQueue.main.async { [weak self] in
-                        self?.handleOKeyReleased()
-                    }
-                } else {
-                    print("⚠️ O 键释放但之前未检测到按下")
-                }
+                // keyUp 事件不处理，只在 keyDown 时计数
+                break
                 
             default:
                 print("❓ O 键未知事件类型: \(type.rawValue)")
@@ -231,7 +246,7 @@ class KeyboardMonitor {
         }
     }
     
-    private func handleOKeyPressed() {
+    private func handleStartRecording() {
         print("🎤 开始识别")
         print("📞 准备调用 startRecordingCallback")
         if let callback = startRecordingCallback {
@@ -243,7 +258,7 @@ class KeyboardMonitor {
         }
     }
     
-    private func handleOKeyReleased() {
+    private func handleStopRecording() {
         print("⏹️ 结束识别")
         print("📞 准备调用 stopRecordingCallback")
         if let callback = stopRecordingCallback {
