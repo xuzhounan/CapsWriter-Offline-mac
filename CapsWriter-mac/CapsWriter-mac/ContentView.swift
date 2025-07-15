@@ -50,6 +50,63 @@ struct ContentView: View {
                 .font(.subheadline)
             }
             
+            // 权限和状态显示
+            VStack(spacing: 12) {
+                // 辅助功能权限状态
+                HStack {
+                    Image(systemName: recordingState.hasAccessibilityPermission ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .foregroundColor(recordingState.hasAccessibilityPermission ? .green : .red)
+                    
+                    Text("辅助功能权限")
+                        .font(.subheadline)
+                    
+                    Spacer()
+                    
+                    Text(recordingState.hasAccessibilityPermission ? "已授权" : "未授权")
+                        .font(.caption)
+                        .foregroundColor(recordingState.hasAccessibilityPermission ? .green : .red)
+                        .fontWeight(.medium)
+                }
+                
+                // 监听器状态
+                HStack {
+                    Image(systemName: "ear.fill")
+                        .foregroundColor(.blue)
+                    
+                    Text("键盘监听器")
+                        .font(.subheadline)
+                    
+                    Spacer()
+                    
+                    Text(recordingState.keyboardMonitorStatus)
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                        .fontWeight(.medium)
+                }
+                
+                // 权限请求按钮
+                if !recordingState.hasAccessibilityPermission {
+                    Button("请求辅助功能权限") {
+                        KeyboardMonitor.requestAccessibilityPermission()
+                        // 延迟检查权限状态
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            checkPermissionStatus()
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.controlBackgroundColor))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color(.separatorColor), lineWidth: 1)
+                    )
+            )
+            
             // 录音状态显示
             if recordingState.isRecording {
                 VStack(spacing: 15) {
@@ -127,6 +184,28 @@ struct ContentView: View {
         .navigationTitle("CapsWriter-mac")
         .onAppear {
             animationScale = 1.2
+            checkPermissionStatus()
+            startPeriodicStatusCheck()
+        }
+    }
+    
+    // MARK: - 权限检查方法
+    private func checkPermissionStatus() {
+        let hasPermission = KeyboardMonitor.checkAccessibilityPermission()
+        recordingState.updateAccessibilityPermission(hasPermission)
+        
+        // 更新监听器状态
+        if hasPermission {
+            recordingState.updateKeyboardMonitorStatus("已启动")
+        } else {
+            recordingState.updateKeyboardMonitorStatus("等待权限")
+        }
+    }
+    
+    private func startPeriodicStatusCheck() {
+        // 每秒检查一次权限状态
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            checkPermissionStatus()
         }
     }
 }

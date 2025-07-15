@@ -33,6 +33,7 @@ class KeyboardMonitor {
         }
         
         print("🔍 正在检查辅助功能权限...")
+        RecordingState.shared.updateKeyboardMonitorStatus("正在检查权限...")
         
         // 检查辅助功能权限
         if !AXIsProcessTrusted() {
@@ -40,15 +41,21 @@ class KeyboardMonitor {
             print("  路径: 系统设置 → 隐私与安全性 → 辅助功能")
             print("  需要将 CapsWriter-mac 添加到允许列表中")
             print("🔧 正在请求辅助功能权限...")
+            
+            RecordingState.shared.updateKeyboardMonitorStatus("等待权限授权...")
+            RecordingState.shared.updateAccessibilityPermission(false)
+            
             requestAccessibilityPermission()
             
             // 给用户一些时间来授予权限，然后重试
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
                 if AXIsProcessTrusted() {
                     print("✅ 辅助功能权限已获得，重新启动监听器")
+                    RecordingState.shared.updateAccessibilityPermission(true)
                     self?.startMonitoring()
                 } else {
                     print("❌ 仍然缺少辅助功能权限，请手动授权")
+                    RecordingState.shared.updateKeyboardMonitorStatus("权限被拒绝")
                 }
             }
             return
@@ -56,6 +63,9 @@ class KeyboardMonitor {
         
         print("✅ 辅助功能权限已获得")
         print("🚀 正在启动键盘监听器...")
+        
+        RecordingState.shared.updateAccessibilityPermission(true)
+        RecordingState.shared.updateKeyboardMonitorStatus("正在启动...")
         
         monitorQueue?.async { [weak self] in
             self?.setupEventTap()
@@ -91,6 +101,7 @@ class KeyboardMonitor {
         guard let eventTap = eventTap else {
             print("❌ 无法创建事件监听器 - 可能权限不足或系统限制")
             print("💡 请确保在系统设置中已授予辅助功能权限")
+            RecordingState.shared.updateKeyboardMonitorStatus("创建监听器失败")
             return
         }
         print("✅ 事件监听器创建成功")
@@ -115,6 +126,8 @@ class KeyboardMonitor {
         print("✅ 键盘监听器已完全启动")
         print("📝 监听右 Shift 键 (键码: \(rightShiftKeyCode))")
         print("🎤 按住右 Shift 键开始录音，释放结束录音")
+        
+        RecordingState.shared.updateKeyboardMonitorStatus("正在监听")
         
         // 运行循环
         print("🔄 开始运行事件循环...")
@@ -195,6 +208,7 @@ class KeyboardMonitor {
         // 停止运行循环
         CFRunLoopStop(CFRunLoopGetCurrent())
         
+        RecordingState.shared.updateKeyboardMonitorStatus("已停止")
         print("⏹️ 键盘监听器已停止")
     }
     
