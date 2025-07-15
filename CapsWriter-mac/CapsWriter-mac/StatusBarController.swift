@@ -55,50 +55,13 @@ class StatusBarController: ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
         
         // 查找现有的主窗口
-        let mainWindows = NSApp.windows.filter { 
-            $0.title == "CapsWriter-mac" && $0.isVisible 
-        }
-        
-        if let existingWindow = mainWindows.first {
-            // 如果窗口存在且可见，就激活它
+        if let existingWindow = NSApp.windows.first(where: { $0.title == "CapsWriter-mac" }) {
+            // 如果窗口存在，就激活它
             existingWindow.makeKeyAndOrderFront(nil)
             existingWindow.orderFrontRegardless()
-        } else {
-            // 查找隐藏的窗口
-            let hiddenWindows = NSApp.windows.filter { 
-                $0.title == "CapsWriter-mac" && !$0.isVisible 
-            }
-            
-            if let hiddenWindow = hiddenWindows.first {
-                // 如果有隐藏的窗口，显示它
-                hiddenWindow.makeKeyAndOrderFront(nil)
-                hiddenWindow.orderFrontRegardless()
-            } else {
-                // 如果没有窗口，创建新窗口
-                createNewMainWindow()
-            }
         }
     }
     
-    private func createNewMainWindow() {
-        let contentView = ContentView()
-        let hostingController = NSHostingController(rootView: contentView)
-        
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 600, height: 400),
-            styleMask: [.titled, .closable, .resizable, .miniaturizable],
-            backing: .buffered,
-            defer: false
-        )
-        
-        window.title = "CapsWriter-mac"
-        window.contentViewController = hostingController
-        window.center()
-        window.makeKeyAndOrderFront(nil)
-        
-        // 设置窗口关闭时不终止应用
-        window.isReleasedWhenClosed = false
-    }
     
     @objc private func quitApp() {
         NSApp.terminate(nil)

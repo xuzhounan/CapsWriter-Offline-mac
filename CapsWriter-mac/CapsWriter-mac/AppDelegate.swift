@@ -38,7 +38,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        // 当最后一个窗口关闭时，不退出应用（继续在菜单栏中运行）
+        // 关闭最后一个窗口时不退出应用，保持状态栏图标
+        return false
+    }
+    
+    func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
         return false
     }
     
