@@ -96,6 +96,16 @@ struct ContentView: View {
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
                 }
+                
+                // 手动刷新按钮（调试用）
+                Button("刷新状态") {
+                    print("🔄 手动刷新权限状态...")
+                    let hasPermission = KeyboardMonitor.checkAccessibilityPermission()
+                    print("📋 权限状态: \(hasPermission)")
+                    checkPermissionStatus()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
             .padding()
             .background(
@@ -191,20 +201,12 @@ struct ContentView: View {
     
     // MARK: - 权限检查方法
     private func checkPermissionStatus() {
-        let hasPermission = KeyboardMonitor.checkAccessibilityPermission()
-        recordingState.updateAccessibilityPermission(hasPermission)
-        
-        // 更新监听器状态
-        if hasPermission {
-            recordingState.updateKeyboardMonitorStatus("已启动")
-        } else {
-            recordingState.updateKeyboardMonitorStatus("等待权限")
-        }
+        recordingState.refreshPermissionStatus()
     }
     
     private func startPeriodicStatusCheck() {
-        // 每秒检查一次权限状态
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+        // 每2秒检查一次权限状态
+        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
             checkPermissionStatus()
         }
     }

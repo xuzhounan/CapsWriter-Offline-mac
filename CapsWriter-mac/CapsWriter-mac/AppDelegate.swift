@@ -43,6 +43,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupKeyboardMonitor() {
         keyboardMonitor = KeyboardMonitor()
         
+        // 初始权限检查和状态更新
+        let hasPermission = KeyboardMonitor.checkAccessibilityPermission()
+        RecordingState.shared.updateAccessibilityPermission(hasPermission)
+        
+        if hasPermission {
+            RecordingState.shared.updateKeyboardMonitorStatus("初始化中...")
+        } else {
+            RecordingState.shared.updateKeyboardMonitorStatus("等待权限")
+        }
+        
         // 设置回调函数
         keyboardMonitor?.setCallbacks(
             startRecording: { [weak self] in

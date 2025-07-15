@@ -41,4 +41,15 @@ class RecordingState: ObservableObject {
             self.hasAccessibilityPermission = hasPermission
         }
     }
+    
+    func refreshPermissionStatus() {
+        let hasPermission = KeyboardMonitor.checkAccessibilityPermission()
+        updateAccessibilityPermission(hasPermission)
+        
+        if hasPermission {
+            updateKeyboardMonitorStatus("已启动")
+        } else {
+            updateKeyboardMonitorStatus("等待权限")
+        }
+    }
 }

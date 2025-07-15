@@ -64,8 +64,11 @@ class KeyboardMonitor {
         print("✅ 辅助功能权限已获得")
         print("🚀 正在启动键盘监听器...")
         
-        RecordingState.shared.updateAccessibilityPermission(true)
-        RecordingState.shared.updateKeyboardMonitorStatus("正在启动...")
+        // 确保状态在主线程更新
+        DispatchQueue.main.async {
+            RecordingState.shared.updateAccessibilityPermission(true)
+            RecordingState.shared.updateKeyboardMonitorStatus("正在启动...")
+        }
         
         monitorQueue?.async { [weak self] in
             self?.setupEventTap()
@@ -127,7 +130,10 @@ class KeyboardMonitor {
         print("📝 监听右 Shift 键 (键码: \(rightShiftKeyCode))")
         print("🎤 按住右 Shift 键开始录音，释放结束录音")
         
-        RecordingState.shared.updateKeyboardMonitorStatus("正在监听")
+        // 确保状态更新在主线程
+        DispatchQueue.main.async {
+            RecordingState.shared.updateKeyboardMonitorStatus("正在监听")
+        }
         
         // 运行循环
         print("🔄 开始运行事件循环...")
