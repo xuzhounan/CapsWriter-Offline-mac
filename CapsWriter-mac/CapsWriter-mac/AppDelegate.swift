@@ -2,29 +2,28 @@ import SwiftUI
 import AppKit
 
 class AppDelegate: NSObject, NSApplicationDelegate {
-    var menuBarController: MenuBarController?
+    var statusBarController: StatusBarController?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // 初始化菜单栏控制器
-        menuBarController = MenuBarController()
+        // 初始化状态栏控制器
+        statusBarController = StatusBarController()
         
-        // 设置应用为 Agent 应用（不显示在 Dock 中，但仍然可以有窗口）
-        // 如果希望在 Dock 中显示，请注释掉下面这行
-        // NSApp.setActivationPolicy(.accessory)
-        
-        // 确保应用在 Dock 中显示
+        // 确保应用在 Dock 中显示（同时支持菜单栏）
         NSApp.setActivationPolicy(.regular)
+        
+        // 如果只想要菜单栏应用（不在 Dock 中显示），可以使用：
+        // NSApp.setActivationPolicy(.accessory)
     }
     
     func applicationWillTerminate(_ notification: Notification) {
         // 清理资源
-        menuBarController = nil
+        statusBarController = nil
     }
     
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         // 当用户在 Dock 中点击应用图标时，如果没有可见窗口，则显示主窗口
         if !flag {
-            menuBarController?.openMainWindow()
+            statusBarController?.openMainWindow()
         }
         return true
     }
