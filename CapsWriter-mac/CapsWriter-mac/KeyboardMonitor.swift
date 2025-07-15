@@ -12,7 +12,7 @@ class KeyboardMonitor {
     private let rightShiftKeyCode: CGKeyCode = 60
     
     // 备用的右 Shift 键码（一些键盘可能使用不同的码）
-    private let alternativeRightShiftKeyCodes: [CGKeyCode] = [60, 124]
+    private let alternativeRightShiftKeyCodes: [CGKeyCode] = [60, 124, 56]
     
     // 状态跟踪
     private var rightShiftPressed = false
@@ -73,11 +73,9 @@ class KeyboardMonitor {
             RecordingState.shared.updateKeyboardMonitorStatus("正在启动...")
         }
         
-        // 尝试在主线程启动事件监听
-        DispatchQueue.main.async { [weak self] in
-            self?.monitorQueue?.async { [weak self] in
-                self?.setupEventTap()
-            }
+        // 在后台线程启动事件监听
+        monitorQueue?.async { [weak self] in
+            self?.setupEventTap()
         }
     }
     
@@ -124,7 +122,7 @@ class KeyboardMonitor {
         }
         print("✅ 运行循环源创建成功")
         
-        // 添加到运行循环
+        // 添加到当前线程的运行循环
         CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
         print("✅ 已添加到运行循环")
         
@@ -142,7 +140,7 @@ class KeyboardMonitor {
             RecordingState.shared.updateKeyboardMonitorStatus("正在监听")
         }
         
-        // 运行循环
+        // 在后台线程中运行事件循环
         print("🔄 开始运行事件循环...")
         CFRunLoopRun()
         print("⏹️ 事件循环已结束")
@@ -152,10 +150,8 @@ class KeyboardMonitor {
         // 获取键码
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
         
-        // 只记录修饰键事件以减少日志噪音
-        if keyCode >= 54 && keyCode <= 65 {
-            print("🔍 修饰键事件: 键码=\(keyCode)(\(getKeyName(for: keyCode))), 类型=\(type.rawValue)")
-        }
+        // 记录所有键盘事件进行调试
+        print("🔍 键盘事件: 键码=\(keyCode)(\(getKeyName(for: keyCode))), 类型=\(type.rawValue)")
         
         // 详细检查右 Shift 键（包括备用键码）
         if alternativeRightShiftKeyCodes.contains(keyCode) {
@@ -212,7 +208,13 @@ class KeyboardMonitor {
         case 61: return "右Option"
         case 62: return "右Control"
         case 63: return "Fn"
-        default: return "未知键(\(keyCode))"
+        case 124: return "右Shift(备用)"
+        default: 
+            if keyCode >= 0 && keyCode <= 127 {
+                return "键(\(keyCode))"
+            } else {
+                return "未知键(\(keyCode))"
+            }
         }
     }
     
@@ -229,23 +231,32 @@ class KeyboardMonitor {
     func stopMonitoring() {
         guard isRunning else { return }
         
+        print("🛑 正在停止键盘监听器...")
         isRunning = false
         
-        // 停止事件监听
-        if let eventTap = eventTap {
-            CGEvent.tapEnable(tap: eventTap, enable: false)
-            CFMachPortInvalidate(eventTap)
-            self.eventTap = nil
+        // 在监听线程中停止
+        monitorQueue?.async { [weak self] in
+            guard let self = self else { return }
+            
+            // 停止事件监听
+            if let eventTap = self.eventTap {
+                CGEvent.tapEnable(tap: eventTap, enable: false)
+                CFMachPortInvalidate(eventTap)
+                self.eventTap = nil
+                print("✅ 事件监听已停用")
+            }
+            
+            // 移除运行循环源
+            if let runLoopSource = self.runLoopSource {
+                CFRunLoopRemoveSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
+                self.runLoopSource = nil
+                print("✅ 运行循环源已移除")
+            }
+            
+            // 停止运行循环
+            CFRunLoopStop(CFRunLoopGetCurrent())
+            print("✅ 运行循环已停止")
         }
-        
-        // 移除运行循环源
-        if let runLoopSource = runLoopSource {
-            CFRunLoopRemoveSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
-            self.runLoopSource = nil
-        }
-        
-        // 停止运行循环
-        CFRunLoopStop(CFRunLoopGetCurrent())
         
         RecordingState.shared.updateKeyboardMonitorStatus("已停止")
         print("⏹️ 键盘监听器已停止")
