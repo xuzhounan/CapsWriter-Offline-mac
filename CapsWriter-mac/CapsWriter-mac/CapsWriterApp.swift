@@ -8,8 +8,7 @@ struct CapsWriterApp: App {
         WindowGroup {
             ContentView()
         }
-        .windowStyle(.hiddenTitleBar)
-        .windowResizability(.contentSize)
         .defaultSize(width: 600, height: 400)
+        .windowResizability(.contentSize)
     }
 }

@@ -5,7 +5,7 @@
     <key>CFBundleDisplayName</key>
     <string>CapsWriter-mac</string>
     <key>CFBundleIdentifier</key>
-    <string>com.example.CapsWriter-mac</string>
+    <string>com.example.CapsWriterMac</string>
     <key>CFBundleName</key>
     <string>CapsWriter-mac</string>
     <key>CFBundleVersion</key>
@@ -30,5 +30,7 @@
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
+    <key>CFBundleIconName</key>
+    <string>AppIcon</string>
 </dict>
 </plist>
