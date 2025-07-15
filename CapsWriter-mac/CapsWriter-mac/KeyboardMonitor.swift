@@ -147,8 +147,9 @@ class KeyboardMonitor {
     }
     
     private func handleKeyEvent(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
-        // 获取键码
-        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+        // 获取键码并转换为正确的类型
+        let keyCodeInt64 = event.getIntegerValueField(.keyboardEventKeycode)
+        let keyCode = CGKeyCode(keyCodeInt64)
         
         // 记录所有键盘事件进行调试
         print("🔍 键盘事件: 键码=\(keyCode)(\(getKeyName(for: keyCode))), 类型=\(type.rawValue)")
