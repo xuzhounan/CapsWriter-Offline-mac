@@ -6,6 +6,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var keyboardMonitor: KeyboardMonitor?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // 禁用窗口恢复功能
+        UserDefaults.standard.register(defaults: ["NSQuitAlwaysKeepsWindows": false])
+        
         // 强制设置应用为正常应用，确保在 Dock 中显示
         NSApp.setActivationPolicy(.regular)
         
