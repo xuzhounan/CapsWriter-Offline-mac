@@ -60,12 +60,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - 语音识别回调
     private func startRecording() {
         print("🎤 开始语音识别...")
+        RecordingState.shared.startRecording()
         // TODO: 在这里添加语音识别开始逻辑
         // 例如：speechRecognizer.startRecording()
     }
     
     private func stopRecording() {
         print("⏹️ 结束语音识别...")
+        RecordingState.shared.stopRecording()
         // TODO: 在这里添加语音识别结束逻辑
         // 例如：speechRecognizer.stopRecording()
     }
