@@ -153,11 +153,10 @@ class KeyboardMonitor {
         let keyCodeInt64 = event.getIntegerValueField(.keyboardEventKeycode)
         let keyCode = CGKeyCode(keyCodeInt64)
         
-        // 记录所有键盘事件进行调试
-        print("🔍 键盘事件: 键码=\(keyCode)(\(getKeyName(for: keyCode))), 类型=\(type.rawValue)")
-        
-        // 额外的调试输出
-        print("🔧 事件监听器正在工作！时间戳: \(Date().timeIntervalSince1970)")
+        // 仅记录 O 键事件进行调试
+        if alternativeOKeyCodes.contains(keyCode) {
+            print("🔍 O 键事件: 键码=\(keyCode), 类型=\(type.rawValue)")
+        }
         
         // 详细检查 O 键（包括备用键码）
         if alternativeOKeyCodes.contains(keyCode) {
