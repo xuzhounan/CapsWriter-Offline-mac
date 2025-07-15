@@ -13,6 +13,7 @@
 		A12345678901234567890008 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890007 /* Preview Assets.xcassets */; };
 		A12345678901234567890010 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890009 /* StatusBarController.swift */; };
 		A12345678901234567890012 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890011 /* AppDelegate.swift */; };
+		A12345678901234567890020 /* KeyboardMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890021 /* KeyboardMonitor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +26,7 @@
 		A12345678901234567890013 /* CapsWriter-mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CapsWriter-mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A12345678901234567890014 /* CapsWriter-mac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "CapsWriter-mac.entitlements"; sourceTree = "<group>"; };
 		A12345678901234567890015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A12345678901234567890021 /* KeyboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardMonitor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +71,7 @@
 				A12345678901234567890011 /* AppDelegate.swift */,
 				A12345678901234567890002 /* ContentView.swift */,
 				A12345678901234567890009 /* StatusBarController.swift */,
+				A12345678901234567890021 /* KeyboardMonitor.swift */,
 				A12345678901234567890004 /* Assets.xcassets */,
 				A12345678901234567890014 /* CapsWriter-mac.entitlements */,
 				A12345678901234567890015 /* Info.plist */,
@@ -150,6 +153,7 @@
 				A12345678901234567890003 /* ContentView.swift in Sources */,
 				A12345678901234567890012 /* AppDelegate.swift in Sources */,
 				A12345678901234567890010 /* StatusBarController.swift in Sources */,
+				A12345678901234567890020 /* KeyboardMonitor.swift in Sources */,
 				A12345678901234567890001 /* CapsWriterApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
