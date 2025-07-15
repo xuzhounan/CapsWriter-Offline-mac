@@ -8,14 +8,14 @@ class KeyboardMonitor {
     private var monitorQueue: DispatchQueue?
     private var isRunning = false
     
-    // 右 Shift 键的键码（可能因键盘布局而异）
-    private let rightShiftKeyCode: CGKeyCode = 60
+    // O 键的键码（美式键盘）
+    private let oKeyCode: CGKeyCode = 31
     
-    // 备用的右 Shift 键码（一些键盘可能使用不同的码）
-    private let alternativeRightShiftKeyCodes: [CGKeyCode] = [60, 124, 56]
+    // 备用的 O 键码（一些键盘可能使用不同的码）
+    private let alternativeOKeyCodes: [CGKeyCode] = [31]
     
     // 状态跟踪
-    private var rightShiftPressed = false
+    private var oKeyPressed = false
     
     // 回调函数
     var startRecordingCallback: (() -> Void)?
@@ -91,7 +91,7 @@ class KeyboardMonitor {
         // 创建事件回调 - 监听所有键盘事件以便调试
         let eventMask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
         print("📋 事件掩码: \(eventMask)")
-        print("🔍 右Shift键码设定为: \(rightShiftKeyCode)")
+        print("🔍 O键码设定为: \(oKeyCode)")
         
         eventTap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
@@ -132,8 +132,8 @@ class KeyboardMonitor {
         
         isRunning = true
         print("✅ 键盘监听器已完全启动")
-        print("📝 监听右 Shift 键 (键码: \(rightShiftKeyCode))")
-        print("🎤 按住右 Shift 键开始录音，释放结束录音")
+        print("📝 监听 O 键 (键码: \(oKeyCode))")
+        print("🎤 按住 O 键开始录音，释放结束录音")
         
         // 确保状态更新在主线程
         DispatchQueue.main.async {
@@ -154,35 +154,35 @@ class KeyboardMonitor {
         // 记录所有键盘事件进行调试
         print("🔍 键盘事件: 键码=\(keyCode)(\(getKeyName(for: keyCode))), 类型=\(type.rawValue)")
         
-        // 详细检查右 Shift 键（包括备用键码）
-        if alternativeRightShiftKeyCodes.contains(keyCode) {
-            print("✅ 检测到右 Shift 键事件: \(type.rawValue == 10 ? "按下(keyDown)" : type.rawValue == 11 ? "释放(keyUp)" : "其他类型(\(type.rawValue))")")
+        // 详细检查 O 键（包括备用键码）
+        if alternativeOKeyCodes.contains(keyCode) {
+            print("✅ 检测到 O 键事件: \(type.rawValue == 10 ? "按下(keyDown)" : type.rawValue == 11 ? "释放(keyUp)" : "其他类型(\(type.rawValue))")")
             
             switch type {
             case .keyDown:
-                if !rightShiftPressed {
-                    rightShiftPressed = true
-                    print("🎤 右 Shift 键按下 - 开始录音")
+                if !oKeyPressed {
+                    oKeyPressed = true
+                    print("🟢 O 键按下 - 开始识别")
                     DispatchQueue.main.async { [weak self] in
-                        self?.handleRightShiftPressed()
+                        self?.handleOKeyPressed()
                     }
                 } else {
-                    print("⚠️ 右 Shift 键重复按下事件")
+                    print("⚠️ O 键重复按下事件")
                 }
                 
             case .keyUp:
-                if rightShiftPressed {
-                    rightShiftPressed = false
-                    print("⏹️ 右 Shift 键释放 - 停止录音")
+                if oKeyPressed {
+                    oKeyPressed = false
+                    print("🔴 O 键松开 - 停止识别")
                     DispatchQueue.main.async { [weak self] in
-                        self?.handleRightShiftReleased()
+                        self?.handleOKeyReleased()
                     }
                 } else {
-                    print("⚠️ 右 Shift 键释放但之前未检测到按下")
+                    print("⚠️ O 键释放但之前未检测到按下")
                 }
                 
             default:
-                print("❓ 右 Shift 键未知事件类型: \(type.rawValue)")
+                print("❓ O 键未知事件类型: \(type.rawValue)")
                 break
             }
         } else {
@@ -205,6 +205,7 @@ class KeyboardMonitor {
         case 57: return "Caps Lock"
         case 58: return "左Option"
         case 59: return "左Control"
+        case 31: return "O"
         case 60: return "右Shift"
         case 61: return "右Option"
         case 62: return "右Control"
@@ -219,7 +220,7 @@ class KeyboardMonitor {
         }
     }
     
-    private func handleRightShiftPressed() {
+    private func handleOKeyPressed() {
         print("🎤 开始识别")
         print("📞 准备调用 startRecordingCallback")
         if let callback = startRecordingCallback {
@@ -231,7 +232,7 @@ class KeyboardMonitor {
         }
     }
     
-    private func handleRightShiftReleased() {
+    private func handleOKeyReleased() {
         print("⏹️ 结束识别")
         print("📞 准备调用 stopRecordingCallback")
         if let callback = stopRecordingCallback {
