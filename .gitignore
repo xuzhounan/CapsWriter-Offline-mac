@@ -279,4 +279,4 @@ CapsWriter-mac/fastlane/Preview.html
 CapsWriter-mac/fastlane/screenshots/**/*.png
 CapsWriter-mac/fastlane/test_output
 CapsWriter-mac/iOSInjectionProject/
-CapsWriter-mac/*.pkg
+CapsWriter-mac/*.pkgsherpa-onnx/

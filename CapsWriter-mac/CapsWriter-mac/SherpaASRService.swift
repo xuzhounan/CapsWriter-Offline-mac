@@ -11,8 +11,8 @@ class SherpaASRService: ObservableObject {
     
     // MARK: - Private Properties
     private var audioEngine: AVAudioEngine?
-    private var recognizer: OpaquePointer?
-    private var stream: OpaquePointer?
+    private var recognizer: UnsafePointer<SherpaOnnxOnlineRecognizer>?
+    private var stream: UnsafePointer<SherpaOnnxOnlineStream>?
     private let audioQueue = DispatchQueue(label: "com.capswriter.audio", qos: .userInitiated)
     
     // Audio configuration
@@ -186,37 +186,60 @@ class SherpaASRService: ObservableObject {
         addLog("  - 词汇表: \(tokensPath)")
         
         // Initialize sherpa-onnx configuration
-        var config = SherpaOnnxOnlineRecognizerConfig()
+        let paraformerConfig = SherpaOnnxOnlineParaformerModelConfig(
+            encoder: strdup(encoderPath),
+            decoder: strdup(decoderPath)
+        )
         
-        // Configure paraformer model
-        config.model_config.paraformer.encoder = strdup(encoderPath)
-        config.model_config.paraformer.decoder = strdup(decoderPath)
-        config.model_config.paraformer.tokens = strdup(tokensPath)
-        config.model_config.paraformer.num_threads = 2
-        config.model_config.paraformer.provider = strdup("cpu")
-        config.model_config.paraformer.debug = 0
-        config.model_config.paraformer.model_type = strdup("paraformer")
+        let modelConfig = SherpaOnnxOnlineModelConfig(
+            transducer: SherpaOnnxOnlineTransducerModelConfig(encoder: nil, decoder: nil, joiner: nil),
+            paraformer: paraformerConfig,
+            zipformer2_ctc: SherpaOnnxOnlineZipformer2CtcModelConfig(model: nil),
+            tokens: strdup(tokensPath),
+            num_threads: 2,
+            provider: strdup("cpu"),
+            debug: 0,
+            model_type: strdup("paraformer"),
+            modeling_unit: strdup("char"),
+            bpe_vocab: nil,
+            tokens_buf: nil,
+            tokens_buf_size: 0
+        )
         
-        // Configure feature extraction
-        config.feat_config.scale = 1.0
+        let featConfig = SherpaOnnxFeatureConfig(
+            sample_rate: 16000,
+            feature_dim: 80
+        )
         
-        // Configure decoding
-        config.decoding_method = strdup("greedy_search")
-        config.max_active_paths = 4
-        config.enable_endpoint = 1
-        config.rule1_min_trailing_silence = 2.4
-        config.rule2_min_trailing_silence = 1.2
-        config.rule3_min_utterance_length = 20.0
+        var config = SherpaOnnxOnlineRecognizerConfig(
+            feat_config: featConfig,
+            model_config: modelConfig,
+            decoding_method: strdup("greedy_search"),
+            max_active_paths: 4,
+            enable_endpoint: 1,
+            rule1_min_trailing_silence: 2.4,
+            rule2_min_trailing_silence: 1.2,
+            rule3_min_utterance_length: 20.0,
+            hotwords_file: nil,
+            hotwords_score: 0.0,
+            ctc_fst_decoder_config: SherpaOnnxOnlineCtcFstDecoderConfig(graph: nil, max_active: 0),
+            rule_fsts: nil,
+            rule_fars: nil,
+            blank_penalty: 0.0,
+            hotwords_buf: nil,
+            hotwords_buf_size: 0,
+            hr: SherpaOnnxHomophoneReplacerConfig(dict_dir: nil, lexicon: nil, rule_fsts: nil)
+        )
         
         addLog("⚙️ 创建识别器实例...")
-        recognizer = CreateOnlineRecognizer(&config)
+        recognizer = SherpaOnnxCreateOnlineRecognizer(&config)
         
         if recognizer != nil {
             addLog("✅ 识别器创建成功")
             
             // Create stream
             addLog("🌊 创建音频流...")
-            stream = CreateOnlineStream(recognizer)
+            stream = SherpaOnnxCreateOnlineStream(recognizer)
             
             if stream != nil {
                 addLog("✅ 音频流创建成功")
@@ -228,25 +251,40 @@ class SherpaASRService: ObservableObject {
         }
         
         // Cleanup allocated strings
-        free(UnsafeMutableRawPointer(mutating: config.model_config.paraformer.encoder))
-        free(UnsafeMutableRawPointer(mutating: config.model_config.paraformer.decoder))
-        free(UnsafeMutableRawPointer(mutating: config.model_config.paraformer.tokens))
-        free(UnsafeMutableRawPointer(mutating: config.model_config.paraformer.provider))
-        free(UnsafeMutableRawPointer(mutating: config.model_config.paraformer.model_type))
-        free(UnsafeMutableRawPointer(mutating: config.decoding_method))
+        if let encoder = paraformerConfig.encoder {
+            free(UnsafeMutableRawPointer(mutating: encoder))
+        }
+        if let decoder = paraformerConfig.decoder {
+            free(UnsafeMutableRawPointer(mutating: decoder))
+        }
+        if let tokens = modelConfig.tokens {
+            free(UnsafeMutableRawPointer(mutating: tokens))
+        }
+        if let provider = modelConfig.provider {
+            free(UnsafeMutableRawPointer(mutating: provider))
+        }
+        if let modelType = modelConfig.model_type {
+            free(UnsafeMutableRawPointer(mutating: modelType))
+        }
+        if let modelingUnit = modelConfig.modeling_unit {
+            free(UnsafeMutableRawPointer(mutating: modelingUnit))
+        }
+        if let decodingMethod = config.decoding_method {
+            free(UnsafeMutableRawPointer(mutating: decodingMethod))
+        }
     }
     
     private func cleanupRecognizer() {
         addLog("🧹 清理识别器资源...")
         
         if let stream = stream {
-            DestroyOnlineStream(stream)
+            SherpaOnnxDestroyOnlineStream(stream)
             self.stream = nil
             addLog("✅ 音频流已销毁")
         }
         
         if let recognizer = recognizer {
-            DestroyOnlineRecognizer(recognizer)
+            SherpaOnnxDestroyOnlineRecognizer(recognizer)
             self.recognizer = nil
             addLog("✅ 识别器已销毁")
         }
@@ -275,17 +313,17 @@ class SherpaASRService: ObservableObject {
         let samples = channelData[0]
         
         // Send audio data to sherpa-onnx
-        AcceptWaveform(stream, Int32(sampleRate), samples, Int32(frameLength))
+        SherpaOnnxOnlineStreamAcceptWaveform(stream, Int32(sampleRate), samples, Int32(frameLength))
         
         // Check if recognizer is ready to decode
-        if IsReady(recognizer, stream) == 1 {
+        if SherpaOnnxIsOnlineStreamReady(recognizer, stream) == 1 {
             // Decode the audio
-            Decode(recognizer, stream)
+            SherpaOnnxDecodeOnlineStream(recognizer, stream)
             
             // Get partial results
-            let result = GetResult(recognizer, stream)
+            let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream)
             if let result = result {
-                let resultText = String(cString: GetResultText(result))
+                let resultText = String(cString: result.pointee.text)
                 
                 if !resultText.isEmpty {
                     DispatchQueue.main.async {
@@ -294,18 +332,18 @@ class SherpaASRService: ObservableObject {
                     }
                 }
                 
-                DestroyOnlineRecognizerResult(result)
+                SherpaOnnxDestroyOnlineRecognizerResult(result)
             }
         }
         
         // Check for endpoint detection
-        if IsEndpoint(recognizer, stream) == 1 {
+        if SherpaOnnxOnlineStreamIsEndpoint(recognizer, stream) == 1 {
             addLog("🔚 检测到语音端点")
             
             // Get final result
-            let result = GetResult(recognizer, stream)
+            let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream)
             if let result = result {
-                let finalText = String(cString: GetResultText(result))
+                let finalText = String(cString: result.pointee.text)
                 
                 if !finalText.isEmpty {
                     DispatchQueue.main.async {
@@ -314,11 +352,11 @@ class SherpaASRService: ObservableObject {
                     }
                 }
                 
-                DestroyOnlineRecognizerResult(result)
+                SherpaOnnxDestroyOnlineRecognizerResult(result)
             }
             
             // Reset the stream for next utterance
-            Reset(recognizer, stream)
+            SherpaOnnxOnlineStreamReset(recognizer, stream)
         }
         
         // Log audio processing (less frequently)
@@ -340,10 +378,10 @@ class SherpaASRService: ObservableObject {
             return nil
         }
         
-        let result = GetResult(recognizer, stream)
+        let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream)
         if let result = result {
-            let finalText = String(cString: GetResultText(result))
-            DestroyOnlineRecognizerResult(result)
+            let finalText = String(cString: result.pointee.text)
+            SherpaOnnxDestroyOnlineRecognizerResult(result)
             return finalText.isEmpty ? nil : finalText
         }
         
