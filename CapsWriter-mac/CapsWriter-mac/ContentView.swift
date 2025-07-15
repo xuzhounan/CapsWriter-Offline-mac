@@ -98,14 +98,27 @@ struct ContentView: View {
                 }
                 
                 // 手动刷新按钮（调试用）
-                Button("刷新状态") {
-                    print("🔄 手动刷新权限状态...")
-                    let hasPermission = KeyboardMonitor.checkAccessibilityPermission()
-                    print("📋 权限状态: \(hasPermission)")
-                    checkPermissionStatus()
+                HStack {
+                    Button("刷新状态") {
+                        print("🔄 手动刷新权限状态...")
+                        let hasPermission = KeyboardMonitor.checkAccessibilityPermission()
+                        print("📋 权限状态: \(hasPermission)")
+                        checkPermissionStatus()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    
+                    Button("测试录音") {
+                        print("🧪 测试录音状态切换")
+                        if recordingState.isRecording {
+                            recordingState.stopRecording()
+                        } else {
+                            recordingState.startRecording()
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
             }
             .padding()
             .background(

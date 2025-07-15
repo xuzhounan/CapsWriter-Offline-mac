@@ -8,8 +8,11 @@ class KeyboardMonitor {
     private var monitorQueue: DispatchQueue?
     private var isRunning = false
     
-    // 右 Shift 键的键码
+    // 右 Shift 键的键码（可能因键盘布局而异）
     private let rightShiftKeyCode: CGKeyCode = 60
+    
+    // 备用的右 Shift 键码（一些键盘可能使用不同的码）
+    private let alternativeRightShiftKeyCodes: [CGKeyCode] = [60, 124]
     
     // 状态跟踪
     private var rightShiftPressed = false
@@ -70,8 +73,11 @@ class KeyboardMonitor {
             RecordingState.shared.updateKeyboardMonitorStatus("正在启动...")
         }
         
-        monitorQueue?.async { [weak self] in
-            self?.setupEventTap()
+        // 尝试在主线程启动事件监听
+        DispatchQueue.main.async { [weak self] in
+            self?.monitorQueue?.async { [weak self] in
+                self?.setupEventTap()
+            }
         }
     }
     
@@ -84,9 +90,10 @@ class KeyboardMonitor {
     private func setupEventTap() {
         print("🔧 正在设置事件监听器...")
         
-        // 创建事件回调
+        // 创建事件回调 - 监听所有键盘事件以便调试
         let eventMask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
         print("📋 事件掩码: \(eventMask)")
+        print("🔍 右Shift键码设定为: \(rightShiftKeyCode)")
         
         eventTap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
@@ -145,42 +152,68 @@ class KeyboardMonitor {
         // 获取键码
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
         
-        // 调试：记录所有按键事件（仅限于特定键码范围以避免过多日志）
-        if keyCode >= 54 && keyCode <= 62 { // Shift, Cmd, Option 键区域
-            print("🔍 检测到按键事件: 键码=\(keyCode), 类型=\(type.rawValue), 目标键码=\(rightShiftKeyCode)")
+        // 只记录修饰键事件以减少日志噪音
+        if keyCode >= 54 && keyCode <= 65 {
+            print("🔍 修饰键事件: 键码=\(keyCode)(\(getKeyName(for: keyCode))), 类型=\(type.rawValue)")
         }
         
-        // 只处理右 Shift 键
-        guard keyCode == rightShiftKeyCode else {
-            return Unmanaged.passUnretained(event)
-        }
-        
-        print("✅ 检测到右 Shift 键事件: \(type.rawValue == 10 ? "按下" : "释放")")
-        
-        switch type {
-        case .keyDown:
-            if !rightShiftPressed {
-                rightShiftPressed = true
-                print("🎤 右 Shift 键按下 - 开始录音")
-                DispatchQueue.main.async { [weak self] in
-                    self?.handleRightShiftPressed()
-                }
-            }
+        // 详细检查右 Shift 键（包括备用键码）
+        if alternativeRightShiftKeyCodes.contains(keyCode) {
+            print("✅ 检测到右 Shift 键事件: \(type.rawValue == 10 ? "按下(keyDown)" : type.rawValue == 11 ? "释放(keyUp)" : "其他类型(\(type.rawValue))")")
             
-        case .keyUp:
-            if rightShiftPressed {
-                rightShiftPressed = false
-                print("⏹️ 右 Shift 键释放 - 停止录音")
-                DispatchQueue.main.async { [weak self] in
-                    self?.handleRightShiftReleased()
+            switch type {
+            case .keyDown:
+                if !rightShiftPressed {
+                    rightShiftPressed = true
+                    print("🎤 右 Shift 键按下 - 开始录音")
+                    DispatchQueue.main.async { [weak self] in
+                        self?.handleRightShiftPressed()
+                    }
+                } else {
+                    print("⚠️ 右 Shift 键重复按下事件")
                 }
+                
+            case .keyUp:
+                if rightShiftPressed {
+                    rightShiftPressed = false
+                    print("⏹️ 右 Shift 键释放 - 停止录音")
+                    DispatchQueue.main.async { [weak self] in
+                        self?.handleRightShiftReleased()
+                    }
+                } else {
+                    print("⚠️ 右 Shift 键释放但之前未检测到按下")
+                }
+                
+            default:
+                print("❓ 右 Shift 键未知事件类型: \(type.rawValue)")
+                break
             }
-            
-        default:
-            break
+        } else {
+            // 记录其他可能相关的键
+            let keyName = getKeyName(for: keyCode)
+            if keyCode >= 50 && keyCode <= 65 { // 包含所有修饰键区域
+                print("🔸 其他修饰键: \(keyName) (键码=\(keyCode))")
+            }
         }
         
         return Unmanaged.passUnretained(event)
+    }
+    
+    // 辅助方法：获取键名
+    private func getKeyName(for keyCode: CGKeyCode) -> String {
+        switch keyCode {
+        case 54: return "右Command"
+        case 55: return "左Command"
+        case 56: return "左Shift"
+        case 57: return "Caps Lock"
+        case 58: return "左Option"
+        case 59: return "左Control"
+        case 60: return "右Shift"
+        case 61: return "右Option"
+        case 62: return "右Control"
+        case 63: return "Fn"
+        default: return "未知键(\(keyCode))"
+        }
     }
     
     private func handleRightShiftPressed() {
