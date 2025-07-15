@@ -188,9 +188,8 @@ class KeyboardMonitor {
         } else {
             // 记录其他可能相关的键
             let keyName = getKeyName(for: keyCode)
-            if keyCode >= 50 && keyCode <= 65 { // 包含所有修饰键区域
-                print("🔸 其他修饰键: \(keyName) (键码=\(keyCode))")
-            }
+            // 临时显示所有键盘事件以便调试
+            print("🔸 其他键: \(keyName) (键码=\(keyCode))")
         }
         
         return Unmanaged.passUnretained(event)
