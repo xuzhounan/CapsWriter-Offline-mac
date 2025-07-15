@@ -10,5 +10,6 @@ struct CapsWriterApp: App {
         }
         .defaultSize(width: 600, height: 400)
         .windowResizability(.contentSize)
+        .windowRestorationBehavior(.disabled)
     }
 }
