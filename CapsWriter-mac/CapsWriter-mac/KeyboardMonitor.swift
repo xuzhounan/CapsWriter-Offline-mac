@@ -221,12 +221,26 @@ class KeyboardMonitor {
     
     private func handleRightShiftPressed() {
         print("🎤 开始识别")
-        startRecordingCallback?()
+        print("📞 准备调用 startRecordingCallback")
+        if let callback = startRecordingCallback {
+            print("✅ 回调函数存在，正在调用...")
+            callback()
+            print("✅ 回调函数已调用")
+        } else {
+            print("❌ 回调函数不存在！")
+        }
     }
     
     private func handleRightShiftReleased() {
         print("⏹️ 结束识别")
-        stopRecordingCallback?()
+        print("📞 准备调用 stopRecordingCallback")
+        if let callback = stopRecordingCallback {
+            print("✅ 回调函数存在，正在调用...")
+            callback()
+            print("✅ 回调函数已调用")
+        } else {
+            print("❌ 回调函数不存在！")
+        }
     }
     
     func stopMonitoring() {
@@ -265,8 +279,12 @@ class KeyboardMonitor {
     
     // 设置回调函数
     func setCallbacks(startRecording: @escaping () -> Void, stopRecording: @escaping () -> Void) {
+        print("📞 KeyboardMonitor: 设置回调函数...")
         startRecordingCallback = startRecording
         stopRecordingCallback = stopRecording
+        print("✅ KeyboardMonitor: 回调函数已设置")
+        print("📊 KeyboardMonitor: startRecordingCallback = \(startRecordingCallback != nil ? "存在" : "不存在")")
+        print("📊 KeyboardMonitor: stopRecordingCallback = \(stopRecordingCallback != nil ? "存在" : "不存在")")
     }
 }
 

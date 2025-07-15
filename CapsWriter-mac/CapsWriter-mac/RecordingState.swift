@@ -12,16 +12,24 @@ class RecordingState: ObservableObject {
     private init() {}
     
     func startRecording() {
+        print("📊 RecordingState: startRecording() 被调用")
+        print("📊 RecordingState: 当前录音状态 = \(isRecording)")
         DispatchQueue.main.async {
+            print("📊 RecordingState: 在主线程中设置 isRecording = true")
             self.isRecording = true
             self.recordingStartTime = Date()
+            print("✅ RecordingState: 录音状态已更新为 \(self.isRecording)")
         }
     }
     
     func stopRecording() {
+        print("📊 RecordingState: stopRecording() 被调用")
+        print("📊 RecordingState: 当前录音状态 = \(isRecording)")
         DispatchQueue.main.async {
+            print("📊 RecordingState: 在主线程中设置 isRecording = false")
             self.isRecording = false
             self.recordingStartTime = nil
+            print("✅ RecordingState: 录音状态已更新为 \(self.isRecording)")
         }
     }
     
