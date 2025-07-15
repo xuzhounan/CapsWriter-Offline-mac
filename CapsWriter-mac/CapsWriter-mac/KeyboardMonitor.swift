@@ -16,6 +16,8 @@ class KeyboardMonitor {
     
     // 状态跟踪
     private var oKeyPressed = false
+    private var lastKeyDownTime: TimeInterval = 0
+    private let debounceInterval: TimeInterval = 0.1 // 100ms 防抖间隔
     
     // 回调函数
     var startRecordingCallback: (() -> Void)?
@@ -160,11 +162,19 @@ class KeyboardMonitor {
             
             switch type {
             case .keyDown:
+                let currentTime = Date().timeIntervalSince1970
+                
                 if !oKeyPressed {
-                    oKeyPressed = true
-                    print("🟢 O 键按下 - 开始识别")
-                    DispatchQueue.main.async { [weak self] in
-                        self?.handleOKeyPressed()
+                    // 检查防抖间隔
+                    if (currentTime - lastKeyDownTime) > debounceInterval {
+                        oKeyPressed = true
+                        lastKeyDownTime = currentTime
+                        print("🟢 O 键按下 - 开始识别")
+                        DispatchQueue.main.async { [weak self] in
+                            self?.handleOKeyPressed()
+                        }
+                    } else {
+                        print("⏱️ O 键按下过快，防抖忽略 (间隔: \(String(format: "%.3f", currentTime - lastKeyDownTime))s)")
                     }
                 } else {
                     print("⚠️ O 键重复按下事件")
