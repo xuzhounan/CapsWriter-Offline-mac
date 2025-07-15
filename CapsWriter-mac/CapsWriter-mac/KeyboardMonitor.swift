@@ -156,6 +156,9 @@ class KeyboardMonitor {
         // 记录所有键盘事件进行调试
         print("🔍 键盘事件: 键码=\(keyCode)(\(getKeyName(for: keyCode))), 类型=\(type.rawValue)")
         
+        // 额外的调试输出
+        print("🔧 事件监听器正在工作！时间戳: \(Date().timeIntervalSince1970)")
+        
         // 详细检查 O 键（包括备用键码）
         if alternativeOKeyCodes.contains(keyCode) {
             print("✅ 检测到 O 键事件: \(type.rawValue == 10 ? "按下(keyDown)" : type.rawValue == 11 ? "释放(keyUp)" : "其他类型(\(type.rawValue))")")
