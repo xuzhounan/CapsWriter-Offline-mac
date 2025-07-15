@@ -14,6 +14,7 @@ class SherpaASRService: ObservableObject {
     private var recognizer: UnsafePointer<SherpaOnnxOnlineRecognizer>?
     private var stream: UnsafePointer<SherpaOnnxOnlineStream>?
     private let audioQueue = DispatchQueue(label: "com.capswriter.audio", qos: .userInitiated)
+    private static var logCounter = 0
     
     // Audio configuration
     private let sampleRate: Double = 16000
@@ -361,12 +362,11 @@ class SherpaASRService: ObservableObject {
         
         // Log audio processing (less frequently)
         if frameLength > 0 {
-            static var logCounter = 0
-            logCounter += 1
-            if logCounter % 100 == 0 { // Log every 100 buffers
+            Self.logCounter += 1
+            if Self.logCounter % 100 == 0 { // Log every 100 buffers
                 let timestamp = DateFormatter.timeFormatter.string(from: Date())
                 DispatchQueue.main.async {
-                    self.addLog("🎵 [\(timestamp)] 已处理 \(logCounter) 个音频缓冲区")
+                    self.addLog("🎵 [\(timestamp)] 已处理 \(Self.logCounter) 个音频缓冲区")
                 }
             }
         }
