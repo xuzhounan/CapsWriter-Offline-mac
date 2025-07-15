@@ -5,14 +5,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusBarController: StatusBarController?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // 确保应用在 Dock 中显示（正常 macOS 应用行为）
+        NSApp.setActivationPolicy(.regular)
+        
         // 初始化状态栏控制器
         statusBarController = StatusBarController()
         
-        // 确保应用在 Dock 中显示（同时支持菜单栏）
-        NSApp.setActivationPolicy(.regular)
-        
-        // 如果只想要菜单栏应用（不在 Dock 中显示），可以使用：
-        // NSApp.setActivationPolicy(.accessory)
+        // 设置应用图标（如果需要的话）
+        if let appIcon = NSApp.applicationIconImage {
+            NSApp.applicationIconImage = appIcon
+        }
     }
     
     func applicationWillTerminate(_ notification: Notification) {
