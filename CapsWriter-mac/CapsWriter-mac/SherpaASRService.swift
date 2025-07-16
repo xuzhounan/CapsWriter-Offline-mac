@@ -188,25 +188,40 @@ class SherpaASRService: ObservableObject {
         addLog("  - 解码器: \(decoderPath)")
         addLog("  - 词汇表: \(tokensPath)")
         
-        // Initialize sherpa-onnx configuration
-        var paraformerConfig = SherpaOnnxOnlineParaformerModelConfig(
-            encoder: UnsafePointer(strdup(encoderPath)),
-            decoder: UnsafePointer(strdup(decoderPath))
-        )
+        // Initialize sherpa-onnx configuration using C API structures
+        var paraformerConfig = SherpaOnnxOnlineParaformerModelConfig()
+        paraformerConfig.encoder = UnsafePointer(strdup(encoderPath))
+        paraformerConfig.decoder = UnsafePointer(strdup(decoderPath))
+        
+        var transducerConfig = SherpaOnnxOnlineTransducerModelConfig()
+        transducerConfig.encoder = nil
+        transducerConfig.decoder = nil
+        transducerConfig.joiner = nil
+        
+        var zipformerConfig = SherpaOnnxOnlineZipformer2CtcModelConfig()
+        zipformerConfig.model = nil
         
         var modelConfig = SherpaOnnxOnlineModelConfig()
         modelConfig.paraformer = paraformerConfig
+        modelConfig.transducer = transducerConfig
+        modelConfig.zipformer2_ctc = zipformerConfig
         modelConfig.tokens = UnsafePointer(strdup(tokensPath))
         modelConfig.num_threads = 2
         modelConfig.provider = UnsafePointer(strdup("cpu"))
         modelConfig.debug = 0
         modelConfig.model_type = UnsafePointer(strdup("paraformer"))
         modelConfig.modeling_unit = UnsafePointer(strdup("char"))
+        modelConfig.bpe_vocab = nil
+        modelConfig.tokens_buf = nil
+        modelConfig.tokens_buf_size = 0
         
-        let featConfig = SherpaOnnxFeatureConfig(
-            sample_rate: 16000,
-            feature_dim: 80
-        )
+        var featConfig = SherpaOnnxFeatureConfig()
+        featConfig.sample_rate = 16000
+        featConfig.feature_dim = 80
+        
+        var ctcConfig = SherpaOnnxOnlineCtcFstDecoderConfig()
+        ctcConfig.graph = nil
+        ctcConfig.max_active = 3000
         
         var config = SherpaOnnxOnlineRecognizerConfig()
         config.feat_config = featConfig
@@ -217,6 +232,11 @@ class SherpaASRService: ObservableObject {
         config.rule1_min_trailing_silence = 2.4
         config.rule2_min_trailing_silence = 1.2
         config.rule3_min_utterance_length = 20.0
+        config.hotwords_file = nil
+        config.hotwords_score = 1.5
+        config.ctc_fst_decoder_config = ctcConfig
+        config.rule_fsts = nil
+        config.rule_fars = nil
         
         addLog("⚙️ 创建识别器实例...")
         recognizer = SherpaOnnxCreateOnlineRecognizer(&config)
