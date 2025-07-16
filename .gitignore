@@ -279,4 +279,13 @@ CapsWriter-mac/fastlane/Preview.html
 CapsWriter-mac/fastlane/screenshots/**/*.png
 CapsWriter-mac/fastlane/test_output
 CapsWriter-mac/iOSInjectionProject/
-CapsWriter-mac/*.pkgsherpa-onnx/
+# Package files
+CapsWriter-mac/*.pkg
+
+# Xcode user-specific files
+*.xcuserstate
+**/xcuserdata/
+**/*.xcworkspace/xcuserdata/
+
+# sherpa-onnx source directory (keep only required files)
+sherpa-onnx-latest/
