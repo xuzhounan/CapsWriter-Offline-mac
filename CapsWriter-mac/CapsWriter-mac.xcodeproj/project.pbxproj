@@ -320,7 +320,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/../sherpa-onnx/sherpa-onnx/c-api",
+					"$(SRCROOT)/sherpa-onnx/sherpa-onnx",
 				);
 				INFOPLIST_FILE = "CapsWriter-mac/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "CapsWriter-mac";
@@ -358,7 +358,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/../sherpa-onnx/sherpa-onnx/c-api",
+					"$(SRCROOT)/sherpa-onnx/sherpa-onnx",
 				);
 				INFOPLIST_FILE = "CapsWriter-mac/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "CapsWriter-mac";
