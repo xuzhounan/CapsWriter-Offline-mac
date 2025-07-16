@@ -36,8 +36,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // 手动激活应用，确保 Dock 图标显示
         NSApp.activate(ignoringOtherApps: true)
         
-        // 调试：检查权限状态
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+        // 调试：检查权限状态（延迟更久，确保监听器完全初始化）
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             self.debugPermissionStatus()
         }
     }
@@ -117,20 +117,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         keyboardMonitor = KeyboardMonitor()
         print("✅ 键盘监听器对象创建完成")
         
-        // 初始权限检查和状态更新
-        print("🔍 检查辅助功能权限...")
-        let hasPermission = KeyboardMonitor.checkAccessibilityPermission()
-        print("🔍 辅助功能权限状态: \(hasPermission)")
-        RecordingState.shared.updateAccessibilityPermission(hasPermission)
-        
-        if hasPermission {
-            print("✅ 已有辅助功能权限")
-            RecordingState.shared.updateKeyboardMonitorStatus("初始化中...")
-        } else {
-            print("❌ 缺少辅助功能权限")
-            RecordingState.shared.updateKeyboardMonitorStatus("等待权限")
-        }
-        
         // 设置回调函数
         print("📞 设置键盘监听器回调函数...")
         keyboardMonitor?.setCallbacks(
@@ -145,35 +131,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         )
         print("✅ 键盘监听器回调函数已设置")
         
-        // 延迟启动监听器（模拟resetMonitoring的延迟机制）
-        print("🚀 延迟启动键盘监听器...")
-        RecordingState.shared.updateKeyboardMonitorStatus("准备启动...")
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            print("🚀 正在启动键盘监听器...")
-            self?.keyboardMonitor?.startMonitoring()
-            print("📡 键盘监听器启动调用完成")
-            
-            // 验证监听器状态并更新UI状态
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                print("🔍 验证键盘监听器状态...")
-                if self?.keyboardMonitor != nil {
-                    print("✅ 监听器对象存在")
-                    // 检查监听器是否真正在运行
-                    let hasPermission = KeyboardMonitor.checkAccessibilityPermission()
-                    if hasPermission {
-                        RecordingState.shared.updateKeyboardMonitorStatus("已启动")
-                        print("✅ 键盘监听器自动启动成功")
-                    } else {
-                        RecordingState.shared.updateKeyboardMonitorStatus("等待权限")
-                        print("⚠️ 键盘监听器启动但缺少权限")
-                    }
-                } else {
-                    print("❌ 监听器对象为nil")
-                    RecordingState.shared.updateKeyboardMonitorStatus("启动失败")
-                }
-            }
-        }
+        // 完全模拟resetMonitoring的行为：包括调用resetMonitoring方法
+        print("🔄 AppDelegate: 直接调用resetMonitoring来确保正确初始化...")
+        keyboardMonitor?.resetMonitoring()
+        print("✅ AppDelegate: resetMonitoring调用完成")
     }
     
     // MARK: - 语音识别回调
