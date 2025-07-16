@@ -330,7 +330,7 @@ class SherpaASRService: ObservableObject {
             // Get partial results
             let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream)
             if let result = result {
-                let textPtr = SherpaOnnxOnlineRecognizerResultGetText(result)
+                let textPtr = result.pointee.text
                 let resultText = textPtr != nil ? String(cString: textPtr!) : ""
                 
                 if !resultText.isEmpty {

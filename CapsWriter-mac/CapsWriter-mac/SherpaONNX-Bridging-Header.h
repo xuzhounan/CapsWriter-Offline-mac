@@ -9,6 +9,6 @@
 #define SherpaONNX_Bridging_Header_h
 
 // Include the official C API header
-#include "sherpa-onnx/c-api/c-api.h"
+#include "Include/c-api.h"
 
 #endif /* SherpaONNX_Bridging_Header_h */
