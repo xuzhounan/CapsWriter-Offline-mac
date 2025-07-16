@@ -18,6 +18,7 @@
 		A12345678901234567890050 /* SherpaASRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890051 /* SherpaASRService.swift */; };
 		A12345678901234567890060 /* libsherpa-onnx-c-api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */; };
 		A12345678901234567890070 /* models in Resources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890071 /* models */; };
+		8A0E46386F774048994E5E87 /* libsherpa-onnx-c-api.dylib in Copy Files */ = {isa = PBXBuildFile; fileRef = A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -113,6 +114,7 @@
 				A12345678901234567890022 /* Sources */,
 				A12345678901234567890016 /* Frameworks */,
 				A12345678901234567890023 /* Resources */,
+				8A0E46386F774048994E5E86 /* Copy Files */,
 			);
 			buildRules = (
 			);
@@ -168,6 +170,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8A0E46386F774048994E5E86 /* Copy Files */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				8A0E46386F774048994E5E87 /* libsherpa-onnx-c-api.dylib in Copy Files */,
+			);
+			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A12345678901234567890022 /* Sources */ = {
