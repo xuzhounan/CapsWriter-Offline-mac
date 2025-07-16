@@ -19,10 +19,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusBarController = StatusBarController()
         
         // 初始化语音识别服务
+        print("🔧 开始初始化语音识别服务...")
         setupASRService()
+        print("✅ 语音识别服务初始化完成")
         
         // 初始化键盘监听器
+        print("🔧 开始初始化键盘监听器...")
         setupKeyboardMonitor()
+        print("✅ 键盘监听器初始化完成")
         
         // 手动激活应用，确保 Dock 图标显示
         NSApp.activate(ignoringOtherApps: true)
@@ -103,16 +107,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     // MARK: - 键盘监听器设置
     private func setupKeyboardMonitor() {
+        print("🔧 AppDelegate: 开始设置键盘监听器...")
         print("🔧 创建键盘监听器...")
         keyboardMonitor = KeyboardMonitor()
+        print("✅ 键盘监听器对象创建完成")
         
         // 初始权限检查和状态更新
+        print("🔍 检查辅助功能权限...")
         let hasPermission = KeyboardMonitor.checkAccessibilityPermission()
+        print("🔍 辅助功能权限状态: \(hasPermission)")
         RecordingState.shared.updateAccessibilityPermission(hasPermission)
         
         if hasPermission {
+            print("✅ 已有辅助功能权限")
             RecordingState.shared.updateKeyboardMonitorStatus("初始化中...")
         } else {
+            print("❌ 缺少辅助功能权限")
             RecordingState.shared.updateKeyboardMonitorStatus("等待权限")
         }
         
@@ -134,6 +144,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("🚀 启动键盘监听器...")
         keyboardMonitor?.startMonitoring()
         print("📡 键盘监听器启动调用完成")
+        
+        // 验证监听器状态
+        print("🔍 验证键盘监听器状态...")
+        if keyboardMonitor != nil {
+            print("✅ 监听器对象存在")
+        } else {
+            print("❌ 监听器对象为nil")
+        }
     }
     
     // MARK: - 语音识别回调
