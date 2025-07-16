@@ -175,6 +175,9 @@ func SherpaOnnxGetOnlineStreamResult(_ recognizer: SherpaOnnxOnlineRecognizer?, 
 @_silgen_name("SherpaOnnxDestroyOnlineRecognizerResult")
 func SherpaOnnxDestroyOnlineRecognizerResult(_ result: SherpaOnnxOnlineRecognizerResult?)
 
+@_silgen_name("SherpaOnnxOnlineRecognizerResultGetText")
+func SherpaOnnxOnlineRecognizerResultGetText(_ result: SherpaOnnxOnlineRecognizerResult?) -> UnsafePointer<CChar>?
+
 @_silgen_name("SherpaOnnxOnlineStreamReset")
 func SherpaOnnxOnlineStreamReset(_ recognizer: SherpaOnnxOnlineRecognizer?, _ stream: SherpaOnnxOnlineStream?)
 

@@ -2,6 +2,149 @@ import Foundation
 import AVFoundation
 import Combine
 
+// 类型定义
+typealias SherpaOnnxOnlineRecognizer = OpaquePointer
+typealias SherpaOnnxOnlineStream = OpaquePointer
+typealias SherpaOnnxOnlineRecognizerResult = OpaquePointer
+
+// 结构体定义
+struct SherpaOnnxOnlineParaformerModelConfig {
+    var encoder: UnsafePointer<CChar>?
+    var decoder: UnsafePointer<CChar>?
+    
+    init(encoder: UnsafePointer<CChar>? = nil, decoder: UnsafePointer<CChar>? = nil) {
+        self.encoder = encoder
+        self.decoder = decoder
+    }
+}
+
+struct SherpaOnnxOnlineModelConfig {
+    var transducer: SherpaOnnxOnlineTransducerModelConfig
+    var paraformer: SherpaOnnxOnlineParaformerModelConfig
+    var zipformer2_ctc: SherpaOnnxOnlineZipformer2CtcModelConfig
+    var tokens: UnsafePointer<CChar>?
+    var num_threads: Int32
+    var provider: UnsafePointer<CChar>?
+    var debug: Int32
+    var model_type: UnsafePointer<CChar>?
+    var modeling_unit: UnsafePointer<CChar>?
+    var bpe_vocab: UnsafePointer<CChar>?
+    
+    init() {
+        self.transducer = SherpaOnnxOnlineTransducerModelConfig()
+        self.paraformer = SherpaOnnxOnlineParaformerModelConfig()
+        self.zipformer2_ctc = SherpaOnnxOnlineZipformer2CtcModelConfig()
+        self.tokens = nil
+        self.num_threads = 1
+        self.provider = nil
+        self.debug = 0
+        self.model_type = nil
+        self.modeling_unit = nil
+        self.bpe_vocab = nil
+    }
+}
+
+struct SherpaOnnxOnlineTransducerModelConfig {
+    var encoder: UnsafePointer<CChar>?
+    var decoder: UnsafePointer<CChar>?
+    var joiner: UnsafePointer<CChar>?
+    
+    init(encoder: UnsafePointer<CChar>? = nil, decoder: UnsafePointer<CChar>? = nil, joiner: UnsafePointer<CChar>? = nil) {
+        self.encoder = encoder
+        self.decoder = decoder
+        self.joiner = joiner
+    }
+}
+
+struct SherpaOnnxOnlineZipformer2CtcModelConfig {
+    var model: UnsafePointer<CChar>?
+    
+    init(model: UnsafePointer<CChar>? = nil) {
+        self.model = model
+    }
+}
+
+struct SherpaOnnxFeatureConfig {
+    var sample_rate: Int32
+    var feature_dim: Int32
+    
+    init(sample_rate: Int32 = 16000, feature_dim: Int32 = 80) {
+        self.sample_rate = sample_rate
+        self.feature_dim = feature_dim
+    }
+}
+
+struct SherpaOnnxOnlineRecognizerConfig {
+    var feat_config: SherpaOnnxFeatureConfig
+    var model_config: SherpaOnnxOnlineModelConfig
+    var decoding_method: UnsafePointer<CChar>?
+    var max_active_paths: Int32
+    var hotwords_file: UnsafePointer<CChar>?
+    var hotwords_score: Float
+    var ctc_fst_decoder_config: SherpaOnnxOnlineCtcFstDecoderConfig
+    var rule_fsts: UnsafePointer<CChar>?
+    var rule_fars: UnsafePointer<CChar>?
+    
+    init() {
+        self.feat_config = SherpaOnnxFeatureConfig()
+        self.model_config = SherpaOnnxOnlineModelConfig()
+        self.decoding_method = nil
+        self.max_active_paths = 4
+        self.hotwords_file = nil
+        self.hotwords_score = 1.5
+        self.ctc_fst_decoder_config = SherpaOnnxOnlineCtcFstDecoderConfig()
+        self.rule_fsts = nil
+        self.rule_fars = nil
+    }
+}
+
+struct SherpaOnnxOnlineCtcFstDecoderConfig {
+    var graph: UnsafePointer<CChar>?
+    var max_active: Int32
+    
+    init() {
+        self.graph = nil
+        self.max_active = 3000
+    }
+}
+
+// C 函数声明
+@_silgen_name("SherpaOnnxCreateOnlineRecognizer")
+func SherpaOnnxCreateOnlineRecognizer(_ config: UnsafePointer<SherpaOnnxOnlineRecognizerConfig>) -> SherpaOnnxOnlineRecognizer?
+
+@_silgen_name("SherpaOnnxDestroyOnlineRecognizer")
+func SherpaOnnxDestroyOnlineRecognizer(_ recognizer: SherpaOnnxOnlineRecognizer?)
+
+@_silgen_name("SherpaOnnxCreateOnlineStream")
+func SherpaOnnxCreateOnlineStream(_ recognizer: SherpaOnnxOnlineRecognizer?) -> SherpaOnnxOnlineStream?
+
+@_silgen_name("SherpaOnnxDestroyOnlineStream")
+func SherpaOnnxDestroyOnlineStream(_ stream: SherpaOnnxOnlineStream?)
+
+@_silgen_name("SherpaOnnxOnlineStreamAcceptWaveform")
+func SherpaOnnxOnlineStreamAcceptWaveform(_ stream: SherpaOnnxOnlineStream?, _ sample_rate: Int32, _ samples: UnsafePointer<Float>, _ n: Int32)
+
+@_silgen_name("SherpaOnnxIsOnlineStreamReady")
+func SherpaOnnxIsOnlineStreamReady(_ recognizer: SherpaOnnxOnlineRecognizer?, _ stream: SherpaOnnxOnlineStream?) -> Int32
+
+@_silgen_name("SherpaOnnxDecodeOnlineStream")
+func SherpaOnnxDecodeOnlineStream(_ recognizer: SherpaOnnxOnlineRecognizer?, _ stream: SherpaOnnxOnlineStream?)
+
+@_silgen_name("SherpaOnnxGetOnlineStreamResult")
+func SherpaOnnxGetOnlineStreamResult(_ recognizer: SherpaOnnxOnlineRecognizer?, _ stream: SherpaOnnxOnlineStream?) -> SherpaOnnxOnlineRecognizerResult?
+
+@_silgen_name("SherpaOnnxDestroyOnlineRecognizerResult")
+func SherpaOnnxDestroyOnlineRecognizerResult(_ result: SherpaOnnxOnlineRecognizerResult?)
+
+@_silgen_name("SherpaOnnxOnlineRecognizerResultGetText")
+func SherpaOnnxOnlineRecognizerResultGetText(_ result: SherpaOnnxOnlineRecognizerResult?) -> UnsafePointer<CChar>?
+
+@_silgen_name("SherpaOnnxOnlineStreamReset")
+func SherpaOnnxOnlineStreamReset(_ recognizer: SherpaOnnxOnlineRecognizer?, _ stream: SherpaOnnxOnlineStream?)
+
+@_silgen_name("SherpaOnnxOnlineStreamIsEndpoint")
+func SherpaOnnxOnlineStreamIsEndpoint(_ recognizer: SherpaOnnxOnlineRecognizer?, _ stream: SherpaOnnxOnlineStream?) -> Int32
+
 class SherpaASRService: ObservableObject {
     // MARK: - Published Properties
     @Published var logs: [String] = []
@@ -11,8 +154,8 @@ class SherpaASRService: ObservableObject {
     
     // MARK: - Private Properties
     private var audioEngine: AVAudioEngine?
-    private var recognizer: UnsafePointer<SherpaOnnxOnlineRecognizer>?
-    private var stream: UnsafePointer<SherpaOnnxOnlineStream>?
+    private var recognizer: SherpaOnnxOnlineRecognizer?
+    private var stream: SherpaOnnxOnlineStream?
     private let audioQueue = DispatchQueue(label: "com.capswriter.audio", qos: .userInitiated)
     private static var logCounter = 0
     
@@ -308,7 +451,8 @@ class SherpaASRService: ObservableObject {
             // Get partial results
             let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream)
             if let result = result {
-                let resultText = String(cString: result.pointee.text)
+                let textPtr = SherpaOnnxOnlineRecognizerResultGetText(result)
+                let resultText = textPtr != nil ? String(cString: textPtr!) : ""
                 
                 if !resultText.isEmpty {
                     DispatchQueue.main.async {
@@ -328,7 +472,8 @@ class SherpaASRService: ObservableObject {
             // Get final result
             let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream)
             if let result = result {
-                let finalText = String(cString: result.pointee.text)
+                let textPtr = SherpaOnnxOnlineRecognizerResultGetText(result)
+                let finalText = textPtr != nil ? String(cString: textPtr!) : ""
                 
                 if !finalText.isEmpty {
                     DispatchQueue.main.async {
@@ -364,7 +509,8 @@ class SherpaASRService: ObservableObject {
         
         let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream)
         if let result = result {
-            let finalText = String(cString: result.pointee.text)
+            let textPtr = SherpaOnnxOnlineRecognizerResultGetText(result)
+            let finalText = textPtr != nil ? String(cString: textPtr!) : ""
             SherpaOnnxDestroyOnlineRecognizerResult(result)
             return finalText.isEmpty ? nil : finalText
         }

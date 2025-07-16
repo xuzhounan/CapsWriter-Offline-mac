@@ -126,6 +126,9 @@ const SherpaOnnxOnlineRecognizerResult *SherpaOnnxGetOnlineStreamResult(
 void SherpaOnnxDestroyOnlineRecognizerResult(
     const SherpaOnnxOnlineRecognizerResult *r);
 
+const char* SherpaOnnxOnlineRecognizerResultGetText(
+    const SherpaOnnxOnlineRecognizerResult *r);
+
 void SherpaOnnxOnlineStreamReset(
     const SherpaOnnxOnlineRecognizer *recognizer,
     const SherpaOnnxOnlineStream *stream);
