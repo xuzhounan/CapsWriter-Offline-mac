@@ -145,17 +145,34 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         )
         print("✅ 键盘监听器回调函数已设置")
         
-        // 启动监听
-        print("🚀 启动键盘监听器...")
-        keyboardMonitor?.startMonitoring()
-        print("📡 键盘监听器启动调用完成")
+        // 延迟启动监听器（模拟resetMonitoring的延迟机制）
+        print("🚀 延迟启动键盘监听器...")
+        RecordingState.shared.updateKeyboardMonitorStatus("准备启动...")
         
-        // 验证监听器状态
-        print("🔍 验证键盘监听器状态...")
-        if keyboardMonitor != nil {
-            print("✅ 监听器对象存在")
-        } else {
-            print("❌ 监听器对象为nil")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            print("🚀 正在启动键盘监听器...")
+            self?.keyboardMonitor?.startMonitoring()
+            print("📡 键盘监听器启动调用完成")
+            
+            // 验证监听器状态并更新UI状态
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                print("🔍 验证键盘监听器状态...")
+                if self?.keyboardMonitor != nil {
+                    print("✅ 监听器对象存在")
+                    // 检查监听器是否真正在运行
+                    let hasPermission = KeyboardMonitor.checkAccessibilityPermission()
+                    if hasPermission {
+                        RecordingState.shared.updateKeyboardMonitorStatus("已启动")
+                        print("✅ 键盘监听器自动启动成功")
+                    } else {
+                        RecordingState.shared.updateKeyboardMonitorStatus("等待权限")
+                        print("⚠️ 键盘监听器启动但缺少权限")
+                    }
+                } else {
+                    print("❌ 监听器对象为nil")
+                    RecordingState.shared.updateKeyboardMonitorStatus("启动失败")
+                }
+            }
         }
     }
     
