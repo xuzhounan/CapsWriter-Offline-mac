@@ -351,7 +351,7 @@ class SherpaASRService: ObservableObject {
             // Get final result
             let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream)
             if let result = result {
-                let textPtr = SherpaOnnxOnlineRecognizerResultGetText(result)
+                let textPtr = result.pointee.text
                 let finalText = textPtr != nil ? String(cString: textPtr!) : ""
                 
                 if !finalText.isEmpty {
@@ -388,7 +388,7 @@ class SherpaASRService: ObservableObject {
         
         let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream)
         if let result = result {
-            let textPtr = SherpaOnnxOnlineRecognizerResultGetText(result)
+            let textPtr = result.pointee.text
             let finalText = textPtr != nil ? String(cString: textPtr!) : ""
             SherpaOnnxDestroyOnlineRecognizerResult(result)
             return finalText.isEmpty ? nil : finalText

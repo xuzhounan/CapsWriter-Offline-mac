@@ -8,7 +8,7 @@
 #ifndef SherpaONNX_Bridging_Header_h
 #define SherpaONNX_Bridging_Header_h
 
-// Include the official C API header
-#include "Include/c-api.h"
+// Include the simplified type definitions
+#include "SherpaTypes.h"
 
 #endif /* SherpaONNX_Bridging_Header_h */
