@@ -5,7 +5,6 @@ import Carbon
 class KeyboardMonitor {
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
-    private var monitorQueue: DispatchQueue?
     private var isRunning = false
     
     // O 键的键码（美式键盘）
@@ -27,7 +26,7 @@ class KeyboardMonitor {
     var stopRecordingCallback: (() -> Void)?
     
     init() {
-        monitorQueue = DispatchQueue(label: "com.capswriter.keyboard-monitor", qos: .userInitiated)
+        // 不再使用单独的队列
     }
     
     deinit {
@@ -42,6 +41,17 @@ class KeyboardMonitor {
         
         print("🟢 KeyboardMonitor.startMonitoring() 被调用")
         
+        // 确保在主线程中执行
+        if Thread.isMainThread {
+            startMonitoringOnMainThread()
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.startMonitoringOnMainThread()
+            }
+        }
+    }
+    
+    private func startMonitoringOnMainThread() {
         print("🔍 正在检查辅助功能权限...")
         RecordingState.shared.updateKeyboardMonitorStatus("正在检查权限...")
         
@@ -62,7 +72,7 @@ class KeyboardMonitor {
                 if AXIsProcessTrusted() {
                     print("✅ 辅助功能权限已获得，重新启动监听器")
                     RecordingState.shared.updateAccessibilityPermission(true)
-                    self?.startMonitoring()
+                    self?.startMonitoringOnMainThread()
                 } else {
                     print("❌ 仍然缺少辅助功能权限，请手动授权")
                     RecordingState.shared.updateKeyboardMonitorStatus("权限被拒绝")
@@ -74,13 +84,10 @@ class KeyboardMonitor {
         print("✅ 辅助功能权限已获得")
         print("🚀 正在启动键盘监听器...")
         
-        // 确保状态在主线程更新
-        DispatchQueue.main.async {
-            RecordingState.shared.updateAccessibilityPermission(true)
-            RecordingState.shared.updateKeyboardMonitorStatus("正在启动...")
-        }
+        RecordingState.shared.updateAccessibilityPermission(true)
+        RecordingState.shared.updateKeyboardMonitorStatus("正在启动...")
         
-        // 直接在主线程设置事件监听，确保事件循环稳定
+        // 确保在主线程设置事件监听
         setupEventTap()
     }
     
@@ -93,8 +100,8 @@ class KeyboardMonitor {
     private func setupEventTap() {
         print("🔧 正在设置事件监听器...")
         
-        // 创建事件回调 - 监听所有键盘事件以便调试
-        let eventMask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
+        // 只监听 keyDown 事件
+        let eventMask = (1 << CGEventType.keyDown.rawValue)
         print("📋 事件掩码: \(eventMask)")
         print("🔍 O键码设定为: \(oKeyCode)")
         
@@ -123,6 +130,7 @@ class KeyboardMonitor {
         runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
         guard let runLoopSource = runLoopSource else {
             print("❌ 无法创建运行循环源")
+            RecordingState.shared.updateKeyboardMonitorStatus("创建运行循环源失败")
             return
         }
         print("✅ 运行循环源创建成功")
@@ -147,122 +155,83 @@ class KeyboardMonitor {
     }
     
     private func handleKeyEvent(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
-        // 获取键码并转换为正确的类型
+        // 获取键码
         let keyCodeInt64 = event.getIntegerValueField(.keyboardEventKeycode)
         let keyCode = CGKeyCode(keyCodeInt64)
         
-        // 仅记录 O 键事件进行调试
-        if alternativeOKeyCodes.contains(keyCode) {
-            print("🔍 O 键事件: 键码=\(keyCode), 类型=\(type.rawValue)")
-        }
-        
-        // 详细检查 O 键（包括备用键码）
-        if alternativeOKeyCodes.contains(keyCode) {
-            print("✅ 检测到 O 键事件: \(type.rawValue == 10 ? "按下(keyDown)" : type.rawValue == 11 ? "释放(keyUp)" : "其他类型(\(type.rawValue))")")
+        // 检查是否是 O 键
+        if alternativeOKeyCodes.contains(keyCode) && type == .keyDown {
+            print("🔍 检测到 O 键按下，键码: \(keyCode)")
             
-            switch type {
-            case .keyDown:
-                let currentTime = Date().timeIntervalSince1970
-                
-                // 防抖检查
-                if (currentTime - lastClickTime) < debounceInterval {
-                    print("⏱️ O 键按下过快，防抖忽略 (间隔: \(String(format: "%.3f", currentTime - lastClickTime))s)")
-                    break
-                }
-                
-                // 检查连击间隔
-                if (currentTime - lastClickTime) > clickInterval {
-                    // 超过间隔时间，重置计数
-                    clickCount = 0
-                }
-                
-                clickCount += 1
-                lastClickTime = currentTime
-                
-                print("🔢 O 键第 \(clickCount) 次点击")
-                
-                if clickCount >= requiredClicks {
-                    // 连击3次，切换录音状态
-                    clickCount = 0
-                    isRecording = !isRecording
-                    
-                    if isRecording {
-                        print("🟢 连击3次 - 开始识别")
-                        DispatchQueue.main.async { [weak self] in
-                            self?.handleStartRecording()
-                        }
-                    } else {
-                        print("🔴 连击3次 - 停止识别")
-                        DispatchQueue.main.async { [weak self] in
-                            self?.handleStopRecording()
-                        }
-                    }
-                }
-                
-            case .keyUp:
-                // keyUp 事件不处理，只在 keyDown 时计数
-                break
-                
-            default:
-                print("❓ O 键未知事件类型: \(type.rawValue)")
-                break
+            let currentTime = Date().timeIntervalSince1970
+            
+            // 防抖检查
+            if (currentTime - lastClickTime) < debounceInterval {
+                print("⏱️ O 键按下过快，防抖忽略 (间隔: \(String(format: "%.3f", currentTime - lastClickTime))s)")
+                return Unmanaged.passUnretained(event)
             }
-        } else {
-            // 只记录一些重要的键，减少日志噪音
-            if keyCode == 36 { // Return/Enter 键
-                print("🔸 Enter键被按下")
+            
+            // 检查连击间隔
+            if (currentTime - lastClickTime) > clickInterval {
+                // 超过间隔时间，重置计数
+                clickCount = 0
+                print("🔄 重置连击计数")
             }
-            // 其他键不记录，减少日志输出
+            
+            clickCount += 1
+            lastClickTime = currentTime
+            
+            print("🔢 O 键第 \(clickCount) 次点击")
+            
+            if clickCount >= requiredClicks {
+                // 连击3次，切换录音状态
+                clickCount = 0
+                isRecording = !isRecording
+                
+                print("🎯 连击3次触发！当前录音状态: \(isRecording)")
+                
+                if isRecording {
+                    print("🟢 连击3次 - 开始识别")
+                    handleStartRecording()
+                } else {
+                    print("🔴 连击3次 - 停止识别")
+                    handleStopRecording()
+                }
+            }
         }
         
         return Unmanaged.passUnretained(event)
     }
     
-    // 辅助方法：获取键名
-    private func getKeyName(for keyCode: CGKeyCode) -> String {
-        switch keyCode {
-        case 54: return "右Command"
-        case 55: return "左Command"
-        case 56: return "左Shift"
-        case 57: return "Caps Lock"
-        case 58: return "左Option"
-        case 59: return "左Control"
-        case 31: return "O"
-        case 60: return "右Shift"
-        case 61: return "右Option"
-        case 62: return "右Control"
-        case 63: return "Fn"
-        case 124: return "右Shift(备用)"
-        default: 
-            if keyCode >= 0 && keyCode <= 127 {
-                return "键(\(keyCode))"
-            } else {
-                return "未知键(\(keyCode))"
-            }
-        }
-    }
-    
     private func handleStartRecording() {
         print("🎤 开始识别")
         print("📞 准备调用 startRecordingCallback")
-        if let callback = startRecordingCallback {
-            print("✅ 回调函数存在，正在调用...")
-            callback()
-            print("✅ 回调函数已调用")
-        } else {
-            print("❌ 回调函数不存在！")
+        
+        // 确保在主线程执行回调
+        DispatchQueue.main.async { [weak self] in
+            if let callback = self?.startRecordingCallback {
+                print("✅ 回调函数存在，正在调用...")
+                callback()
+                print("✅ 回调函数已调用")
+            } else {
+                print("❌ 回调函数不存在！")
+            }
         }
     }
     
     private func handleStopRecording() {
         print("⏹️ 结束识别")
         print("📞 准备调用 stopRecordingCallback")
-        if let callback = stopRecordingCallback {
-            print("✅ 回调函数存在，正在调用...")
-            callback()
-            print("✅ 回调函数已调用")
-        } else {
-            print("❌ 回调函数不存在！")
+        
+        // 确保在主线程执行回调
+        DispatchQueue.main.async { [weak self] in
+            if let callback = self?.stopRecordingCallback {
+                print("✅ 回调函数存在，正在调用...")
+                callback()
+                print("✅ 回调函数已调用")
+            } else {
+                print("❌ 回调函数不存在！")
+            }
         }
     }
     
@@ -270,6 +239,18 @@ class KeyboardMonitor {
         guard isRunning else { return }
         
         print("🛑 正在停止键盘监听器...")
+        
+        // 确保在主线程执行
+        if Thread.isMainThread {
+            stopMonitoringOnMainThread()
+        } else {
+            DispatchQueue.main.sync { [weak self] in
+                self?.stopMonitoringOnMainThread()
+            }
+        }
+    }
+    
+    private func stopMonitoringOnMainThread() {
         isRunning = false
         
         // 停止事件监听

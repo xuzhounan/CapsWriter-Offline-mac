@@ -233,19 +233,15 @@ class AudioCaptureService: ObservableObject {
         addLog("🧹 清理音频引擎...")
         
         if let audioEngine = audioEngine {
-            do {
-                // 安全地移除 tap
-                audioEngine.inputNode.removeTap(onBus: 0)
-                
-                // 停止音频引擎
-                if audioEngine.isRunning {
-                    audioEngine.stop()
-                }
-                
-                addLog("✅ 音频引擎已停止")
-            } catch {
-                addLog("⚠️ 清理音频引擎时出现警告: \(error.localizedDescription)")
+            // 安全地移除 tap
+            audioEngine.inputNode.removeTap(onBus: 0)
+            
+            // 停止音频引擎
+            if audioEngine.isRunning {
+                audioEngine.stop()
             }
+            
+            addLog("✅ 音频引擎已停止")
         }
         
         audioEngine = nil
@@ -299,4 +295,3 @@ enum AudioCaptureError: LocalizedError {
         }
     }
 }
-

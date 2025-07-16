@@ -103,6 +103,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     // MARK: - 键盘监听器设置
     private func setupKeyboardMonitor() {
+        print("🔧 创建键盘监听器...")
         keyboardMonitor = KeyboardMonitor()
         
         // 初始权限检查和状态更新
@@ -188,7 +189,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         // 检查键盘监听器状态
-        if let monitor = keyboardMonitor {
+        if keyboardMonitor != nil {
             print("⌨️ 键盘监听器: 已创建")
         } else {
             print("⌨️ 键盘监听器: ❌ 未创建")
