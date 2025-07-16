@@ -373,8 +373,10 @@ struct MainDashboardView: View {
     private func startKeyboardMonitoring() {
         print("🎤 开始键盘监听...")
         
-        // 优先使用AppDelegate中的监听器
-        if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
+        // 优先使用静态AppDelegate引用，备用NSApplication.shared.delegate
+        let appDelegate = CapsWriterApp.sharedAppDelegate ?? (NSApplication.shared.delegate as? AppDelegate)
+        
+        if let appDelegate = appDelegate {
             if let monitor = appDelegate.keyboardMonitor {
                 monitor.startMonitoring()
                 recordingState.userStartedKeyboardMonitor()
@@ -394,15 +396,27 @@ struct MainDashboardView: View {
                 }
             }
         } else {
-            print("❌ 未找到AppDelegate")
+            print("❌ 未找到AppDelegate，尝试重新获取...")
+            // 尝试使用全局监听器引用进行启动
+            if let globalMonitor = ContentView.globalKeyboardMonitor {
+                print("🔄 使用全局监听器引用进行启动...")
+                globalMonitor.startMonitoring()
+                recordingState.userStartedKeyboardMonitor()
+                print("✅ 通过全局引用启动监听器成功")
+            } else {
+                print("❌ 全局监听器引用也不存在，需要重新初始化应用")
+                recordingState.updateKeyboardMonitorStatus("初始化失败")
+            }
         }
     }
     
     private func stopKeyboardMonitoring() {
         print("⏹️ 停止键盘监听...")
         
-        // 优先使用AppDelegate中的监听器
-        if let appDelegate = NSApplication.shared.delegate as? AppDelegate,
+        // 优先使用静态AppDelegate引用，备用NSApplication.shared.delegate
+        let appDelegate = CapsWriterApp.sharedAppDelegate ?? (NSApplication.shared.delegate as? AppDelegate)
+        
+        if let appDelegate = appDelegate,
            let monitor = appDelegate.keyboardMonitor {
             monitor.stopMonitoring()
             recordingState.userStoppedKeyboardMonitor()

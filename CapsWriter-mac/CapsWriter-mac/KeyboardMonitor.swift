@@ -161,8 +161,8 @@ class KeyboardMonitor {
         print("📝 监听 O 键 (键码: \(oKeyCode))")
         print("🎤 连击3下 O 键开始/结束录音")
         
-        // 更新状态
-        RecordingState.shared.updateKeyboardMonitorStatus("正在监听")
+        // 不再直接设置状态，让调用方控制状态更新
+        // RecordingState.shared.updateKeyboardMonitorStatus("正在监听")
         
         print("✅ 键盘监听器设置完成，使用主运行循环")
     }
@@ -280,7 +280,8 @@ class KeyboardMonitor {
             print("✅ 运行循环源已移除")
         }
         
-        RecordingState.shared.updateKeyboardMonitorStatus("已停止")
+        // 不再直接设置状态，让调用方控制状态更新
+        // RecordingState.shared.updateKeyboardMonitorStatus("已停止")
         print("⏹️ 键盘监听器已停止")
     }
     
