@@ -25,6 +25,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // 手动激活应用，确保 Dock 图标显示
         NSApp.activate(ignoringOtherApps: true)
+        
+        // 调试：检查权限状态
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            self.debugPermissionStatus()
+        }
     }
     
     func applicationWillTerminate(_ notification: Notification) {
@@ -114,17 +119,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         // 设置回调函数
+        print("📞 设置键盘监听器回调函数...")
         keyboardMonitor?.setCallbacks(
             startRecording: { [weak self] in
+                print("🎤 键盘监听器触发: 开始录音回调")
                 self?.startRecording()
             },
             stopRecording: { [weak self] in
+                print("⏹️ 键盘监听器触发: 停止录音回调")
                 self?.stopRecording()
             }
         )
+        print("✅ 键盘监听器回调函数已设置")
         
         // 启动监听
+        print("🚀 启动键盘监听器...")
         keyboardMonitor?.startMonitoring()
+        print("📡 键盘监听器启动调用完成")
     }
     
     // MARK: - 语音识别回调
@@ -150,5 +161,39 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         RecordingState.shared.stopRecording()
         
         print("✅ AppDelegate: 语音识别已停止")
+    }
+    
+    // MARK: - 调试方法
+    private func debugPermissionStatus() {
+        print("🔍 === 权限状态调试 ===")
+        
+        // 检查辅助功能权限
+        let hasAccessibilityPermission = KeyboardMonitor.checkAccessibilityPermission()
+        print("🔐 辅助功能权限: \(hasAccessibilityPermission ? "✅ 已授权" : "❌ 未授权")")
+        
+        // 检查麦克风权限
+        let micPermission = AVCaptureDevice.authorizationStatus(for: .audio)
+        print("🎤 麦克风权限: \(micPermission == .authorized ? "✅ 已授权" : "❌ 未授权 (\(micPermission.rawValue))")")
+        
+        // 检查键盘监听器状态
+        if let monitor = keyboardMonitor {
+            print("⌨️ 键盘监听器: 已创建")
+        } else {
+            print("⌨️ 键盘监听器: ❌ 未创建")
+        }
+        
+        // 检查ASR服务状态
+        if let asr = asrService {
+            print("🧠 ASR服务: 已创建，运行状态: \(asr.isServiceRunning ? "✅ 运行中" : "❌ 未运行")")
+        } else {
+            print("🧠 ASR服务: ❌ 未创建")
+        }
+        
+        print("🔍 === 调试完成 ===")
+        
+        // 如果没有辅助功能权限，提示用户
+        if !hasAccessibilityPermission {
+            print("⚠️ 请前往 系统设置 → 隐私与安全性 → 辅助功能，添加 CapsWriter-mac")
+        }
     }
 }

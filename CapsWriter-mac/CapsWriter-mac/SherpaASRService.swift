@@ -172,14 +172,12 @@ class SherpaASRService: ObservableObject {
             return
         }
         
-        // Initialize audio engine
-        setupAudioEngine()
-        
-        // Initialize sherpa-onnx recognizer
+        // 只初始化 sherpa-onnx 识别器，不启动音频引擎
+        // 音频引擎会在用户开始录音时启动
         initializeRecognizer()
         
         isServiceRunning = true
-        addLog("✅ 语音识别服务启动成功")
+        addLog("✅ 语音识别服务启动成功（音频引擎将在需要时启动）")
     }
     
     func stopService() {
@@ -210,6 +208,11 @@ class SherpaASRService: ObservableObject {
         
         addLog("🎤 开始语音识别...")
         isRecognizing = true
+        
+        // 现在才初始化和启动音频引擎
+        if audioEngine == nil {
+            setupAudioEngine()
+        }
         
         do {
             try audioEngine?.start()

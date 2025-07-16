@@ -40,6 +40,8 @@ class KeyboardMonitor {
             return 
         }
         
+        print("🟢 KeyboardMonitor.startMonitoring() 被调用")
+        
         print("🔍 正在检查辅助功能权限...")
         RecordingState.shared.updateKeyboardMonitorStatus("正在检查权限...")
         
@@ -213,10 +215,11 @@ class KeyboardMonitor {
                 break
             }
         } else {
-            // 记录其他可能相关的键
-            let keyName = getKeyName(for: keyCode)
-            // 临时显示所有键盘事件以便调试
-            print("🔸 其他键: \(keyName) (键码=\(keyCode))")
+            // 只记录一些重要的键，减少日志噪音
+            if keyCode == 36 { // Return/Enter 键
+                print("🔸 Enter键被按下")
+            }
+            // 其他键不记录，减少日志输出
         }
         
         return Unmanaged.passUnretained(event)
