@@ -112,6 +112,22 @@ struct MainDashboardView: View {
                         .fontWeight(.medium)
                 }
                 
+                // 麦克风权限状态
+                HStack {
+                    Image(systemName: recordingState.hasMicrophonePermission ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .foregroundColor(recordingState.hasMicrophonePermission ? .green : .orange)
+                    
+                    Text("麦克风权限")
+                        .font(.subheadline)
+                    
+                    Spacer()
+                    
+                    Text(recordingState.hasMicrophonePermission ? "已授权" : "按需授权")
+                        .font(.caption)
+                        .foregroundColor(recordingState.hasMicrophonePermission ? .green : .orange)
+                        .fontWeight(.medium)
+                }
+                
                 // 监听器状态
                 HStack {
                     Image(systemName: "ear.fill")
@@ -128,17 +144,59 @@ struct MainDashboardView: View {
                         .fontWeight(.medium)
                 }
                 
+                // 语音识别服务状态
+                HStack {
+                    Image(systemName: recordingState.isASRServiceRunning ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .foregroundColor(recordingState.isASRServiceRunning ? .green : .red)
+                    
+                    Text("语音识别服务")
+                        .font(.subheadline)
+                    
+                    Spacer()
+                    
+                    Text(recordingState.isASRServiceRunning ? "运行中" : "已停止")
+                        .font(.caption)
+                        .foregroundColor(recordingState.isASRServiceRunning ? .green : .red)
+                        .fontWeight(.medium)
+                }
+                
+                // 音频采集服务状态
+                HStack {
+                    Image(systemName: recordingState.isAudioCaptureServiceReady ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .foregroundColor(recordingState.isAudioCaptureServiceReady ? .green : .orange)
+                    
+                    Text("音频采集服务")
+                        .font(.subheadline)
+                    
+                    Spacer()
+                    
+                    Text(recordingState.isAudioCaptureServiceReady ? "就绪" : "等待")
+                        .font(.caption)
+                        .foregroundColor(recordingState.isAudioCaptureServiceReady ? .green : .orange)
+                        .fontWeight(.medium)
+                }
+                
                 // 权限请求按钮
-                if !recordingState.hasAccessibilityPermission {
-                    Button("请求辅助功能权限") {
-                        KeyboardMonitor.requestAccessibilityPermission()
-                        // 延迟检查权限状态
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            checkPermissionStatus()
+                VStack(spacing: 8) {
+                    if !recordingState.hasAccessibilityPermission {
+                        Button("请求辅助功能权限") {
+                            KeyboardMonitor.requestAccessibilityPermission()
+                            // 延迟检查权限状态
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                checkPermissionStatus()
+                            }
                         }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
+                    
+                    if !recordingState.hasMicrophonePermission {
+                        Button("打开系统设置授权麦克风") {
+                            openMicrophonePermissionSettings()
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
                 }
                 
                 // 手动刷新按钮（调试用）
@@ -265,6 +323,13 @@ struct MainDashboardView: View {
         // 每2秒检查一次权限状态
         Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
             checkPermissionStatus()
+        }
+    }
+    
+    private func openMicrophonePermissionSettings() {
+        // 打开系统设置的隐私与安全性 -> 麦克风页面
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+            NSWorkspace.shared.open(url)
         }
     }
 }

@@ -1,11 +1,15 @@
 import SwiftUI
 import Combine
+import AVFoundation
 
 class RecordingState: ObservableObject {
     @Published var isRecording: Bool = false
     @Published var recordingStartTime: Date?
     @Published var keyboardMonitorStatus: String = "未知"
     @Published var hasAccessibilityPermission: Bool = false
+    @Published var hasMicrophonePermission: Bool = false
+    @Published var isASRServiceRunning: Bool = false
+    @Published var isAudioCaptureServiceReady: Bool = false
     
     static let shared = RecordingState()
     
@@ -50,11 +54,36 @@ class RecordingState: ObservableObject {
         }
     }
     
+    func updateMicrophonePermission(_ hasPermission: Bool) {
+        DispatchQueue.main.async {
+            self.hasMicrophonePermission = hasPermission
+        }
+    }
+    
+    func updateASRServiceStatus(_ isRunning: Bool) {
+        DispatchQueue.main.async {
+            self.isASRServiceRunning = isRunning
+        }
+    }
+    
+    func updateAudioCaptureServiceStatus(_ isReady: Bool) {
+        DispatchQueue.main.async {
+            self.isAudioCaptureServiceReady = isReady
+        }
+    }
+    
     func refreshPermissionStatus() {
-        let hasPermission = KeyboardMonitor.checkAccessibilityPermission()
-        updateAccessibilityPermission(hasPermission)
+        // 检查辅助功能权限
+        let hasAccessibilityPermission = KeyboardMonitor.checkAccessibilityPermission()
+        updateAccessibilityPermission(hasAccessibilityPermission)
         
-        if hasPermission {
+        // 检查麦克风权限
+        let microphoneStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+        let hasMicrophonePermission = (microphoneStatus == .authorized)
+        updateMicrophonePermission(hasMicrophonePermission)
+        
+        // 更新键盘监听器状态
+        if hasAccessibilityPermission {
             updateKeyboardMonitorStatus("已启动")
         } else {
             updateKeyboardMonitorStatus("等待权限")

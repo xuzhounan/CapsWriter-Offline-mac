@@ -81,6 +81,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // 启动纯识别服务
         asrService?.startService()
+        
+        // 更新UI状态
+        RecordingState.shared.updateASRServiceStatus(asrService?.isServiceRunning ?? false)
+        
         print("✅ 语音识别服务已启动（纯识别模式）")
     }
     
@@ -90,6 +94,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // 设置音频采集回调
         audioCaptureService?.delegate = self
+        
+        // 更新UI状态
+        RecordingState.shared.updateAudioCaptureServiceStatus(true)
         
         print("✅ 音频采集服务已初始化")
     }
@@ -174,6 +181,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // 检查音频采集服务状态
         if let audioCapture = audioCaptureService {
             print("🎤 音频采集服务: 已创建，权限状态: \(audioCapture.hasPermission ? "✅ 已授权" : "❌ 未授权")")
+            // 更新UI状态
+            RecordingState.shared.updateMicrophonePermission(audioCapture.hasPermission)
         } else {
             print("🎤 音频采集服务: ❌ 未创建")
         }
@@ -211,6 +220,8 @@ extension AppDelegate: AudioCaptureDelegate {
     
     func audioCaptureDidStart() {
         print("✅ 音频采集已开始")
+        // 更新权限状态
+        RecordingState.shared.updateMicrophonePermission(true)
     }
     
     func audioCaptureDidStop() {
