@@ -383,61 +383,56 @@ class SherpaASRService: ObservableObject {
         let frameLength = Int(buffer.frameLength)
         let samples = channelData[0]
         
-        // 使用 do-catch 捕获异常
-        do {
-            // Send audio data to sherpa-onnx
-            SherpaOnnxOnlineStreamAcceptWaveform(stream, Int32(sampleRate), samples, Int32(frameLength))
+        // Send audio data to sherpa-onnx
+        SherpaOnnxOnlineStreamAcceptWaveform(stream, Int32(sampleRate), samples, Int32(frameLength))
+        
+        // Check if recognizer is ready to decode
+        if SherpaOnnxIsOnlineStreamReady(recognizer, stream) == 1 {
+            // Decode the audio
+            SherpaOnnxDecodeOnlineStream(recognizer, stream)
             
-            // Check if recognizer is ready to decode
-            if SherpaOnnxIsOnlineStreamReady(recognizer, stream) == 1 {
-                // Decode the audio
-                SherpaOnnxDecodeOnlineStream(recognizer, stream)
+            // Get partial results - 使用安全的方式访问结果
+            if let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream) {
+                let resultText = getTextFromResult(result)
                 
-                // Get partial results - 使用安全的方式访问结果
-                if let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream) {
-                    let resultText = getTextFromResult(result)
-                    
-                    if !resultText.isEmpty {
-                        DispatchQueue.main.async {
-                            self.transcript = resultText
-                            self.addLog("📝 部分识别结果: \(resultText)")
-                            self.delegate?.speechRecognitionDidReceivePartialResult(resultText)
-                        }
+                if !resultText.isEmpty {
+                    DispatchQueue.main.async {
+                        self.transcript = resultText
+                        self.addLog("📝 部分识别结果: \(resultText)")
+                        self.delegate?.speechRecognitionDidReceivePartialResult(resultText)
                     }
-                    
-                    SherpaOnnxDestroyOnlineRecognizerResult(result)
                 }
+                
+                SherpaOnnxDestroyOnlineRecognizerResult(result)
+            }
+        }
+        
+        // Check for endpoint detection
+        if SherpaOnnxOnlineStreamIsEndpoint(recognizer, stream) == 1 {
+            addLog("🔚 检测到语音端点")
+            
+            // Get final result
+            if let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream) {
+                let finalText = getTextFromResult(result)
+                
+                if !finalText.isEmpty {
+                    DispatchQueue.main.async {
+                        self.transcript = finalText
+                        self.addLog("✅ 最终识别结果: \(finalText)")
+                        self.delegate?.speechRecognitionDidReceiveFinalResult(finalText)
+                    }
+                }
+                
+                SherpaOnnxDestroyOnlineRecognizerResult(result)
             }
             
-            // Check for endpoint detection
-            if SherpaOnnxOnlineStreamIsEndpoint(recognizer, stream) == 1 {
-                addLog("🔚 检测到语音端点")
-                
-                // Get final result
-                if let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream) {
-                    let finalText = getTextFromResult(result)
-                    
-                    if !finalText.isEmpty {
-                        DispatchQueue.main.async {
-                            self.transcript = finalText
-                            self.addLog("✅ 最终识别结果: \(finalText)")
-                            self.delegate?.speechRecognitionDidReceiveFinalResult(finalText)
-                        }
-                    }
-                    
-                    SherpaOnnxDestroyOnlineRecognizerResult(result)
-                }
-                
-                // Notify delegate about endpoint
-                DispatchQueue.main.async {
-                    self.delegate?.speechRecognitionDidDetectEndpoint()
-                }
-                
-                // Reset the stream for next utterance
-                SherpaOnnxOnlineStreamReset(recognizer, stream)
+            // Notify delegate about endpoint
+            DispatchQueue.main.async {
+                self.delegate?.speechRecognitionDidDetectEndpoint()
             }
-        } catch {
-            addLog("❌ 音频处理异常: \(error)")
+            
+            // Reset the stream for next utterance
+            SherpaOnnxOnlineStreamReset(recognizer, stream)
         }
         
         // Log audio processing (less frequently)
