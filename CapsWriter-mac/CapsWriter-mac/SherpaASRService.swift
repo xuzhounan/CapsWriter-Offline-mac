@@ -247,7 +247,18 @@ class SherpaASRService: ObservableObject {
     // MARK: - Audio Processing Interface
     
     func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
-        guard isRecognizing else { return }
+        // 添加接收音频缓冲区的调试日志（每100帧输出一次）
+        Self.logCounter += 1
+        if Self.logCounter % 100 == 0 {
+            addLog("📥 ASR服务已接收 \(Self.logCounter) 个音频缓冲区，当前缓冲区大小: \(buffer.frameLength)")
+        }
+        
+        guard isRecognizing else { 
+            if Self.logCounter % 100 == 0 {
+                addLog("⚠️ ASR服务未在识别状态，跳过音频处理")
+            }
+            return 
+        }
         
         // Process audio data in background queue
         processingQueue.async { [weak self] in
@@ -275,9 +286,27 @@ class SherpaASRService: ObservableObject {
     private func initializeRecognizer() {
         addLog("🧠 初始化 Sherpa-ONNX 识别器...")
         
-        // 暂时跳过模型初始化，避免崩溃
-        addLog("⚠️ 跳过模型初始化，避免崩溃")
-        return
+        // 检查模型文件是否存在
+        addLog("📂 检查模型文件...")
+        addLog("  - 模型路径: \(modelPath)")
+        addLog("  - 编码器: \(encoderPath)")
+        addLog("  - 解码器: \(decoderPath)")
+        addLog("  - 词汇表: \(tokensPath)")
+        
+        guard FileManager.default.fileExists(atPath: modelPath) else {
+            addLog("❌ 模型目录不存在: \(modelPath)")
+            addLog("⚠️ 识别器初始化失败，无法处理音频")
+            return
+        }
+        
+        // 创建一个简化的模拟识别器（用于测试音频流）
+        addLog("🔧 创建模拟识别器用于测试音频流...")
+        
+        // 设置模拟状态（使用OpaquePointer）
+        recognizer = OpaquePointer(bitPattern: 1) // 非空指针，表示"已初始化"
+        stream = OpaquePointer(bitPattern: 1)     // 非空指针，表示"已初始化"
+        
+        addLog("✅ 模拟识别器创建成功（用于测试音频流）")
         
         // 以下代码暂时注释，等修复结构体访问问题后再启用
         /*
@@ -369,7 +398,9 @@ class SherpaASRService: ObservableObject {
             return
         }
         
-        // 暂时跳过处理，避免崩溃
+        let frameLength = Int(buffer.frameLength)
+        
+        // 检查识别器是否初始化
         guard let recognizer = recognizer,
               let stream = stream else {
             // 只记录一次警告，避免日志过多
@@ -380,7 +411,27 @@ class SherpaASRService: ObservableObject {
             return
         }
         
-        let frameLength = Int(buffer.frameLength)
+        // 模拟处理音频数据（用于测试音频流）
+        if recognizer == OpaquePointer(bitPattern: 1) {
+            // 这是模拟识别器，记录音频处理
+            Self.logCounter += 1
+            if Self.logCounter % 50 == 0 {
+                let timestamp = DateFormatter.timeFormatter.string(from: Date())
+                addLog("🎵 [\(timestamp)] 模拟处理音频: 第\(Self.logCounter)帧，大小: \(frameLength)")
+                
+                // 模拟识别结果
+                if Self.logCounter % 200 == 0 {
+                    let mockResult = "模拟识别结果 \(Self.logCounter/200)"
+                    DispatchQueue.main.async {
+                        self.transcript = mockResult
+                        self.addLog("📝 模拟识别结果: \(mockResult)")
+                        self.delegate?.speechRecognitionDidReceivePartialResult(mockResult)
+                    }
+                }
+            }
+            return
+        }
+        
         let samples = channelData[0]
         
         // Send audio data to sherpa-onnx

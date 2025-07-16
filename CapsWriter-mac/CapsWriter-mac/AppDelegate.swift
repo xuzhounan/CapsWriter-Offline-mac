@@ -8,6 +8,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var asrService: SherpaASRService?
     var audioCaptureService: AudioCaptureService?
     
+    // Audio forwarding counter
+    private static var forwardCount = 0
+    
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("🚀🚀🚀 AppDelegate: applicationDidFinishLaunching 开始执行 🚀🚀🚀")
         
@@ -235,6 +238,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
 extension AppDelegate: AudioCaptureDelegate {
     func audioCaptureDidReceiveBuffer(_ buffer: AVAudioPCMBuffer) {
+        // 添加音频数据转发日志（每200帧输出一次避免刷屏）
+        AppDelegate.forwardCount += 1
+        if AppDelegate.forwardCount % 200 == 0 {
+            print("🔄 已转发 \(AppDelegate.forwardCount) 个音频缓冲区到ASR服务，缓冲区大小: \(buffer.frameLength)")
+        }
+        
         // 将音频数据转发给语音识别服务
         asrService?.processAudioBuffer(buffer)
     }

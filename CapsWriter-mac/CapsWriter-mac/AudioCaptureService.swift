@@ -24,6 +24,9 @@ class AudioCaptureService: ObservableObject {
     private let channels: Int = 1
     private let bufferSize: UInt32 = 1024
     
+    // Audio processing counter
+    private static var bufferCount = 0
+    
     // Delegate
     weak var delegate: AudioCaptureDelegate?
     
@@ -252,6 +255,12 @@ class AudioCaptureService: ObservableObject {
     
     private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
         guard isCapturing else { return }
+        
+        // 添加音频数据日志（每100帧输出一次避免刷屏）
+        AudioCaptureService.bufferCount += 1
+        if AudioCaptureService.bufferCount % 100 == 0 {
+            addLog("🎵 已处理 \(AudioCaptureService.bufferCount) 个音频缓冲区，当前缓冲区大小: \(buffer.frameLength)")
+        }
         
         // Forward audio buffer to delegate in background queue
         audioQueue.async { [weak self] in
