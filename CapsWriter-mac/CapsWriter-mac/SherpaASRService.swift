@@ -118,7 +118,15 @@ func sherpaOnnxOnlineRecognizerConfig(
   )
 }
 
-// MARK: - ASR Service Class
+// MARK: - Speech Recognition Delegate Protocol
+
+protocol SpeechRecognitionDelegate: AnyObject {
+    func speechRecognitionDidReceivePartialResult(_ text: String)
+    func speechRecognitionDidReceiveFinalResult(_ text: String)
+    func speechRecognitionDidDetectEndpoint()
+}
+
+// MARK: - Pure ASR Service Class
 
 class SherpaASRService: ObservableObject {
     // MARK: - Published Properties
@@ -128,15 +136,13 @@ class SherpaASRService: ObservableObject {
     @Published var isRecognizing: Bool = false
     
     // MARK: - Private Properties
-    private var audioEngine: AVAudioEngine?
     private var recognizer: OpaquePointer?
     private var stream: OpaquePointer?
-    private let audioQueue = DispatchQueue(label: "com.capswriter.audio", qos: .userInitiated)
+    private let processingQueue = DispatchQueue(label: "com.capswriter.speech-recognition", qos: .userInitiated)
     private static var logCounter = 0
     
     // Audio configuration
     private let sampleRate: Double = 16000
-    private let channels: Int = 1
     
     // Model configuration
     private let modelPath: String
@@ -144,16 +150,19 @@ class SherpaASRService: ObservableObject {
     private let encoderPath: String
     private let decoderPath: String
     
+    // Delegate
+    weak var delegate: SpeechRecognitionDelegate?
+    
     // MARK: - Initialization
     init() {
-        // Initialize model paths (will be configured based on actual model structure)
+        // Initialize model paths
         let bundle = Bundle.main
         self.modelPath = bundle.path(forResource: "paraformer-zh-streaming", ofType: nil, inDirectory: "models") ?? ""
         self.tokensPath = "\(modelPath)/tokens.txt"
         self.encoderPath = "\(modelPath)/encoder.onnx"
         self.decoderPath = "\(modelPath)/decoder.onnx"
         
-        addLog("🚀 SherpaASRService 初始化")
+        addLog("🧠 SherpaASRService 初始化（纯识别服务）")
         addLog("📁 模型路径: \(modelPath)")
     }
     
@@ -172,22 +181,15 @@ class SherpaASRService: ObservableObject {
             return
         }
         
-        // 只初始化 sherpa-onnx 识别器，不启动音频引擎
-        // 音频引擎会在用户开始录音时启动
         initializeRecognizer()
         
         isServiceRunning = true
-        addLog("✅ 语音识别服务启动成功（音频引擎将在需要时启动）")
+        addLog("✅ 语音识别服务启动成功（纯识别模式）")
     }
     
     func stopService() {
         addLog("🛑 正在停止语音识别服务...")
         
-        // Stop audio engine
-        audioEngine?.stop()
-        audioEngine = nil
-        
-        // Cleanup sherpa-onnx resources
         cleanupRecognizer()
         
         isServiceRunning = false
@@ -206,20 +208,13 @@ class SherpaASRService: ObservableObject {
             return
         }
         
-        addLog("🎤 开始语音识别...")
+        addLog("🧠 开始语音识别处理...")
         isRecognizing = true
         
-        // 现在才初始化和启动音频引擎
-        if audioEngine == nil {
-            setupAudioEngine()
-        }
-        
-        do {
-            try audioEngine?.start()
-            addLog("✅ 音频引擎启动成功")
-        } catch {
-            addLog("❌ 音频引擎启动失败: \(error.localizedDescription)")
-            isRecognizing = false
+        // Reset stream for new recognition session
+        if let recognizer = recognizer, let stream = stream {
+            SherpaOnnxOnlineStreamReset(recognizer, stream)
+            addLog("🔄 音频流已重置，准备新的识别会话")
         }
     }
     
@@ -229,17 +224,28 @@ class SherpaASRService: ObservableObject {
             return
         }
         
-        addLog("⏹️ 停止语音识别...")
-        audioEngine?.stop()
+        addLog("⏹️ 停止语音识别处理...")
         isRecognizing = false
         
         // Get final result from sherpa-onnx
         if let finalResult = getFinalResult() {
             transcript = finalResult
             addLog("📝 最终识别结果: \(finalResult)")
+            delegate?.speechRecognitionDidReceiveFinalResult(finalResult)
         }
         
-        addLog("✅ 语音识别已停止")
+        addLog("✅ 语音识别处理已停止")
+    }
+    
+    // MARK: - Audio Processing Interface
+    
+    func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
+        guard isRecognizing else { return }
+        
+        // Process audio data in background queue
+        processingQueue.async { [weak self] in
+            self?.processAudioData(buffer)
+        }
     }
     
     // MARK: - Private Methods
@@ -257,40 +263,6 @@ class SherpaASRService: ObservableObject {
         }
         
         print(logMessage)
-    }
-    
-    private func setupAudioEngine() {
-        addLog("🔧 配置音频引擎...")
-        
-        audioEngine = AVAudioEngine()
-        guard let audioEngine = audioEngine else {
-            addLog("❌ 无法创建音频引擎")
-            return
-        }
-        
-        let inputNode = audioEngine.inputNode
-        let inputFormat = inputNode.outputFormat(forBus: 0)
-        
-        // Configure desired format for sherpa-onnx (16kHz, mono, PCM)
-        guard let desiredFormat = AVAudioFormat(
-            commonFormat: .pcmFormatFloat32,
-            sampleRate: sampleRate,
-            channels: AVAudioChannelCount(channels),
-            interleaved: false
-        ) else {
-            addLog("❌ 无法创建音频格式")
-            return
-        }
-        
-        addLog("🎵 输入格式: \(inputFormat.sampleRate)Hz, \(inputFormat.channelCount)声道")
-        addLog("🎵 目标格式: \(desiredFormat.sampleRate)Hz, \(desiredFormat.channelCount)声道")
-        
-        // Install audio tap to process audio data
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: desiredFormat) { [weak self] buffer, time in
-            self?.processAudioBuffer(buffer)
-        }
-        
-        addLog("✅ 音频引擎配置完成")
     }
     
     private func initializeRecognizer() {
@@ -377,15 +349,6 @@ class SherpaASRService: ObservableObject {
         addLog("✅ 识别器资源清理完成")
     }
     
-    private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
-        guard isRecognizing else { return }
-        
-        // Process audio data in background queue
-        audioQueue.async { [weak self] in
-            self?.processAudioData(buffer)
-        }
-    }
-    
     private func processAudioData(_ buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData,
               let recognizer = recognizer,
@@ -415,6 +378,7 @@ class SherpaASRService: ObservableObject {
                     DispatchQueue.main.async {
                         self.transcript = resultText
                         self.addLog("📝 部分识别结果: \(resultText)")
+                        self.delegate?.speechRecognitionDidReceivePartialResult(resultText)
                     }
                 }
                 
@@ -436,10 +400,16 @@ class SherpaASRService: ObservableObject {
                     DispatchQueue.main.async {
                         self.transcript = finalText
                         self.addLog("✅ 最终识别结果: \(finalText)")
+                        self.delegate?.speechRecognitionDidReceiveFinalResult(finalText)
                     }
                 }
                 
                 SherpaOnnxDestroyOnlineRecognizerResult(result)
+            }
+            
+            // Notify delegate about endpoint
+            DispatchQueue.main.async {
+                self.delegate?.speechRecognitionDidDetectEndpoint()
             }
             
             // Reset the stream for next utterance

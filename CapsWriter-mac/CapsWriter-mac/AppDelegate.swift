@@ -6,6 +6,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusBarController: StatusBarController?
     var keyboardMonitor: KeyboardMonitor?
     var asrService: SherpaASRService?
+    var audioCaptureService: AudioCaptureService?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 禁用窗口恢复功能
@@ -34,6 +35,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationWillTerminate(_ notification: Notification) {
         // 清理资源
+        audioCaptureService?.stopCapture()
+        audioCaptureService = nil
         asrService?.stopService()
         asrService = nil
         keyboardMonitor?.stopMonitoring()
@@ -60,48 +63,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     // MARK: - 语音识别服务设置
     private func setupASRService() {
-        print("🚀 初始化语音识别服务...")
+        print("🚀 初始化语音服务...")
         
-        // 先请求麦克风权限
-        requestMicrophonePermission { [weak self] granted in
-            if granted {
-                print("✅ 麦克风权限已获得")
-                DispatchQueue.main.async {
-                    self?.initializeASRService()
-                }
-            } else {
-                print("❌ 麦克风权限被拒绝")
-            }
-        }
-    }
-    
-    private func requestMicrophonePermission(completion: @escaping (Bool) -> Void) {
-        switch AVCaptureDevice.authorizationStatus(for: .audio) {
-        case .authorized:
-            print("✅ 麦克风权限已授权")
-            completion(true)
-        case .notDetermined:
-            print("🔍 请求麦克风权限...")
-            AVCaptureDevice.requestAccess(for: .audio) { granted in
-                print(granted ? "✅ 用户授予了麦克风权限" : "❌ 用户拒绝了麦克风权限")
-                completion(granted)
-            }
-        case .denied, .restricted:
-            print("❌ 麦克风权限被拒绝或受限")
-            completion(false)
-        @unknown default:
-            print("❓ 未知麦克风权限状态")
-            completion(false)
-        }
+        // 初始化纯识别服务（不涉及麦克风）
+        initializeASRService()
+        
+        // 初始化音频采集服务（负责麦克风权限）
+        initializeAudioCaptureService()
     }
     
     private func initializeASRService() {
-        print("🔧 初始化ASR服务实例...")
+        print("🧠 初始化ASR识别服务...")
         asrService = SherpaASRService()
         
-        // 启动服务，让它随时准备识别
+        // 设置识别结果回调
+        asrService?.delegate = self
+        
+        // 启动纯识别服务
         asrService?.startService()
-        print("✅ 语音识别服务已启动，随时准备检测语音")
+        print("✅ 语音识别服务已启动（纯识别模式）")
+    }
+    
+    private func initializeAudioCaptureService() {
+        print("🎤 初始化音频采集服务...")
+        audioCaptureService = AudioCaptureService()
+        
+        // 设置音频采集回调
+        audioCaptureService?.delegate = self
+        
+        print("✅ 音频采集服务已初始化")
     }
     
     // MARK: - 键盘监听器设置
@@ -140,27 +130,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     // MARK: - 语音识别回调
     private func startRecording() {
-        print("🎤 AppDelegate: 开始语音识别...")
+        print("🎤 AppDelegate: 开始录音...")
         
-        // 更新状态
+        // 更新UI状态
         RecordingState.shared.startRecording()
         
-        // 开始实际的语音识别
+        // 开始音频采集（会自动请求权限）
+        audioCaptureService?.requestPermissionAndStartCapture()
+        
+        // 开始语音识别处理
         asrService?.startRecognition()
         
-        print("✅ AppDelegate: 语音识别已启动")
+        print("✅ AppDelegate: 录音流程已启动")
     }
     
     private func stopRecording() {
-        print("⏹️ AppDelegate: 结束语音识别...")
+        print("⏹️ AppDelegate: 结束录音...")
         
-        // 停止实际的语音识别
+        // 停止音频采集
+        audioCaptureService?.stopCapture()
+        
+        // 停止语音识别处理
         asrService?.stopRecognition()
         
-        // 更新状态
+        // 更新UI状态
         RecordingState.shared.stopRecording()
         
-        print("✅ AppDelegate: 语音识别已停止")
+        print("✅ AppDelegate: 录音流程已停止")
     }
     
     // MARK: - 调试方法
@@ -174,6 +170,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // 检查麦克风权限
         let micPermission = AVCaptureDevice.authorizationStatus(for: .audio)
         print("🎤 麦克风权限: \(micPermission == .authorized ? "✅ 已授权" : "❌ 未授权 (\(micPermission.rawValue))")")
+        
+        // 检查音频采集服务状态
+        if let audioCapture = audioCaptureService {
+            print("🎤 音频采集服务: 已创建，权限状态: \(audioCapture.hasPermission ? "✅ 已授权" : "❌ 未授权")")
+        } else {
+            print("🎤 音频采集服务: ❌ 未创建")
+        }
         
         // 检查键盘监听器状态
         if let monitor = keyboardMonitor {
@@ -195,5 +198,46 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if !hasAccessibilityPermission {
             print("⚠️ 请前往 系统设置 → 隐私与安全性 → 辅助功能，添加 CapsWriter-mac")
         }
+    }
+}
+
+// MARK: - AudioCaptureDelegate
+
+extension AppDelegate: AudioCaptureDelegate {
+    func audioCaptureDidReceiveBuffer(_ buffer: AVAudioPCMBuffer) {
+        // 将音频数据转发给语音识别服务
+        asrService?.processAudioBuffer(buffer)
+    }
+    
+    func audioCaptureDidStart() {
+        print("✅ 音频采集已开始")
+    }
+    
+    func audioCaptureDidStop() {
+        print("⏹️ 音频采集已停止")
+    }
+    
+    func audioCaptureDidFailWithError(_ error: Error) {
+        print("❌ 音频采集失败: \(error.localizedDescription)")
+        // 停止录音状态
+        DispatchQueue.main.async {
+            RecordingState.shared.stopRecording()
+        }
+    }
+}
+
+// MARK: - SpeechRecognitionDelegate
+
+extension AppDelegate: SpeechRecognitionDelegate {
+    func speechRecognitionDidReceivePartialResult(_ text: String) {
+        print("📝 部分识别结果: \(text)")
+    }
+    
+    func speechRecognitionDidReceiveFinalResult(_ text: String) {
+        print("✅ 最终识别结果: \(text)")
+    }
+    
+    func speechRecognitionDidDetectEndpoint() {
+        print("🔚 检测到语音端点")
     }
 }
