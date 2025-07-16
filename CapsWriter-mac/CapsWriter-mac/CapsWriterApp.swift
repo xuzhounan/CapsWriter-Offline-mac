@@ -8,9 +8,8 @@ struct CapsWriterApp: App {
     static var sharedAppDelegate: AppDelegate?
     
     init() {
-        // 在应用启动时直接初始化键盘监听器
+        // 在应用启动时保存appDelegate引用
         print("🚀 CapsWriterApp init() - 开始初始化")
-        setupGlobalKeyboardMonitor()
     }
     
     var body: some Scene {
@@ -20,6 +19,9 @@ struct CapsWriterApp: App {
                     // 保存appDelegate到静态变量
                     CapsWriterApp.sharedAppDelegate = appDelegate
                     print("✅ 已保存appDelegate到静态变量")
+                    
+                    // 在保存appDelegate后再设置全局键盘监听器
+                    setupGlobalKeyboardMonitor()
                 }
         }
         .defaultSize(width: 600, height: 400)
@@ -30,8 +32,8 @@ struct CapsWriterApp: App {
     private func setupGlobalKeyboardMonitor() {
         print("🔧 CapsWriterApp: 设置全局键盘监听器...")
         
-        // 延迟一点确保应用完全启动和appDelegate已设置
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+        // 由于现在是在onAppear中调用，appDelegate已经设置，只需短暂延迟确保UI完全就绪
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             print("🔧 开始创建键盘监听器...")
             print("🔧 检查静态appDelegate: \(String(describing: CapsWriterApp.sharedAppDelegate))")
             
