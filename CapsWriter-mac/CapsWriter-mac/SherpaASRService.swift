@@ -187,50 +187,34 @@ class SherpaASRService: ObservableObject {
         addLog("  - 词汇表: \(tokensPath)")
         
         // Initialize sherpa-onnx configuration
-        let paraformerConfig = SherpaOnnxOnlineParaformerModelConfig(
+        var paraformerConfig = SherpaOnnxOnlineParaformerModelConfig(
             encoder: strdup(encoderPath),
             decoder: strdup(decoderPath)
         )
         
-        let modelConfig = SherpaOnnxOnlineModelConfig(
-            transducer: SherpaOnnxOnlineTransducerModelConfig(encoder: nil, decoder: nil, joiner: nil),
-            paraformer: paraformerConfig,
-            zipformer2_ctc: SherpaOnnxOnlineZipformer2CtcModelConfig(model: nil),
-            tokens: strdup(tokensPath),
-            num_threads: 2,
-            provider: strdup("cpu"),
-            debug: 0,
-            model_type: strdup("paraformer"),
-            modeling_unit: strdup("char"),
-            bpe_vocab: nil,
-            tokens_buf: nil,
-            tokens_buf_size: 0
-        )
+        var modelConfig = SherpaOnnxOnlineModelConfig()
+        modelConfig.paraformer = paraformerConfig
+        modelConfig.tokens = strdup(tokensPath)
+        modelConfig.num_threads = 2
+        modelConfig.provider = strdup("cpu")
+        modelConfig.debug = 0
+        modelConfig.model_type = strdup("paraformer")
+        modelConfig.modeling_unit = strdup("char")
         
         let featConfig = SherpaOnnxFeatureConfig(
             sample_rate: 16000,
             feature_dim: 80
         )
         
-        var config = SherpaOnnxOnlineRecognizerConfig(
-            feat_config: featConfig,
-            model_config: modelConfig,
-            decoding_method: strdup("greedy_search"),
-            max_active_paths: 4,
-            enable_endpoint: 1,
-            rule1_min_trailing_silence: 2.4,
-            rule2_min_trailing_silence: 1.2,
-            rule3_min_utterance_length: 20.0,
-            hotwords_file: nil,
-            hotwords_score: 0.0,
-            ctc_fst_decoder_config: SherpaOnnxOnlineCtcFstDecoderConfig(graph: nil, max_active: 0),
-            rule_fsts: nil,
-            rule_fars: nil,
-            blank_penalty: 0.0,
-            hotwords_buf: nil,
-            hotwords_buf_size: 0,
-            hr: SherpaOnnxHomophoneReplacerConfig(dict_dir: nil, lexicon: nil, rule_fsts: nil)
-        )
+        var config = SherpaOnnxOnlineRecognizerConfig()
+        config.feat_config = featConfig
+        config.model_config = modelConfig
+        config.decoding_method = strdup("greedy_search")
+        config.max_active_paths = 4
+        config.enable_endpoint = 1
+        config.rule1_min_trailing_silence = 2.4
+        config.rule2_min_trailing_silence = 1.2
+        config.rule3_min_utterance_length = 20.0
         
         addLog("⚙️ 创建识别器实例...")
         recognizer = SherpaOnnxCreateOnlineRecognizer(&config)
