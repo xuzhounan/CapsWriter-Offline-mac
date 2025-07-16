@@ -188,18 +188,18 @@ class SherpaASRService: ObservableObject {
         
         // Initialize sherpa-onnx configuration
         var paraformerConfig = SherpaOnnxOnlineParaformerModelConfig(
-            encoder: strdup(encoderPath),
-            decoder: strdup(decoderPath)
+            encoder: UnsafePointer(strdup(encoderPath)),
+            decoder: UnsafePointer(strdup(decoderPath))
         )
         
         var modelConfig = SherpaOnnxOnlineModelConfig()
         modelConfig.paraformer = paraformerConfig
-        modelConfig.tokens = strdup(tokensPath)
+        modelConfig.tokens = UnsafePointer(strdup(tokensPath))
         modelConfig.num_threads = 2
-        modelConfig.provider = strdup("cpu")
+        modelConfig.provider = UnsafePointer(strdup("cpu"))
         modelConfig.debug = 0
-        modelConfig.model_type = strdup("paraformer")
-        modelConfig.modeling_unit = strdup("char")
+        modelConfig.model_type = UnsafePointer(strdup("paraformer"))
+        modelConfig.modeling_unit = UnsafePointer(strdup("char"))
         
         let featConfig = SherpaOnnxFeatureConfig(
             sample_rate: 16000,
@@ -209,7 +209,7 @@ class SherpaASRService: ObservableObject {
         var config = SherpaOnnxOnlineRecognizerConfig()
         config.feat_config = featConfig
         config.model_config = modelConfig
-        config.decoding_method = strdup("greedy_search")
+        config.decoding_method = UnsafePointer(strdup("greedy_search"))
         config.max_active_paths = 4
         config.enable_endpoint = 1
         config.rule1_min_trailing_silence = 2.4
