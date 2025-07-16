@@ -111,7 +111,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
     // MARK: - 键盘监听器设置
-    private func setupKeyboardMonitor() {
+    func setupKeyboardMonitor() {
         print("🔧 AppDelegate: 开始设置键盘监听器...")
         print("🔧 创建键盘监听器...")
         keyboardMonitor = KeyboardMonitor()

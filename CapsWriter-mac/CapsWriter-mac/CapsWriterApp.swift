@@ -20,8 +20,8 @@ struct CapsWriterApp: App {
                     CapsWriterApp.sharedAppDelegate = appDelegate
                     print("✅ 已保存appDelegate到静态变量")
                     
-                    // 在保存appDelegate后再设置全局键盘监听器
-                    setupGlobalKeyboardMonitor()
+                    // 确保使用AppDelegate中已经初始化的监听器，而不是创建新的
+                    setupGlobalKeyboardMonitorReference()
                 }
         }
         .defaultSize(width: 600, height: 400)
@@ -29,62 +29,33 @@ struct CapsWriterApp: App {
         .commandsRemoved()
     }
     
-    private func setupGlobalKeyboardMonitor() {
-        print("🔧 CapsWriterApp: 设置全局键盘监听器...")
+    private func setupGlobalKeyboardMonitorReference() {
+        print("🔧 CapsWriterApp: 设置全局键盘监听器引用...")
         
-        // 由于现在是在onAppear中调用，appDelegate已经设置，只需短暂延迟确保UI完全就绪
+        // 使用已经在AppDelegate中初始化的监听器，而不是创建新的
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            print("🔧 开始创建键盘监听器...")
             print("🔧 检查静态appDelegate: \(String(describing: CapsWriterApp.sharedAppDelegate))")
             
-            let monitor = KeyboardMonitor()
-            
-            // 设置回调 - 使用静态引用
-            monitor.setCallbacks(
-                startRecording: {
-                    print("🎤 全局回调: 开始录音")
-                    DispatchQueue.main.async {
-                        if let appDelegate = CapsWriterApp.sharedAppDelegate {
-                            print("✅ 使用静态appDelegate调用startRecording()")
-                            appDelegate.startRecording()
-                        } else {
-                            print("❌ 静态appDelegate为nil，尝试NSApplication.shared.delegate")
-                            if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
-                                print("✅ 通过NSApplication找到AppDelegate，调用startRecording()")
-                                appDelegate.startRecording()
-                            } else {
-                                print("❌ 完全找不到AppDelegate，只更新UI状态")
-                                RecordingState.shared.startRecording()
-                            }
-                        }
-                    }
-                },
-                stopRecording: {
-                    print("⏹️ 全局回调: 停止录音")
-                    DispatchQueue.main.async {
-                        if let appDelegate = CapsWriterApp.sharedAppDelegate {
-                            print("✅ 使用静态appDelegate调用stopRecording()")
-                            appDelegate.stopRecording()
-                        } else {
-                            print("❌ 静态appDelegate为nil，尝试NSApplication.shared.delegate")
-                            if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
-                                print("✅ 通过NSApplication找到AppDelegate，调用stopRecording()")
-                                appDelegate.stopRecording()
-                            } else {
-                                print("❌ 完全找不到AppDelegate，只更新UI状态")
-                                RecordingState.shared.stopRecording()
-                            }
-                        }
+            if let appDelegate = CapsWriterApp.sharedAppDelegate,
+               let existingMonitor = appDelegate.keyboardMonitor {
+                // 使用AppDelegate中已经初始化的监听器
+                ContentView.globalKeyboardMonitor = existingMonitor
+                print("✅ 已将AppDelegate的监听器设置为全局引用")
+            } else {
+                print("⚠️ AppDelegate或其监听器不存在，使用备用方案")
+                // 备用方案：通过NSApplication.shared.delegate获取
+                if let appDelegate = NSApplication.shared.delegate as? AppDelegate,
+                   let existingMonitor = appDelegate.keyboardMonitor {
+                    ContentView.globalKeyboardMonitor = existingMonitor
+                    print("✅ 通过NSApplication获取到AppDelegate的监听器")
+                } else {
+                    print("❌ 无法获取AppDelegate的监听器，可能需要等待初始化完成")
+                    // 再次尝试，延迟更长时间
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        self.setupGlobalKeyboardMonitorReference()
                     }
                 }
-            )
-            
-            // 启动监听
-            monitor.startMonitoring()
-            
-            // 保存到静态变量
-            ContentView.globalKeyboardMonitor = monitor
-            print("✅ 全局键盘监听器已自动启动")
+            }
         }
     }
 }
