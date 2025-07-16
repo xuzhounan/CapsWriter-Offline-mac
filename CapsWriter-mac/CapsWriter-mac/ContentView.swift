@@ -51,8 +51,8 @@ struct MainDashboardView: View {
     @ObservedObject var recordingState: RecordingState
     @Binding var animationScale: CGFloat
     
-    var body: some View {
-        VStack(spacing: 30) {
+    var headerSection: some View {
+        VStack(spacing: 20) {
             // 应用图标区域
             Image(systemName: "doc.text.magnifyingglass")
                 .font(.system(size: 80))
@@ -68,37 +68,40 @@ struct MainDashboardView: View {
                     .font(.title2)
                     .foregroundColor(.secondary)
             }
+        }
+    }
+    
+    var featuresSection: some View {
+        VStack(spacing: 8) {
+            Text("功能特点：")
+                .font(.headline)
+                .foregroundColor(.primary)
             
-            // 功能描述
-            VStack(spacing: 8) {
-                Text("功能特点：")
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Image(systemName: "mic.fill")
-                            .foregroundColor(.blue)
-                        Text("实时语音转录")
-                    }
-                    
-                    HStack {
-                        Image(systemName: "textformat")
-                            .foregroundColor(.green)
-                        Text("智能标点符号")
-                    }
-                    
-                    HStack {
-                        Image(systemName: "doc.text")
-                            .foregroundColor(.orange)
-                        Text("多种输出格式")
-                    }
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Image(systemName: "mic.fill")
+                        .foregroundColor(.blue)
+                    Text("实时语音转录")
                 }
-                .font(.subheadline)
+                
+                HStack {
+                    Image(systemName: "textformat")
+                        .foregroundColor(.green)
+                    Text("智能标点符号")
+                }
+                
+                HStack {
+                    Image(systemName: "doc.text")
+                        .foregroundColor(.orange)
+                    Text("多种输出格式")
+                }
             }
-            
-            // 权限和状态显示
-            VStack(spacing: 12) {
+            .font(.subheadline)
+        }
+    }
+    
+    var statusSection: some View {
+        VStack(spacing: 12) {
                 // 辅助功能权限状态
                 HStack {
                     Image(systemName: recordingState.hasAccessibilityPermission ? "checkmark.circle.fill" : "xmark.circle.fill")
@@ -213,69 +216,16 @@ struct MainDashboardView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     
-                    Button(recordingState.keyboardMonitorStatus == "已启动" ? "停止监听" : "开始监听") {
+                    Button(recordingState.keyboardMonitorStatus == "已启动" ? "停止键盘监听" : "开始键盘监听") {
                         if recordingState.keyboardMonitorStatus == "已启动" {
-                            print("⏹️ 停止键盘监听...")
-                            
-                            // 优先使用AppDelegate中的监听器
-                            if let appDelegate = NSApplication.shared.delegate as? AppDelegate,
-                               let monitor = appDelegate.keyboardMonitor {
-                                monitor.stopMonitoring()
-                                recordingState.updateKeyboardMonitorStatus("已停止")
-                                print("✅ 键盘监听已停止")
-                            } else if let monitor = ContentView.globalKeyboardMonitor {
-                                monitor.stopMonitoring()
-                                recordingState.updateKeyboardMonitorStatus("已停止")
-                                print("✅ 键盘监听已停止（通过全局引用）")
-                            } else {
-                                print("❌ 未找到活跃的监听器")
-                            }
+                            stopKeyboardMonitoring()
                         } else {
-                            print("🎤 开始键盘监听...")
-                            
-                            // 优先使用AppDelegate中的监听器
-                            if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
-                                if let monitor = appDelegate.keyboardMonitor {
-                                    monitor.startMonitoring()
-                                    recordingState.updateKeyboardMonitorStatus("已启动")
-                                    ContentView.globalKeyboardMonitor = monitor
-                                    print("✅ 键盘监听已启动")
-                                } else {
-                                    print("⚠️ 监听器不存在，重新初始化...")
-                                    appDelegate.setupKeyboardMonitor()
-                                    
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                                        if let newMonitor = appDelegate.keyboardMonitor {
-                                            ContentView.globalKeyboardMonitor = newMonitor
-                                            recordingState.updateKeyboardMonitorStatus("已启动")
-                                            print("✅ 监听器重新初始化并启动完成")
-                                        }
-                                    }
-                                }
-                            } else {
-                                print("❌ 未找到AppDelegate")
-                            }
+                            startKeyboardMonitoring()
                         }
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    
-                    Button("重置监听器") {
-                        print("🔄 重置键盘监听器...")
-                        
-                        // 优先使用静态变量中的监听器
-                        if let monitor = ContentView.globalKeyboardMonitor {
-                            print("✅ 使用静态变量中的监听器进行重置")
-                            monitor.resetMonitoring()
-                        } else if let appDelegate = NSApplication.shared.delegate as? AppDelegate,
-                                  let monitor = appDelegate.keyboardMonitor {
-                            print("✅ 使用AppDelegate中的监听器进行重置")
-                            monitor.resetMonitoring()
-                        } else {
-                            print("❌ 没有找到活跃的监听器，请先点击'开始监听'")
-                        }
-                    }
-                    .buttonStyle(.bordered)
+                    .foregroundColor(recordingState.keyboardMonitorStatus == "已启动" ? .white : .primary)
+                    .background(recordingState.keyboardMonitorStatus == "已启动" ? Color.blue : Color.gray.opacity(0.2))
+                    .cornerRadius(8)
                     .controlSize(.small)
                     
                     Button("测试录音") {
@@ -289,16 +239,20 @@ struct MainDashboardView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                 }
-            }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.controlBackgroundColor))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color(.separatorColor), lineWidth: 1)
-                    )
-            )
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.controlBackgroundColor))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(.separatorColor), lineWidth: 1)
+                )
+        )
+    }
+    
+    var recordingIndicator: some View {
+        Group {
             
             // 录音状态显示
             if recordingState.isRecording {
@@ -371,6 +325,15 @@ struct MainDashboardView: View {
                 .transition(.scale.combined(with: .opacity))
             }
         }
+    }
+    
+    var body: some View {
+        VStack(spacing: 30) {
+            headerSection
+            featuresSection
+            statusSection
+            recordingIndicator
+        }
         .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.windowBackgroundColor))
@@ -398,6 +361,56 @@ struct MainDashboardView: View {
         // 打开系统设置的隐私与安全性 -> 麦克风页面
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
             NSWorkspace.shared.open(url)
+        }
+    }
+    
+    // MARK: - 键盘监听控制方法
+    
+    private func startKeyboardMonitoring() {
+        print("🎤 开始键盘监听...")
+        
+        // 优先使用AppDelegate中的监听器
+        if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
+            if let monitor = appDelegate.keyboardMonitor {
+                monitor.startMonitoring()
+                recordingState.updateKeyboardMonitorStatus("已启动")
+                ContentView.globalKeyboardMonitor = monitor
+                print("✅ 键盘监听已启动")
+            } else {
+                print("⚠️ 监听器不存在，重新初始化...")
+                appDelegate.setupKeyboardMonitor()
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    if let newMonitor = appDelegate.keyboardMonitor {
+                        newMonitor.startMonitoring()
+                        ContentView.globalKeyboardMonitor = newMonitor
+                        recordingState.updateKeyboardMonitorStatus("已启动")
+                        print("✅ 监听器重新初始化并启动完成")
+                    }
+                }
+            }
+        } else {
+            print("❌ 未找到AppDelegate")
+        }
+    }
+    
+    private func stopKeyboardMonitoring() {
+        print("⏹️ 停止键盘监听...")
+        
+        // 优先使用AppDelegate中的监听器
+        if let appDelegate = NSApplication.shared.delegate as? AppDelegate,
+           let monitor = appDelegate.keyboardMonitor {
+            monitor.stopMonitoring()
+            recordingState.updateKeyboardMonitorStatus("已停止")
+            print("✅ 键盘监听已停止")
+        } else if let monitor = ContentView.globalKeyboardMonitor {
+            monitor.stopMonitoring()
+            recordingState.updateKeyboardMonitorStatus("已停止")
+            print("✅ 键盘监听已停止（通过全局引用）")
+        } else {
+            print("❌ 未找到活跃的监听器")
+            // 如果找不到监听器但状态显示已启动，则重置状态
+            recordingState.updateKeyboardMonitorStatus("已停止")
         }
     }
 }
