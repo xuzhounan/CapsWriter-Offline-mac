@@ -216,15 +216,15 @@ struct MainDashboardView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     
-                    Button(recordingState.keyboardMonitorStatus == "已启动" ? "停止键盘监听" : "开始键盘监听") {
-                        if recordingState.keyboardMonitorStatus == "已启动" {
+                    Button(isKeyboardMonitorRunning(recordingState.keyboardMonitorStatus) ? "停止键盘监听" : "开始键盘监听") {
+                        if isKeyboardMonitorRunning(recordingState.keyboardMonitorStatus) {
                             stopKeyboardMonitoring()
                         } else {
                             startKeyboardMonitoring()
                         }
                     }
-                    .foregroundColor(recordingState.keyboardMonitorStatus == "已启动" ? .white : .primary)
-                    .background(recordingState.keyboardMonitorStatus == "已启动" ? Color.blue : Color.gray.opacity(0.2))
+                    .foregroundColor(isKeyboardMonitorRunning(recordingState.keyboardMonitorStatus) ? .white : .primary)
+                    .background(isKeyboardMonitorRunning(recordingState.keyboardMonitorStatus) ? Color.blue : Color.gray.opacity(0.2))
                     .cornerRadius(8)
                     .controlSize(.small)
                     
@@ -366,6 +366,10 @@ struct MainDashboardView: View {
     
     // MARK: - 键盘监听控制方法
     
+    private func isKeyboardMonitorRunning(_ status: String) -> Bool {
+        return status == "已启动" || status == "正在监听"
+    }
+    
     private func startKeyboardMonitoring() {
         print("🎤 开始键盘监听...")
         
@@ -373,7 +377,7 @@ struct MainDashboardView: View {
         if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
             if let monitor = appDelegate.keyboardMonitor {
                 monitor.startMonitoring()
-                recordingState.updateKeyboardMonitorStatus("已启动")
+                recordingState.userStartedKeyboardMonitor()
                 ContentView.globalKeyboardMonitor = monitor
                 print("✅ 键盘监听已启动")
             } else {
@@ -384,7 +388,7 @@ struct MainDashboardView: View {
                     if let newMonitor = appDelegate.keyboardMonitor {
                         newMonitor.startMonitoring()
                         ContentView.globalKeyboardMonitor = newMonitor
-                        recordingState.updateKeyboardMonitorStatus("已启动")
+                        recordingState.userStartedKeyboardMonitor()
                         print("✅ 监听器重新初始化并启动完成")
                     }
                 }
@@ -401,16 +405,16 @@ struct MainDashboardView: View {
         if let appDelegate = NSApplication.shared.delegate as? AppDelegate,
            let monitor = appDelegate.keyboardMonitor {
             monitor.stopMonitoring()
-            recordingState.updateKeyboardMonitorStatus("已停止")
+            recordingState.userStoppedKeyboardMonitor()
             print("✅ 键盘监听已停止")
         } else if let monitor = ContentView.globalKeyboardMonitor {
             monitor.stopMonitoring()
-            recordingState.updateKeyboardMonitorStatus("已停止")
+            recordingState.userStoppedKeyboardMonitor()
             print("✅ 键盘监听已停止（通过全局引用）")
         } else {
             print("❌ 未找到活跃的监听器")
             // 如果找不到监听器但状态显示已启动，则重置状态
-            recordingState.updateKeyboardMonitorStatus("已停止")
+            recordingState.userStoppedKeyboardMonitor()
         }
     }
 }

@@ -11,6 +11,9 @@ class RecordingState: ObservableObject {
     @Published var isASRServiceRunning: Bool = false
     @Published var isAudioCaptureServiceReady: Bool = false
     
+    // 添加一个标志位来跟踪用户是否手动停止了监听
+    private var isManuallyStoppedByUser: Bool = false
+    
     static let shared = RecordingState()
     
     private init() {}
@@ -48,6 +51,18 @@ class RecordingState: ObservableObject {
         }
     }
     
+    // 用户手动启动监听器
+    func userStartedKeyboardMonitor() {
+        isManuallyStoppedByUser = false
+        updateKeyboardMonitorStatus("已启动")
+    }
+    
+    // 用户手动停止监听器
+    func userStoppedKeyboardMonitor() {
+        isManuallyStoppedByUser = true
+        updateKeyboardMonitorStatus("已停止")
+    }
+    
     func updateAccessibilityPermission(_ hasPermission: Bool) {
         DispatchQueue.main.async {
             self.hasAccessibilityPermission = hasPermission
@@ -82,11 +97,24 @@ class RecordingState: ObservableObject {
         let hasMicrophonePermission = (microphoneStatus == .authorized)
         updateMicrophonePermission(hasMicrophonePermission)
         
-        // 更新键盘监听器状态
-        if hasAccessibilityPermission {
-            updateKeyboardMonitorStatus("已启动")
-        } else {
+        // 更新键盘监听器状态 - 只有在没有权限时才强制更新状态
+        // 如果有权限且用户没有手动停止，则不要覆盖当前状态
+        if !hasAccessibilityPermission {
             updateKeyboardMonitorStatus("等待权限")
+            // 权限丢失时重置手动停止标志
+            isManuallyStoppedByUser = false
+        } else {
+            // 有权限时，只有在状态是"等待权限"或"未知"时才自动设置为启动
+            // 如果用户手动停止了，就保持停止状态
+            if keyboardMonitorStatus == "等待权限" || keyboardMonitorStatus == "未知" {
+                if !isManuallyStoppedByUser {
+                    updateKeyboardMonitorStatus("已启动")
+                }
+            }
+            // 如果当前是运行状态但用户手动停止了，应该保持停止状态
+            else if (keyboardMonitorStatus == "已启动" || keyboardMonitorStatus == "正在监听") && isManuallyStoppedByUser {
+                updateKeyboardMonitorStatus("已停止")
+            }
         }
     }
 }
