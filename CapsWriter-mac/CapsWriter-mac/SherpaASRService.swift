@@ -141,6 +141,9 @@ class SherpaASRService: ObservableObject {
     private let processingQueue = DispatchQueue(label: "com.capswriter.speech-recognition", qos: .userInitiated)
     private static var logCounter = 0
     
+    // Mock mode flag - 设置为 false 来启用真实模型
+    private let isMockMode = true
+    
     // Audio configuration
     private let sampleRate: Double = 16000
     
@@ -216,24 +219,26 @@ class SherpaASRService: ObservableObject {
             initializeRecognizer()
         }
         
-        // 添加空指针保护
-        guard let recognizer = self.recognizer else {
-            addLog("❌ recognizer 未初始化")
-            return
-        }
-        guard let stream = self.stream else {
-            addLog("❌ stream 未初始化") 
-            return
-        }
-        
         isRecognizing = true
         
-        // Reset stream for new recognition session - 只有真实识别器才调用
-        if recognizer != OpaquePointer(bitPattern: 1) && stream != OpaquePointer(bitPattern: 1) {
+        if isMockMode {
+            addLog("🔄 模拟模式：跳过Sherpa识别器重置")
+        } else {
+            // 只有真实模式才检查并调用Sherpa C函数
+            guard let recognizer = self.recognizer else {
+                addLog("❌ recognizer 未初始化")
+                isRecognizing = false
+                return
+            }
+            guard let stream = self.stream else {
+                addLog("❌ stream 未初始化") 
+                isRecognizing = false
+                return
+            }
+            
+            // 重置音频流准备新的识别会话
             SherpaOnnxOnlineStreamReset(recognizer, stream)
             addLog("🔄 音频流已重置，准备新的识别会话")
-        } else {
-            addLog("🔄 模拟识别器不需要重置音频流")
         }
     }
     
@@ -311,14 +316,15 @@ class SherpaASRService: ObservableObject {
             return
         }
         
-        // 创建一个简化的模拟识别器（用于测试音频流）
-        addLog("🔧 创建模拟识别器用于测试音频流...")
-        
-        // 设置模拟状态（使用OpaquePointer）
-        recognizer = OpaquePointer(bitPattern: 1) // 非空指针，表示"已初始化"
-        stream = OpaquePointer(bitPattern: 1)     // 非空指针，表示"已初始化"
-        
-        addLog("✅ 模拟识别器创建成功（用于测试音频流）")
+        if isMockMode {
+            // 模拟模式：不创建真实的Sherpa对象，保持nil状态
+            addLog("🔧 模拟模式：不创建真实识别器")
+            addLog("✅ 模拟识别器初始化完成（音频流测试模式）")
+        } else {
+            // 真实模式：创建Sherpa识别器（目前已注释）
+            addLog("🔧 真实模式：创建Sherpa识别器...")
+            addLog("⚠️ 真实识别器代码暂时注释，需要修复结构体访问问题")
+        }
         
         // 以下代码暂时注释，等修复结构体访问问题后再启用
         /*
@@ -389,16 +395,24 @@ class SherpaASRService: ObservableObject {
     private func cleanupRecognizer() {
         addLog("🧹 清理识别器资源...")
         
-        if let stream = stream {
-            SherpaOnnxDestroyOnlineStream(stream)
-            self.stream = nil
-            addLog("✅ 音频流已销毁")
-        }
-        
-        if let recognizer = recognizer {
-            SherpaOnnxDestroyOnlineRecognizer(recognizer)
-            self.recognizer = nil
-            addLog("✅ 识别器已销毁")
+        if isMockMode {
+            // 模拟模式：直接清空引用，不调用C函数
+            recognizer = nil
+            stream = nil
+            addLog("✅ 模拟识别器资源已清理")
+        } else {
+            // 真实模式：调用Sherpa C函数清理
+            if let stream = stream {
+                SherpaOnnxDestroyOnlineStream(stream)
+                self.stream = nil
+                addLog("✅ 音频流已销毁")
+            }
+            
+            if let recognizer = recognizer {
+                SherpaOnnxDestroyOnlineRecognizer(recognizer)
+                self.recognizer = nil
+                addLog("✅ 识别器已销毁")
+            }
         }
         
         addLog("✅ 识别器资源清理完成")
@@ -412,20 +426,8 @@ class SherpaASRService: ObservableObject {
         
         let frameLength = Int(buffer.frameLength)
         
-        // 检查识别器是否初始化
-        guard let recognizer = recognizer,
-              let stream = stream else {
-            // 只记录一次警告，避免日志过多
-            if Self.logCounter % 1000 == 0 {
-                addLog("⚠️ 识别器未初始化，跳过音频处理")
-            }
-            Self.logCounter += 1
-            return
-        }
-        
-        // 模拟处理音频数据（用于测试音频流）
-        if recognizer == OpaquePointer(bitPattern: 1) {
-            // 这是模拟识别器，记录音频处理
+        if isMockMode {
+            // 模拟模式：记录音频处理但不调用Sherpa C函数
             Self.logCounter += 1
             if Self.logCounter % 50 == 0 {
                 let timestamp = DateFormatter.timeFormatter.string(from: Date())
@@ -441,6 +443,17 @@ class SherpaASRService: ObservableObject {
                     }
                 }
             }
+            return
+        }
+        
+        // 真实模式：检查识别器是否初始化
+        guard let recognizer = recognizer,
+              let stream = stream else {
+            // 只记录一次警告，避免日志过多
+            if Self.logCounter % 1000 == 0 {
+                addLog("⚠️ 识别器未初始化，跳过音频处理")
+            }
+            Self.logCounter += 1
             return
         }
         
@@ -517,6 +530,11 @@ class SherpaASRService: ObservableObject {
     }
     
     private func getFinalResult() -> String? {
+        if isMockMode {
+            // 模拟模式：返回模拟结果
+            return "模拟最终识别结果"
+        }
+        
         guard let recognizer = recognizer,
               let stream = stream else {
             return nil
