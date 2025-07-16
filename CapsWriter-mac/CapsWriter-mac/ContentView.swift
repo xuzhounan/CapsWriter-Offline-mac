@@ -210,6 +210,34 @@ struct MainDashboardView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     
+                    Button("测试键盘监听初始化") {
+                        print("🧪 测试键盘监听器初始化...")
+                        if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
+                            print("✅ AppDelegate 存在")
+                            if let monitor = appDelegate.keyboardMonitor {
+                                print("✅ 键盘监听器对象存在")
+                                monitor.startMonitoring()
+                            } else {
+                                print("❌ 键盘监听器对象不存在，尝试重新创建...")
+                                // 尝试重新初始化
+                                appDelegate.keyboardMonitor = KeyboardMonitor()
+                                appDelegate.keyboardMonitor?.setCallbacks(
+                                    startRecording: {
+                                        print("🎤 测试回调: 开始录音")
+                                    },
+                                    stopRecording: {
+                                        print("⏹️ 测试回调: 停止录音")
+                                    }
+                                )
+                                appDelegate.keyboardMonitor?.startMonitoring()
+                            }
+                        } else {
+                            print("❌ AppDelegate 不存在")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    
                     Button("重置监听器") {
                         print("🔄 重置键盘监听器...")
                         if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
