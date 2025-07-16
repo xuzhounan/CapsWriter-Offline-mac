@@ -1,12 +1,12 @@
 //
-//  SherpaONNX-Bridging-Header.h
+//  sherpa-onnx-types.h
 //  CapsWriter-mac
 //
-//  Created for Sherpa-ONNX C API integration
+//  Simplified sherpa-onnx type definitions for Swift bridging
 //
 
-#ifndef SherpaONNX_Bridging_Header_h
-#define SherpaONNX_Bridging_Header_h
+#ifndef sherpa_onnx_types_h
+#define sherpa_onnx_types_h
 
 #include <stdint.h>
 
@@ -138,4 +138,4 @@ int32_t SherpaOnnxOnlineStreamIsEndpoint(
 }
 #endif
 
-#endif /* SherpaONNX_Bridging_Header_h */
+#endif /* sherpa_onnx_types_h */

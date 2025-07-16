@@ -1,0 +1,4 @@
+module SherpaONNX {
+    header "sherpa-onnx-types.h"
+    export *
+}
