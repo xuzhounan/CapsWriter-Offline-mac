@@ -12,7 +12,20 @@ class RecordingState: ObservableObject {
     @Published var isAudioCaptureServiceReady: Bool = false
     
     // 添加一个标志位来跟踪用户是否手动停止了监听
-    private var isManuallyStoppedByUser: Bool = false
+    // 使用队列保护以确保线程安全
+    private let stateQueue = DispatchQueue(label: "com.capswriter.recording-state", attributes: .concurrent)
+    private var _isManuallyStoppedByUser: Bool = false
+    
+    private var isManuallyStoppedByUser: Bool {
+        get {
+            stateQueue.sync { _isManuallyStoppedByUser }
+        }
+        set {
+            stateQueue.async(flags: .barrier) { [weak self] in
+                self?._isManuallyStoppedByUser = newValue
+            }
+        }
+    }
     
     static let shared = RecordingState()
     

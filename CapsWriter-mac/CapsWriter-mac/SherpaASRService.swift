@@ -139,6 +139,7 @@ class SherpaASRService: ObservableObject {
     private var recognizer: OpaquePointer?
     private var stream: OpaquePointer?
     private let processingQueue = DispatchQueue(label: "com.capswriter.speech-recognition", qos: .userInitiated)
+    private let cleanupQueue = DispatchQueue(label: "com.capswriter.sherpa-cleanup", qos: .utility)
     private static var logCounter = 0
     
     // Mock mode flag - 设置为 false 来启用真实模型
@@ -170,8 +171,12 @@ class SherpaASRService: ObservableObject {
     }
     
     deinit {
-        stopService()
-        addLog("🛑 SherpaASRService 销毁")
+        print("🛑 SherpaASRService deinit 开始")
+        // 使用专用队列进行清理，避免主线程阻塞
+        cleanupQueue.sync {
+            self.cleanupRecognizer()
+        }
+        print("🛑 SherpaASRService deinit 完成")
     }
     
     // MARK: - Public Methods
@@ -194,7 +199,10 @@ class SherpaASRService: ObservableObject {
     func stopService() {
         addLog("🛑 正在停止语音识别服务...")
         
-        cleanupRecognizer()
+        // 使用专用队列进行清理，避免阻塞调用线程
+        cleanupQueue.async { [weak self] in
+            self?.cleanupRecognizer()
+        }
         
         isServiceRunning = false
         isRecognizing = false

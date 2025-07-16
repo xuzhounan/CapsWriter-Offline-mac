@@ -268,10 +268,9 @@ class AudioCaptureService: ObservableObject {
             addLog("🎵 已处理 \(AudioCaptureService.bufferCount) 个音频缓冲区，当前缓冲区大小: \(buffer.frameLength)")
         }
         
-        // Forward audio buffer to delegate in background queue
-        audioQueue.async { [weak self] in
-            self?.delegate?.audioCaptureDidReceiveBuffer(buffer)
-        }
+        // 直接在当前线程调用delegate，避免额外的队列切换
+        // audioQueue已经是音频处理的专用队列，无需再次分发
+        delegate?.audioCaptureDidReceiveBuffer(buffer)
     }
     
     // MARK: - Logging

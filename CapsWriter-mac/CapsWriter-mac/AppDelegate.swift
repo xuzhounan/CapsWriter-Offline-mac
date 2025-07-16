@@ -43,14 +43,35 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
     func applicationWillTerminate(_ notification: Notification) {
-        // 清理资源
-        audioCaptureService?.stopCapture()
-        audioCaptureService = nil
-        asrService?.stopService()
-        asrService = nil
+        print("🛑 AppDelegate: 应用即将终止，开始清理资源...")
+        
+        // 按正确顺序清理资源，避免依赖关系问题
+        // 1. 首先停止键盘监听，避免新的录音触发
         keyboardMonitor?.stopMonitoring()
         keyboardMonitor = nil
+        print("✅ 键盘监听器已清理")
+        
+        // 2. 停止音频采集
+        audioCaptureService?.stopCapture()
+        audioCaptureService?.delegate = nil // 清除delegate引用
+        audioCaptureService = nil
+        print("✅ 音频采集服务已清理")
+        
+        // 3. 停止语音识别服务
+        asrService?.stopService()
+        asrService?.delegate = nil // 清除delegate引用
+        asrService = nil
+        print("✅ 语音识别服务已清理")
+        
+        // 4. 清理状态栏控制器
         statusBarController = nil
+        print("✅ 状态栏控制器已清理")
+        
+        // 5. 清理静态AppDelegate引用
+        CapsWriterApp.sharedAppDelegate = nil
+        print("✅ 静态引用已清理")
+        
+        print("🛑 AppDelegate: 资源清理完成")
     }
     
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -131,10 +152,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         )
         print("✅ 键盘监听器回调函数已设置")
         
-        // 完全模拟resetMonitoring的行为：包括调用resetMonitoring方法
-        print("🔄 AppDelegate: 直接调用resetMonitoring来确保正确初始化...")
-        keyboardMonitor?.resetMonitoring()
-        print("✅ AppDelegate: resetMonitoring调用完成")
+        // 修复：不应该调用resetMonitoring，而是直接启动监听
+        // resetMonitoring会先停止再启动，在初始化阶段是不必要的
+        print("🚀 AppDelegate: 启动键盘监听器...")
+        keyboardMonitor?.startMonitoring()
+        print("✅ AppDelegate: 键盘监听器启动完成")
     }
     
     // MARK: - 语音识别回调

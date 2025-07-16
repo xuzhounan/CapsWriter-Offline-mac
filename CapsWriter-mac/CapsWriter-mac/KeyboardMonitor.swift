@@ -39,7 +39,12 @@ class KeyboardMonitor {
     }
     
     deinit {
+        print("🛑 KeyboardMonitor deinit 开始")
         stopMonitoring()
+        // 清除回调函数引用，避免循环引用
+        startRecordingCallback = nil
+        stopRecordingCallback = nil
+        print("🛑 KeyboardMonitor deinit 完成")
     }
     
     func startMonitoring() {

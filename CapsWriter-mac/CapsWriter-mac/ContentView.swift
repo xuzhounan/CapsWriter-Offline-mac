@@ -5,8 +5,6 @@ struct ContentView: View {
     @State private var animationScale: CGFloat = 1.0
     @State private var selectedTab = 0
     
-    // 静态变量来持久化保存键盘监听器
-    static var globalKeyboardMonitor: KeyboardMonitor?
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -373,63 +371,55 @@ struct MainDashboardView: View {
     private func startKeyboardMonitoring() {
         print("🎤 开始键盘监听...")
         
-        // 优先使用静态AppDelegate引用，备用NSApplication.shared.delegate
-        let appDelegate = CapsWriterApp.sharedAppDelegate ?? (NSApplication.shared.delegate as? AppDelegate)
+        // 简化AppDelegate获取，优先使用静态引用
+        guard let appDelegate = CapsWriterApp.sharedAppDelegate ?? (NSApplication.shared.delegate as? AppDelegate) else {
+            print("❌ 无法获取AppDelegate")
+            recordingState.updateKeyboardMonitorStatus("初始化失败")
+            return
+        }
         
-        if let appDelegate = appDelegate {
-            if let monitor = appDelegate.keyboardMonitor {
-                monitor.startMonitoring()
-                recordingState.userStartedKeyboardMonitor()
-                ContentView.globalKeyboardMonitor = monitor
-                print("✅ 键盘监听已启动")
-            } else {
-                print("⚠️ 监听器不存在，重新初始化...")
-                appDelegate.setupKeyboardMonitor()
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    if let newMonitor = appDelegate.keyboardMonitor {
-                        newMonitor.startMonitoring()
-                        ContentView.globalKeyboardMonitor = newMonitor
-                        recordingState.userStartedKeyboardMonitor()
-                        print("✅ 监听器重新初始化并启动完成")
-                    }
+        guard let monitor = appDelegate.keyboardMonitor else {
+            print("⚠️ 监听器不存在，重新初始化...")
+            appDelegate.setupKeyboardMonitor()
+            
+            // 延迟启动新创建的监听器
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                if let newMonitor = appDelegate.keyboardMonitor {
+                    newMonitor.startMonitoring()
+                    self.recordingState.userStartedKeyboardMonitor()
+                    print("✅ 监听器重新初始化并启动完成")
+                } else {
+                    print("❌ 重新初始化监听器失败")
+                    self.recordingState.updateKeyboardMonitorStatus("初始化失败")
                 }
             }
-        } else {
-            print("❌ 未找到AppDelegate，尝试重新获取...")
-            // 尝试使用全局监听器引用进行启动
-            if let globalMonitor = ContentView.globalKeyboardMonitor {
-                print("🔄 使用全局监听器引用进行启动...")
-                globalMonitor.startMonitoring()
-                recordingState.userStartedKeyboardMonitor()
-                print("✅ 通过全局引用启动监听器成功")
-            } else {
-                print("❌ 全局监听器引用也不存在，需要重新初始化应用")
-                recordingState.updateKeyboardMonitorStatus("初始化失败")
-            }
+            return
         }
+        
+        monitor.startMonitoring()
+        recordingState.userStartedKeyboardMonitor()
+        print("✅ 键盘监听已启动")
     }
     
     private func stopKeyboardMonitoring() {
         print("⏹️ 停止键盘监听...")
         
-        // 优先使用静态AppDelegate引用，备用NSApplication.shared.delegate
-        let appDelegate = CapsWriterApp.sharedAppDelegate ?? (NSApplication.shared.delegate as? AppDelegate)
-        
-        if let appDelegate = appDelegate,
-           let monitor = appDelegate.keyboardMonitor {
-            monitor.stopMonitoring()
+        // 简化AppDelegate获取
+        guard let appDelegate = CapsWriterApp.sharedAppDelegate ?? (NSApplication.shared.delegate as? AppDelegate) else {
+            print("❌ 无法获取AppDelegate")
             recordingState.userStoppedKeyboardMonitor()
-            print("✅ 键盘监听已停止")
-        } else if let monitor = ContentView.globalKeyboardMonitor {
-            monitor.stopMonitoring()
-            recordingState.userStoppedKeyboardMonitor()
-            print("✅ 键盘监听已停止（通过全局引用）")
-        } else {
-            print("❌ 未找到活跃的监听器")
-            // 如果找不到监听器但状态显示已启动，则重置状态
-            recordingState.userStoppedKeyboardMonitor()
+            return
         }
+        
+        guard let monitor = appDelegate.keyboardMonitor else {
+            print("❌ 监听器不存在")
+            recordingState.userStoppedKeyboardMonitor()
+            return
+        }
+        
+        monitor.stopMonitoring()
+        recordingState.userStoppedKeyboardMonitor()
+        print("✅ 键盘监听已停止")
     }
 }
 
