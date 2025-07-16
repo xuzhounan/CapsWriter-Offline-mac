@@ -44,23 +44,65 @@ class AudioCaptureService: ObservableObject {
     func requestPermissionAndStartCapture() {
         addLog("🔍 请求麦克风权限并开始采集...")
         
-        requestMicrophonePermission { [weak self] granted in
-            DispatchQueue.main.async {
-                self?.addLog("🎤 权限请求回调: granted=\(granted)")
-                if granted {
-                    self?.hasPermission = true
-                    self?.addLog("✅ 麦克风权限已获取，开始启动音频采集...")
-                    self?.startCapture()
-                } else {
-                    self?.hasPermission = false
-                    self?.addLog("❌ 麦克风权限被拒绝")
-                    self?.delegate?.audioCaptureDidFailWithError(AudioCaptureError.permissionDenied)
+        // 确保在主线程中执行
+        DispatchQueue.main.async { [weak self] in
+            self?.checkAndRequestPermission()
+        }
+    }
+    
+    private func checkAndRequestPermission() {
+        addLog("🔍 检查当前麦克风权限状态...")
+        
+        let currentStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+        addLog("🎤 当前权限状态: \(audioPermissionStatusString(currentStatus))")
+        
+        switch currentStatus {
+        case .authorized:
+            addLog("✅ 权限已授权，直接开始采集")
+            self.hasPermission = true
+            self.startCapture()
+            
+        case .notDetermined:
+            addLog("🔍 权限未确定，请求权限...")
+            AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
+                DispatchQueue.main.async {
+                    self?.addLog("🎤 权限请求完成: \(granted ? "已授权" : "被拒绝")")
+                    if granted {
+                        self?.hasPermission = true
+                        self?.startCapture()
+                    } else {
+                        self?.hasPermission = false
+                        self?.addLog("❌ 用户拒绝了麦克风权限")
+                        self?.delegate?.audioCaptureDidFailWithError(AudioCaptureError.permissionDenied)
+                    }
                 }
             }
+            
+        case .denied, .restricted:
+            addLog("❌ 麦克风权限被拒绝或受限")
+            self.hasPermission = false
+            self.delegate?.audioCaptureDidFailWithError(AudioCaptureError.permissionDenied)
+            
+        @unknown default:
+            addLog("❓ 未知麦克风权限状态")
+            self.hasPermission = false
+            self.delegate?.audioCaptureDidFailWithError(AudioCaptureError.permissionDenied)
+        }
+    }
+    
+    private func audioPermissionStatusString(_ status: AVAuthorizationStatus) -> String {
+        switch status {
+        case .authorized: return "已授权"
+        case .denied: return "已拒绝"
+        case .restricted: return "受限制"
+        case .notDetermined: return "未确定"
+        @unknown default: return "未知状态"
         }
     }
     
     func startCapture() {
+        addLog("🎤 开始音频采集...")
+        
         guard hasPermission else {
             addLog("❌ 没有麦克风权限，无法开始采集")
             delegate?.audioCaptureDidFailWithError(AudioCaptureError.permissionDenied)
@@ -72,17 +114,17 @@ class AudioCaptureService: ObservableObject {
             return
         }
         
-        addLog("🎤 开始音频采集...")
-        
         // 在音频队列中设置和启动音频引擎
         audioQueue.async { [weak self] in
-            guard let self = self else { 
-                print("⚠️ AudioCaptureService 实例已被释放")
-                return 
-            }
-            
-            self.addLog("🎧 在音频队列中开始设置音频引擎...")
-            self.setupAudioEngine()
+            self?.setupAndStartAudioEngine()
+        }
+    }
+    
+    private func setupAndStartAudioEngine() {
+        addLog("🎧 在音频队列中设置音频引擎...")
+        
+        do {
+            try setupAudioEngine()
             
             guard let audioEngine = self.audioEngine else {
                 DispatchQueue.main.async {
@@ -92,21 +134,21 @@ class AudioCaptureService: ObservableObject {
                 return
             }
             
-            do {
-                self.addLog("🚀 尝试启动音频引擎...")
-                try audioEngine.start()
-                DispatchQueue.main.async {
-                    self.isCapturing = true
-                    self.addLog("✅ 音频采集启动成功")
-                    self.delegate?.audioCaptureDidStart()
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    self.addLog("❌ 音频采集启动失败: \(error.localizedDescription)")
-                    self.addLog("❌ 错误详情: \(error)")
-                    self.isCapturing = false
-                    self.delegate?.audioCaptureDidFailWithError(error)
-                }
+            addLog("🚀 尝试启动音频引擎...")
+            try audioEngine.start()
+            
+            DispatchQueue.main.async {
+                self.isCapturing = true
+                self.addLog("✅ 音频采集启动成功")
+                self.delegate?.audioCaptureDidStart()
+            }
+            
+        } catch {
+            DispatchQueue.main.async {
+                self.addLog("❌ 音频采集启动失败: \(error.localizedDescription)")
+                self.addLog("❌ 错误详情: \(error)")
+                self.isCapturing = false
+                self.delegate?.audioCaptureDidFailWithError(error)
             }
         }
     }
@@ -121,68 +163,26 @@ class AudioCaptureService: ObservableObject {
         
         // 在音频队列中停止音频引擎
         audioQueue.async { [weak self] in
-            guard let self = self else { return }
-            
-            self.audioEngine?.stop()
-            self.cleanupAudioEngine()
-            
-            DispatchQueue.main.async {
-                self.isCapturing = false
-                self.addLog("✅ 音频采集已停止")
-                self.delegate?.audioCaptureDidStop()
-            }
+            self?.stopAudioEngine()
         }
     }
     
-    // MARK: - Permission Management
-    
-    private func checkMicrophonePermission() {
-        let status = AVCaptureDevice.authorizationStatus(for: .audio)
-        hasPermission = (status == .authorized)
-        
-        let statusText = switch status {
-        case .authorized: "✅ 已授权"
-        case .denied: "❌ 已拒绝"
-        case .restricted: "❌ 受限制"
-        case .notDetermined: "🔍 未确定"
-        @unknown default: "❓ 未知状态"
+    private func stopAudioEngine() {
+        if let audioEngine = audioEngine {
+            audioEngine.stop()
+            cleanupAudioEngine()
         }
         
-        addLog("🎤 麦克风权限状态: \(statusText)")
-    }
-    
-    private func requestMicrophonePermission(completion: @escaping (Bool) -> Void) {
-        switch AVCaptureDevice.authorizationStatus(for: .audio) {
-        case .authorized:
-            addLog("✅ 麦克风权限已授权")
-            DispatchQueue.main.async {
-                completion(true)
-            }
-        case .notDetermined:
-            addLog("🔍 请求麦克风权限...")
-            AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
-                let message = granted ? "✅ 用户授予了麦克风权限" : "❌ 用户拒绝了麦克风权限"
-                self?.addLog(message)
-                DispatchQueue.main.async {
-                    completion(granted)
-                }
-            }
-        case .denied, .restricted:
-            addLog("❌ 麦克风权限被拒绝或受限")
-            DispatchQueue.main.async {
-                completion(false)
-            }
-        @unknown default:
-            addLog("❓ 未知麦克风权限状态")
-            DispatchQueue.main.async {
-                completion(false)
-            }
+        DispatchQueue.main.async {
+            self.isCapturing = false
+            self.addLog("✅ 音频采集已停止")
+            self.delegate?.audioCaptureDidStop()
         }
     }
     
     // MARK: - Audio Engine Setup
     
-    private func setupAudioEngine() {
+    private func setupAudioEngine() throws {
         addLog("🔧 配置音频引擎...")
         
         // 清理之前的音频引擎（如果存在）
@@ -190,9 +190,9 @@ class AudioCaptureService: ObservableObject {
         
         addLog("🏗️ 创建新的 AVAudioEngine...")
         audioEngine = AVAudioEngine()
+        
         guard let audioEngine = audioEngine else {
-            addLog("❌ 无法创建音频引擎")
-            return
+            throw AudioCaptureError.engineSetupFailed
         }
         
         addLog("⚙️ 预备音频引擎...")
@@ -212,10 +212,9 @@ class AudioCaptureService: ObservableObject {
             interleaved: false
         ) else {
             addLog("❌ 无法创建音频格式")
-            return
+            throw AudioCaptureError.engineSetupFailed
         }
         
-        addLog("🎵 输入格式: \(inputFormat.sampleRate)Hz, \(inputFormat.channelCount)声道")
         addLog("🎵 目标格式: \(desiredFormat.sampleRate)Hz, \(desiredFormat.channelCount)声道")
         
         addLog("🧹 移除已存在的 tap...")
@@ -283,6 +282,7 @@ enum AudioCaptureError: LocalizedError {
     case permissionDenied
     case engineSetupFailed
     case captureStartFailed
+    case audioSessionError
     
     var errorDescription: String? {
         switch self {
@@ -292,6 +292,8 @@ enum AudioCaptureError: LocalizedError {
             return "音频引擎设置失败"
         case .captureStartFailed:
             return "音频采集启动失败"
+        case .audioSessionError:
+            return "音频会话配置失败"
         }
     }
 }
