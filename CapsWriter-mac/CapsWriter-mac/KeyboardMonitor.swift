@@ -168,17 +168,12 @@ class KeyboardMonitor {
     }
     
     private func handleKeyEvent(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
-        print("⌨️⌨️⌨️ handleKeyEvent() 被调用 ⌨️⌨️⌨️")
-        
         // 获取键码
         let keyCodeInt64 = event.getIntegerValueField(.keyboardEventKeycode)
         let keyCode = CGKeyCode(keyCodeInt64)
         
         // 获取键名（用于调试）
         let keyName = getKeyNameFromKeyCode(keyCode)
-        
-        // 详细日志输出每个键盘按键
-        print("⌨️ 键盘按键事件 - 键码: \(keyCode), 键名: \(keyName), 事件类型: \(type == .keyDown ? "按下" : "释放")")
         
         // 检查是否是 O 键
         if alternativeOKeyCodes.contains(keyCode) && type == .keyDown {
@@ -203,7 +198,6 @@ class KeyboardMonitor {
             lastClickTime = currentTime
             
             print("🔢 O 键第 \(clickCount) 次点击 (需要 \(requiredClicks) 次)")
-            print("📊 当前状态 - 连击计数: \(clickCount), 录音状态: \(isRecording), 时间戳: \(String(format: "%.3f", currentTime))")
             
             if clickCount >= requiredClicks {
                 // 连击3次，切换录音状态
@@ -220,9 +214,6 @@ class KeyboardMonitor {
                     handleStopRecording()
                 }
             }
-        } else if type == .keyDown {
-            // 输出其他非O键的按键信息（用于调试）
-            print("🔍 其他按键: 键码=\(keyCode), 键名=\(keyName)")
         }
         
         return Unmanaged.passUnretained(event)
@@ -230,14 +221,12 @@ class KeyboardMonitor {
     
     private func handleStartRecording() {
         print("🎤 开始识别")
-        print("📞 准备调用 startRecordingCallback")
         
         // 确保在主线程执行回调
         DispatchQueue.main.async { [weak self] in
             if let callback = self?.startRecordingCallback {
-                print("✅ 回调函数存在，正在调用...")
                 callback()
-                print("✅ 回调函数已调用")
+                print("✅ 开始录音回调已执行")
             } else {
                 print("❌ 回调函数不存在！")
             }
@@ -246,14 +235,12 @@ class KeyboardMonitor {
     
     private func handleStopRecording() {
         print("⏹️ 结束识别")
-        print("📞 准备调用 stopRecordingCallback")
         
         // 确保在主线程执行回调
         DispatchQueue.main.async { [weak self] in
             if let callback = self?.stopRecordingCallback {
-                print("✅ 回调函数存在，正在调用...")
                 callback()
-                print("✅ 回调函数已调用")
+                print("✅ 停止录音回调已执行")
             } else {
                 print("❌ 回调函数不存在！")
             }
