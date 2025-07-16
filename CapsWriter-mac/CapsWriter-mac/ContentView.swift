@@ -5,6 +5,9 @@ struct ContentView: View {
     @State private var animationScale: CGFloat = 1.0
     @State private var selectedTab = 0
     
+    // 静态变量来持久化保存键盘监听器
+    static var globalKeyboardMonitor: KeyboardMonitor?
+    
     var body: some View {
         TabView(selection: $selectedTab) {
             // 主页面 - 原有内容
@@ -213,7 +216,13 @@ struct MainDashboardView: View {
                     Button("强制初始化键盘监听") {
                         print("🧪 强制初始化键盘监听器...")
                         
-                        // 直接创建键盘监听器
+                        // 先停止现有监听器（如果存在）
+                        if let existingMonitor = ContentView.globalKeyboardMonitor {
+                            print("🛑 停止现有监听器...")
+                            existingMonitor.stopMonitoring()
+                        }
+                        
+                        // 创建新的键盘监听器
                         let monitor = KeyboardMonitor()
                         
                         // 设置回调
@@ -237,12 +246,16 @@ struct MainDashboardView: View {
                         // 启动监听
                         monitor.startMonitoring()
                         
-                        // 将监听器保存到AppDelegate（如果存在）
+                        // 保存到静态变量（确保不被释放）
+                        ContentView.globalKeyboardMonitor = monitor
+                        print("✅ 监听器已保存到静态变量，确保持久化")
+                        
+                        // 同时尝试保存到AppDelegate
                         if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
                             print("✅ 已将监听器保存到AppDelegate")
                             appDelegate.keyboardMonitor = monitor
                         } else {
-                            print("⚠️ AppDelegate不存在，监听器可能在视图销毁时丢失")
+                            print("⚠️ AppDelegate不存在，但监听器已保存到静态变量")
                         }
                     }
                     .buttonStyle(.bordered)
@@ -250,10 +263,17 @@ struct MainDashboardView: View {
                     
                     Button("重置监听器") {
                         print("🔄 重置键盘监听器...")
-                        if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
-                            appDelegate.keyboardMonitor?.resetMonitoring()
+                        
+                        // 优先使用静态变量中的监听器
+                        if let monitor = ContentView.globalKeyboardMonitor {
+                            print("✅ 使用静态变量中的监听器进行重置")
+                            monitor.resetMonitoring()
+                        } else if let appDelegate = NSApplication.shared.delegate as? AppDelegate,
+                                  let monitor = appDelegate.keyboardMonitor {
+                            print("✅ 使用AppDelegate中的监听器进行重置")
+                            monitor.resetMonitoring()
                         } else {
-                            print("❌ AppDelegate不存在，无法重置监听器")
+                            print("❌ 没有找到活跃的监听器，请先点击'强制初始化键盘监听'")
                         }
                     }
                     .buttonStyle(.bordered)
