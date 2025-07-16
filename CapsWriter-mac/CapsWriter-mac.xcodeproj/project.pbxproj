@@ -34,7 +34,7 @@
 		A12345678901234567890041 /* RecordingState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingState.swift; sourceTree = "<group>"; };
 		A12345678901234567890051 /* SherpaASRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaASRService.swift; sourceTree = "<group>"; };
 		A12345678901234567890052 /* SherpaONNX-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SherpaONNX-Bridging-Header.h"; sourceTree = "<group>"; };
-		A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libsherpa-onnx-c-api.dylib"; path = "../../sherpa-onnx/build/lib/libsherpa-onnx-c-api.dylib"; sourceTree = "<group>"; };
+		A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libsherpa-onnx-c-api.dylib"; path = "CapsWriter-mac/Frameworks/libsherpa-onnx-c-api.dylib"; sourceTree = "<group>"; };
 		A12345678901234567890071 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = models; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -318,6 +318,10 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../sherpa-onnx/sherpa-onnx/c-api",
+				);
 				INFOPLIST_FILE = "CapsWriter-mac/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "CapsWriter-mac";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
@@ -352,6 +356,10 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../sherpa-onnx/sherpa-onnx/c-api",
+				);
 				INFOPLIST_FILE = "CapsWriter-mac/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "CapsWriter-mac";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
