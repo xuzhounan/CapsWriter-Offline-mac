@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8A0E46386F774048994E5E88 /* libsherpa-onnx-c-api.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		A12345678901234567890001 /* CapsWriterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890000 /* CapsWriterApp.swift */; };
 		A12345678901234567890003 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890002 /* ContentView.swift */; };
 		A12345678901234567890005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890004 /* Assets.xcassets */; };
@@ -18,9 +19,22 @@
 		A12345678901234567890050 /* SherpaASRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890051 /* SherpaASRService.swift */; };
 		A12345678901234567890055 /* AudioCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890056 /* AudioCaptureService.swift */; };
 		A12345678901234567890060 /* libsherpa-onnx-c-api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */; };
-		8A0E46386F774048994E5E88 /* libsherpa-onnx-c-api.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		A12345678901234567890070 /* models in Resources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890071 /* models */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8A0E46386F774048994E5E89 /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				8A0E46386F774048994E5E88 /* libsherpa-onnx-c-api.dylib in Embed Libraries */,
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		A12345678901234567890000 /* CapsWriterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapsWriterApp.swift; sourceTree = "<group>"; };
@@ -35,8 +49,8 @@
 		A12345678901234567890031 /* KeyboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardMonitor.swift; sourceTree = "<group>"; };
 		A12345678901234567890041 /* RecordingState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingState.swift; sourceTree = "<group>"; };
 		A12345678901234567890051 /* SherpaASRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaASRService.swift; sourceTree = "<group>"; };
-		A12345678901234567890056 /* AudioCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCaptureService.swift; sourceTree = "<group>"; };
 		A12345678901234567890052 /* SherpaONNX-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SherpaONNX-Bridging-Header.h"; sourceTree = "<group>"; };
+		A12345678901234567890056 /* AudioCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCaptureService.swift; sourceTree = "<group>"; };
 		A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libsherpa-onnx-c-api.dylib"; path = "CapsWriter-mac/Frameworks/libsherpa-onnx-c-api.dylib"; sourceTree = "<group>"; };
 		A12345678901234567890071 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = models; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -136,7 +150,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1500;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					A12345678901234567890032 = {
 						CreatedOnToolsVersion = 15.0;
@@ -173,20 +187,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		8A0E46386F774048994E5E89 /* Embed Libraries */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				8A0E46386F774048994E5E88 /* libsherpa-onnx-c-api.dylib in Embed Libraries */,
-			);
-			name = "Embed Libraries";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A12345678901234567890022 /* Sources */ = {
@@ -241,6 +241,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -304,6 +305,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -334,6 +336,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"CapsWriter-mac/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
@@ -355,7 +358,7 @@
 					"$(SRCROOT)/CapsWriter-mac/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.example.CapsWriterMac";
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.CapsWriterMac;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "CapsWriter-mac/SherpaONNX-Bridging-Header.h";
@@ -372,6 +375,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"CapsWriter-mac/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
@@ -393,7 +397,7 @@
 					"$(SRCROOT)/CapsWriter-mac/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.example.CapsWriterMac";
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.CapsWriterMac;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "CapsWriter-mac/SherpaONNX-Bridging-Header.h";
@@ -404,20 +408,20 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A12345678901234567890033 /* Build configuration list for PBXNativeTarget "CapsWriter-mac" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A12345678901234567890028 /* Debug */,
-				A12345678901234567890029 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		A12345678901234567890025 /* Build configuration list for PBXProject "CapsWriter-mac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A12345678901234567890026 /* Debug */,
 				A12345678901234567890027 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A12345678901234567890033 /* Build configuration list for PBXNativeTarget "CapsWriter-mac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A12345678901234567890028 /* Debug */,
+				A12345678901234567890029 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

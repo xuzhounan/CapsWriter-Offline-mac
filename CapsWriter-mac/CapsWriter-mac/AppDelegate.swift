@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 import AVFoundation
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var statusBarController: StatusBarController?
     var keyboardMonitor: KeyboardMonitor?
     var asrService: SherpaASRService?
@@ -157,7 +157,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     // MARK: - 语音识别回调
-    private func startRecording() {
+    func startRecording() {
         print("🎤 AppDelegate: 开始录音...")
         
         // 更新UI状态
@@ -172,7 +172,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("✅ AppDelegate: 录音流程已启动")
     }
     
-    private func stopRecording() {
+    func stopRecording() {
         print("⏹️ AppDelegate: 结束录音...")
         
         // 停止音频采集

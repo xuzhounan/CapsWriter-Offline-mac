@@ -210,29 +210,39 @@ struct MainDashboardView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     
-                    Button("测试键盘监听初始化") {
-                        print("🧪 测试键盘监听器初始化...")
-                        if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
-                            print("✅ AppDelegate 存在")
-                            if let monitor = appDelegate.keyboardMonitor {
-                                print("✅ 键盘监听器对象存在")
-                                monitor.startMonitoring()
-                            } else {
-                                print("❌ 键盘监听器对象不存在，尝试重新创建...")
-                                // 尝试重新初始化
-                                appDelegate.keyboardMonitor = KeyboardMonitor()
-                                appDelegate.keyboardMonitor?.setCallbacks(
-                                    startRecording: {
-                                        print("🎤 测试回调: 开始录音")
-                                    },
-                                    stopRecording: {
-                                        print("⏹️ 测试回调: 停止录音")
-                                    }
-                                )
-                                appDelegate.keyboardMonitor?.startMonitoring()
+                    Button("强制初始化键盘监听") {
+                        print("🧪 强制初始化键盘监听器...")
+                        
+                        // 直接创建键盘监听器
+                        let monitor = KeyboardMonitor()
+                        
+                        // 设置回调
+                        monitor.setCallbacks(
+                            startRecording: {
+                                print("🎤 强制回调: 开始录音")
+                                // 手动触发录音状态
+                                DispatchQueue.main.async {
+                                    RecordingState.shared.startRecording()
+                                }
+                            },
+                            stopRecording: {
+                                print("⏹️ 强制回调: 停止录音")
+                                // 手动触发停止状态
+                                DispatchQueue.main.async {
+                                    RecordingState.shared.stopRecording()
+                                }
                             }
+                        )
+                        
+                        // 启动监听
+                        monitor.startMonitoring()
+                        
+                        // 将监听器保存到AppDelegate（如果存在）
+                        if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
+                            print("✅ 已将监听器保存到AppDelegate")
+                            appDelegate.keyboardMonitor = monitor
                         } else {
-                            print("❌ AppDelegate 不存在")
+                            print("⚠️ AppDelegate不存在，监听器可能在视图销毁时丢失")
                         }
                     }
                     .buttonStyle(.bordered)
@@ -242,6 +252,8 @@ struct MainDashboardView: View {
                         print("🔄 重置键盘监听器...")
                         if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
                             appDelegate.keyboardMonitor?.resetMonitoring()
+                        } else {
+                            print("❌ AppDelegate不存在，无法重置监听器")
                         }
                     }
                     .buttonStyle(.bordered)
