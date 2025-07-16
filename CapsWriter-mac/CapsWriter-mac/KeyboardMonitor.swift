@@ -11,7 +11,7 @@ class KeyboardMonitor {
     private let oKeyCode: CGKeyCode = 31
     
     // 备用的 O 键码（一些键盘可能使用不同的码）
-    private let alternativeOKeyCodes: [CGKeyCode] = [31]
+    private let alternativeOKeyCodes: [CGKeyCode] = [31] // 标准美式键盘布局中的 O 键
     
     // 状态跟踪
     private var isRecording = false
@@ -27,6 +27,13 @@ class KeyboardMonitor {
     
     init() {
         // 不再使用单独的队列
+        print("🔧 KeyboardMonitor 初始化")
+        print("📝 监听配置:")
+        print("  - O 键码: \(oKeyCode)")
+        print("  - 备用键码: \(alternativeOKeyCodes)")
+        print("  - 连击间隔: \(clickInterval)s")
+        print("  - 防抖间隔: \(debounceInterval)s")
+        print("  - 需要连击次数: \(requiredClicks)")
     }
     
     deinit {
@@ -159,9 +166,15 @@ class KeyboardMonitor {
         let keyCodeInt64 = event.getIntegerValueField(.keyboardEventKeycode)
         let keyCode = CGKeyCode(keyCodeInt64)
         
+        // 获取键名（用于调试）
+        let keyName = getKeyNameFromKeyCode(keyCode)
+        
+        // 详细日志输出每个键盘按键
+        print("⌨️ 键盘按键事件 - 键码: \(keyCode), 键名: \(keyName), 事件类型: \(type == .keyDown ? "按下" : "释放")")
+        
         // 检查是否是 O 键
         if alternativeOKeyCodes.contains(keyCode) && type == .keyDown {
-            print("🔍 检测到 O 键按下，键码: \(keyCode)")
+            print("🔍 检测到 O 键按下，键码: \(keyCode), 键名: \(keyName)")
             
             let currentTime = Date().timeIntervalSince1970
             
@@ -175,13 +188,14 @@ class KeyboardMonitor {
             if (currentTime - lastClickTime) > clickInterval {
                 // 超过间隔时间，重置计数
                 clickCount = 0
-                print("🔄 重置连击计数")
+                print("🔄 重置连击计数 (上次点击时间: \(String(format: "%.3f", lastClickTime)), 当前时间: \(String(format: "%.3f", currentTime)), 间隔: \(String(format: "%.3f", currentTime - lastClickTime))s)")
             }
             
             clickCount += 1
             lastClickTime = currentTime
             
-            print("🔢 O 键第 \(clickCount) 次点击")
+            print("🔢 O 键第 \(clickCount) 次点击 (需要 \(requiredClicks) 次)")
+            print("📊 当前状态 - 连击计数: \(clickCount), 录音状态: \(isRecording), 时间戳: \(String(format: "%.3f", currentTime))")
             
             if clickCount >= requiredClicks {
                 // 连击3次，切换录音状态
@@ -198,6 +212,9 @@ class KeyboardMonitor {
                     handleStopRecording()
                 }
             }
+        } else if type == .keyDown {
+            // 输出其他非O键的按键信息（用于调试）
+            print("🔍 其他按键: 键码=\(keyCode), 键名=\(keyName)")
         }
         
         return Unmanaged.passUnretained(event)
@@ -272,6 +289,27 @@ class KeyboardMonitor {
         print("⏹️ 键盘监听器已停止")
     }
     
+    // 将键码转换为键名的辅助函数
+    private func getKeyNameFromKeyCode(_ keyCode: CGKeyCode) -> String {
+        let keyNames: [CGKeyCode: String] = [
+            0: "a", 1: "s", 2: "d", 3: "f", 4: "h", 5: "g", 6: "z", 7: "x", 8: "c", 9: "v",
+            10: "§", 11: "b", 12: "q", 13: "w", 14: "e", 15: "r", 16: "y", 17: "t", 18: "1", 19: "2",
+            20: "3", 21: "4", 22: "6", 23: "5", 24: "=", 25: "9", 26: "7", 27: "-", 28: "8", 29: "0",
+            30: "]", 31: "o", 32: "u", 33: "[", 34: "i", 35: "p", 36: "Enter", 37: "l", 38: "j", 39: "'",
+            40: "k", 41: ";", 42: "\\", 43: ",", 44: "/", 45: "n", 46: "m", 47: ".", 48: "Tab", 49: "Space",
+            50: "`", 51: "Delete", 53: "Escape", 55: "Cmd", 56: "Shift", 57: "CapsLock", 58: "Option", 59: "Ctrl",
+            60: "RightShift", 61: "RightOption", 62: "RightCtrl", 63: "Fn", 64: "F17", 65: ".", 66: "*", 67: "+",
+            69: "NumLock", 70: "VolumeUp", 71: "VolumeDown", 72: "Mute", 75: "/", 76: "NumEnter", 78: "-",
+            79: "F18", 80: "F19", 81: "=", 82: "0", 83: "1", 84: "2", 85: "3", 86: "4", 87: "5", 88: "6",
+            89: "7", 91: "8", 92: "9", 96: "F5", 97: "F6", 98: "F7", 99: "F3", 100: "F8", 101: "F9",
+            103: "F11", 105: "F13", 107: "F14", 109: "F10", 111: "F12", 113: "F16", 114: "Help", 115: "Home",
+            116: "PageUp", 117: "ForwardDelete", 118: "F4", 119: "End", 120: "F2", 121: "PageDown", 122: "F1",
+            123: "←", 124: "→", 125: "↓", 126: "↑"
+        ]
+        
+        return keyNames[keyCode] ?? "Unknown(\(keyCode))"
+    }
+    
     // 设置回调函数
     func setCallbacks(startRecording: @escaping () -> Void, stopRecording: @escaping () -> Void) {
         print("📞 KeyboardMonitor: 设置回调函数...")
@@ -292,10 +330,22 @@ class KeyboardMonitor {
         lastClickTime = 0
         isRecording = false
         
+        print("🔄 状态已重置 - 连击计数: \(clickCount), 录音状态: \(isRecording)")
+        
         // 短暂延迟后重新启动
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            print("🔄 重新启动键盘监听器...")
             self?.startMonitoring()
         }
+    }
+    
+    // 强制重置连击状态（用于调试）
+    func forceResetClickState() {
+        print("🔄 强制重置连击状态")
+        clickCount = 0
+        lastClickTime = 0
+        isRecording = false
+        print("✅ 连击状态已重置 - 连击计数: \(clickCount), 录音状态: \(isRecording)")
     }
 }
 
