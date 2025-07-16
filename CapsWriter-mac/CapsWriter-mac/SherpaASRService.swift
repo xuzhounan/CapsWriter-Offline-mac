@@ -2,7 +2,123 @@ import Foundation
 import AVFoundation
 import Combine
 
-// 直接使用 C API 中的类型定义，不需要手动定义结构体
+// MARK: - Sherpa-ONNX C API Helper Functions
+
+/// Convert a String from swift to a `const char*` so that we can pass it to
+/// the C language.
+func toCPointer(_ s: String) -> UnsafePointer<Int8>! {
+  let cs = (s as NSString).utf8String
+  return UnsafePointer<Int8>(cs)
+}
+
+/// Return an instance of SherpaOnnxOnlineParaformerModelConfig.
+func sherpaOnnxOnlineParaformerModelConfig(
+  encoder: String = "",
+  decoder: String = ""
+) -> SherpaOnnxOnlineParaformerModelConfig {
+  return SherpaOnnxOnlineParaformerModelConfig(
+    encoder: toCPointer(encoder),
+    decoder: toCPointer(decoder)
+  )
+}
+
+/// Return an instance of SherpaOnnxOnlineTransducerModelConfig.
+func sherpaOnnxOnlineTransducerModelConfig(
+  encoder: String = "",
+  decoder: String = "",
+  joiner: String = ""
+) -> SherpaOnnxOnlineTransducerModelConfig {
+  return SherpaOnnxOnlineTransducerModelConfig(
+    encoder: toCPointer(encoder),
+    decoder: toCPointer(decoder),
+    joiner: toCPointer(joiner)
+  )
+}
+
+/// Return an instance of SherpaOnnxOnlineZipformer2CtcModelConfig.
+func sherpaOnnxOnlineZipformer2CtcModelConfig(
+  model: String = ""
+) -> SherpaOnnxOnlineZipformer2CtcModelConfig {
+  return SherpaOnnxOnlineZipformer2CtcModelConfig(
+    model: toCPointer(model)
+  )
+}
+
+/// Return an instance of SherpaOnnxOnlineModelConfig.
+func sherpaOnnxOnlineModelConfig(
+  tokens: String = "",
+  transducer: SherpaOnnxOnlineTransducerModelConfig = sherpaOnnxOnlineTransducerModelConfig(),
+  paraformer: SherpaOnnxOnlineParaformerModelConfig = sherpaOnnxOnlineParaformerModelConfig(),
+  zipformer2Ctc: SherpaOnnxOnlineZipformer2CtcModelConfig = sherpaOnnxOnlineZipformer2CtcModelConfig(),
+  numThreads: Int = 1,
+  provider: String = "cpu",
+  debug: Bool = false,
+  modelType: String = "",
+  modelingUnit: String = "",
+  bpeVocab: String = ""
+) -> SherpaOnnxOnlineModelConfig {
+  return SherpaOnnxOnlineModelConfig(
+    transducer: transducer,
+    paraformer: paraformer,
+    zipformer2_ctc: zipformer2Ctc,
+    tokens: toCPointer(tokens),
+    num_threads: Int32(numThreads),
+    provider: toCPointer(provider),
+    debug: debug ? 1 : 0,
+    model_type: toCPointer(modelType),
+    modeling_unit: toCPointer(modelingUnit),
+    bpe_vocab: toCPointer(bpeVocab),
+    tokens_buf: nil,
+    tokens_buf_size: 0
+  )
+}
+
+/// Return an instance of SherpaOnnxFeatureConfig.
+func sherpaOnnxFeatureConfig(
+  sampleRate: Int = 16000,
+  featureDim: Int = 80
+) -> SherpaOnnxFeatureConfig {
+  return SherpaOnnxFeatureConfig(
+    sample_rate: Int32(sampleRate),
+    feature_dim: Int32(featureDim)
+  )
+}
+
+/// Return an instance of SherpaOnnxOnlineRecognizerConfig.
+func sherpaOnnxOnlineRecognizerConfig(
+  featConfig: SherpaOnnxFeatureConfig = sherpaOnnxFeatureConfig(),
+  modelConfig: SherpaOnnxOnlineModelConfig = sherpaOnnxOnlineModelConfig(),
+  decodingMethod: String = "greedy_search",
+  maxActivePaths: Int = 4,
+  enableEndpoint: Bool = false,
+  rule1MinTrailingSilence: Float = 2.4,
+  rule2MinTrailingSilence: Float = 1.2,
+  rule3MinUtteranceLength: Float = 20.0,
+  hotwordsFile: String = "",
+  hotwordsScore: Float = 1.5
+) -> SherpaOnnxOnlineRecognizerConfig {
+  return SherpaOnnxOnlineRecognizerConfig(
+    feat_config: featConfig,
+    model_config: modelConfig,
+    decoding_method: toCPointer(decodingMethod),
+    max_active_paths: Int32(maxActivePaths),
+    enable_endpoint: enableEndpoint ? 1 : 0,
+    rule1_min_trailing_silence: rule1MinTrailingSilence,
+    rule2_min_trailing_silence: rule2MinTrailingSilence,
+    rule3_min_utterance_length: rule3MinUtteranceLength,
+    hotwords_file: toCPointer(hotwordsFile),
+    hotwords_score: hotwordsScore,
+    ctc_fst_decoder_config: SherpaOnnxOnlineCtcFstDecoderConfig(),
+    rule_fsts: nil,
+    rule_fars: nil,
+    blank_penalty: 0.0,
+    hotwords_buf: nil,
+    hotwords_buf_size: 0,
+    hr: SherpaOnnxHomophoneReplacerConfig()
+  )
+}
+
+// MARK: - ASR Service Class
 
 class SherpaASRService: ObservableObject {
     // MARK: - Published Properties
@@ -13,8 +129,8 @@ class SherpaASRService: ObservableObject {
     
     // MARK: - Private Properties
     private var audioEngine: AVAudioEngine?
-    private var recognizer: SherpaOnnxOnlineRecognizer?
-    private var stream: SherpaOnnxOnlineStream?
+    private var recognizer: OpaquePointer?
+    private var stream: OpaquePointer?
     private let audioQueue = DispatchQueue(label: "com.capswriter.audio", qos: .userInitiated)
     private static var logCounter = 0
     
@@ -188,55 +304,37 @@ class SherpaASRService: ObservableObject {
         addLog("  - 解码器: \(decoderPath)")
         addLog("  - 词汇表: \(tokensPath)")
         
-        // Initialize sherpa-onnx configuration using C API structures
-        var paraformerConfig = SherpaOnnxOnlineParaformerModelConfig()
-        paraformerConfig.encoder = UnsafePointer(strdup(encoderPath))
-        paraformerConfig.decoder = UnsafePointer(strdup(decoderPath))
+        // Use helper functions to create configuration
+        let paraformerConfig = sherpaOnnxOnlineParaformerModelConfig(
+            encoder: encoderPath,
+            decoder: decoderPath
+        )
         
-        var transducerConfig = SherpaOnnxOnlineTransducerModelConfig()
-        transducerConfig.encoder = nil
-        transducerConfig.decoder = nil
-        transducerConfig.joiner = nil
+        let modelConfig = sherpaOnnxOnlineModelConfig(
+            tokens: tokensPath,
+            paraformer: paraformerConfig,
+            numThreads: 2,
+            provider: "cpu",
+            debug: false,
+            modelType: "paraformer",
+            modelingUnit: "char"
+        )
         
-        var zipformerConfig = SherpaOnnxOnlineZipformer2CtcModelConfig()
-        zipformerConfig.model = nil
+        let featConfig = sherpaOnnxFeatureConfig(
+            sampleRate: Int(sampleRate),
+            featureDim: 80
+        )
         
-        var modelConfig = SherpaOnnxOnlineModelConfig()
-        modelConfig.paraformer = paraformerConfig
-        modelConfig.transducer = transducerConfig
-        modelConfig.zipformer2_ctc = zipformerConfig
-        modelConfig.tokens = UnsafePointer(strdup(tokensPath))
-        modelConfig.num_threads = 2
-        modelConfig.provider = UnsafePointer(strdup("cpu"))
-        modelConfig.debug = 0
-        modelConfig.model_type = UnsafePointer(strdup("paraformer"))
-        modelConfig.modeling_unit = UnsafePointer(strdup("char"))
-        modelConfig.bpe_vocab = nil
-        modelConfig.tokens_buf = nil
-        modelConfig.tokens_buf_size = 0
-        
-        var featConfig = SherpaOnnxFeatureConfig()
-        featConfig.sample_rate = 16000
-        featConfig.feature_dim = 80
-        
-        var ctcConfig = SherpaOnnxOnlineCtcFstDecoderConfig()
-        ctcConfig.graph = nil
-        ctcConfig.max_active = 3000
-        
-        var config = SherpaOnnxOnlineRecognizerConfig()
-        config.feat_config = featConfig
-        config.model_config = modelConfig
-        config.decoding_method = UnsafePointer(strdup("greedy_search"))
-        config.max_active_paths = 4
-        config.enable_endpoint = 1
-        config.rule1_min_trailing_silence = 2.4
-        config.rule2_min_trailing_silence = 1.2
-        config.rule3_min_utterance_length = 20.0
-        config.hotwords_file = nil
-        config.hotwords_score = 1.5
-        config.ctc_fst_decoder_config = ctcConfig
-        config.rule_fsts = nil
-        config.rule_fars = nil
+        var config = sherpaOnnxOnlineRecognizerConfig(
+            featConfig: featConfig,
+            modelConfig: modelConfig,
+            decodingMethod: "greedy_search",
+            maxActivePaths: 4,
+            enableEndpoint: true,
+            rule1MinTrailingSilence: 2.4,
+            rule2MinTrailingSilence: 1.2,
+            rule3MinUtteranceLength: 20.0
+        )
         
         addLog("⚙️ 创建识别器实例...")
         recognizer = SherpaOnnxCreateOnlineRecognizer(&config)
@@ -255,29 +353,6 @@ class SherpaASRService: ObservableObject {
             }
         } else {
             addLog("❌ 识别器创建失败")
-        }
-        
-        // Cleanup allocated strings
-        if let encoder = paraformerConfig.encoder {
-            free(UnsafeMutableRawPointer(mutating: encoder))
-        }
-        if let decoder = paraformerConfig.decoder {
-            free(UnsafeMutableRawPointer(mutating: decoder))
-        }
-        if let tokens = modelConfig.tokens {
-            free(UnsafeMutableRawPointer(mutating: tokens))
-        }
-        if let provider = modelConfig.provider {
-            free(UnsafeMutableRawPointer(mutating: provider))
-        }
-        if let modelType = modelConfig.model_type {
-            free(UnsafeMutableRawPointer(mutating: modelType))
-        }
-        if let modelingUnit = modelConfig.modeling_unit {
-            free(UnsafeMutableRawPointer(mutating: modelingUnit))
-        }
-        if let decodingMethod = config.decoding_method {
-            free(UnsafeMutableRawPointer(mutating: decodingMethod))
         }
     }
     

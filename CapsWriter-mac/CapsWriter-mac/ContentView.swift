@@ -357,7 +357,7 @@ struct ASRServicePlaceholderView: View {
                     .frame(maxHeight: .infinity)
                     .background(Color(.textBackgroundColor))
                     .cornerRadius(8)
-                    .onChange(of: asrService.logs.count) { _ in
+                    .onChange(of: asrService.logs.count) {
                         if isAutoScroll && !asrService.logs.isEmpty {
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 proxy.scrollTo(asrService.logs.count - 1, anchor: .bottom)
