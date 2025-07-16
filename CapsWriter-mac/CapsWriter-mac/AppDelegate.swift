@@ -169,8 +169,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // 开始音频采集（会自动请求权限）
         audioCaptureService?.requestPermissionAndStartCapture()
         
-        // 开始语音识别处理
-        asrService?.startRecognition()
+        // 延迟启动语音识别，确保音频采集已经开始
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.asrService?.startRecognition()
+            print("🧠 AppDelegate: 延迟启动语音识别")
+        }
         
         print("✅ AppDelegate: 录音流程已启动")
     }

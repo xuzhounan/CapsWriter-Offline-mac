@@ -61,9 +61,12 @@ class AudioCaptureService: ObservableObject {
         
         switch currentStatus {
         case .authorized:
-            addLog("✅ 权限已授权，直接开始采集")
+            addLog("✅ 权限已授权，延迟开始采集")
             self.hasPermission = true
-            self.startCapture()
+            // 延迟一点确保音频设备完全准备好
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.startCapture()
+            }
             
         case .notDetermined:
             addLog("🔍 权限未确定，请求权限...")
@@ -72,7 +75,10 @@ class AudioCaptureService: ObservableObject {
                     self?.addLog("🎤 权限请求完成: \(granted ? "已授权" : "被拒绝")")
                     if granted {
                         self?.hasPermission = true
-                        self?.startCapture()
+                        // 延迟一点确保音频设备完全准备好
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            self?.startCapture()
+                        }
                     } else {
                         self?.hasPermission = false
                         self?.addLog("❌ 用户拒绝了麦克风权限")

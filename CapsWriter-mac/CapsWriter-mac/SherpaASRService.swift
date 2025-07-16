@@ -216,12 +216,24 @@ class SherpaASRService: ObservableObject {
             initializeRecognizer()
         }
         
+        // 添加空指针保护
+        guard let recognizer = self.recognizer else {
+            addLog("❌ recognizer 未初始化")
+            return
+        }
+        guard let stream = self.stream else {
+            addLog("❌ stream 未初始化") 
+            return
+        }
+        
         isRecognizing = true
         
-        // Reset stream for new recognition session
-        if let recognizer = recognizer, let stream = stream {
+        // Reset stream for new recognition session - 只有真实识别器才调用
+        if recognizer != OpaquePointer(bitPattern: 1) && stream != OpaquePointer(bitPattern: 1) {
             SherpaOnnxOnlineStreamReset(recognizer, stream)
             addLog("🔄 音频流已重置，准备新的识别会话")
+        } else {
+            addLog("🔄 模拟识别器不需要重置音频流")
         }
     }
     
