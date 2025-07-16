@@ -195,9 +195,6 @@ class AudioCaptureService: ObservableObject {
             throw AudioCaptureError.engineSetupFailed
         }
         
-        addLog("⚙️ 预备音频引擎...")
-        audioEngine.prepare()
-        
         addLog("🎤 获取音频输入节点...")
         let inputNode = audioEngine.inputNode
         let inputFormat = inputNode.outputFormat(forBus: 0)
@@ -224,6 +221,10 @@ class AudioCaptureService: ObservableObject {
         inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: desiredFormat) { [weak self] buffer, time in
             self?.processAudioBuffer(buffer)
         }
+        
+        addLog("⚙️ 预备音频引擎...")
+        audioEngine.prepare()
+        addLog("✅ 音频引擎预备成功")
         
         addLog("✅ 音频引擎配置完成")
     }
