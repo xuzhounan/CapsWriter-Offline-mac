@@ -26,14 +26,16 @@ class KeyboardMonitor {
     var stopRecordingCallback: (() -> Void)?
     
     init() {
+        print("🔧🔧🔧 KeyboardMonitor 初始化开始 🔧🔧🔧")
         // 不再使用单独的队列
-        print("🔧 KeyboardMonitor 初始化")
+        print("🔧 KeyboardMonitor 对象创建中...")
         print("📝 监听配置:")
         print("  - O 键码: \(oKeyCode)")
         print("  - 备用键码: \(alternativeOKeyCodes)")
         print("  - 连击间隔: \(clickInterval)s")
         print("  - 防抖间隔: \(debounceInterval)s")
         print("  - 需要连击次数: \(requiredClicks)")
+        print("✅✅✅ KeyboardMonitor 初始化完成 ✅✅✅")
     }
     
     deinit {
@@ -41,12 +43,14 @@ class KeyboardMonitor {
     }
     
     func startMonitoring() {
+        print("🟢🟢🟢 KeyboardMonitor.startMonitoring() 被调用 🟢🟢🟢")
+        
         guard !isRunning else { 
             print("⚠️ 键盘监听器已在运行中")
             return 
         }
         
-        print("🟢 KeyboardMonitor.startMonitoring() 被调用")
+        print("🟢 KeyboardMonitor.startMonitoring() 继续执行...")
         
         // 确保在主线程中执行
         if Thread.isMainThread {
@@ -59,6 +63,7 @@ class KeyboardMonitor {
     }
     
     private func startMonitoringOnMainThread() {
+        print("🔍🔍🔍 startMonitoringOnMainThread() 被调用 🔍🔍🔍")
         print("🔍 正在检查辅助功能权限...")
         RecordingState.shared.updateKeyboardMonitorStatus("正在检查权限...")
         
@@ -105,6 +110,7 @@ class KeyboardMonitor {
     }
     
     private func setupEventTap() {
+        print("🔧🔧🔧 setupEventTap() 被调用 🔧🔧🔧")
         print("🔧 正在设置事件监听器...")
         
         // 只监听 keyDown 事件
@@ -162,6 +168,8 @@ class KeyboardMonitor {
     }
     
     private func handleKeyEvent(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
+        print("⌨️⌨️⌨️ handleKeyEvent() 被调用 ⌨️⌨️⌨️")
+        
         // 获取键码
         let keyCodeInt64 = event.getIntegerValueField(.keyboardEventKeycode)
         let keyCode = CGKeyCode(keyCodeInt64)

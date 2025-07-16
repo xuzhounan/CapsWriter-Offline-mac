@@ -9,6 +9,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var audioCaptureService: AudioCaptureService?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
+        print("🚀🚀🚀 AppDelegate: applicationDidFinishLaunching 开始执行 🚀🚀🚀")
+        
         // 禁用窗口恢复功能
         UserDefaults.standard.register(defaults: ["NSQuitAlwaysKeepsWindows": false])
         
