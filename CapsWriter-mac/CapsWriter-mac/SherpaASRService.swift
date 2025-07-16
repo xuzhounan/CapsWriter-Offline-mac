@@ -142,7 +142,7 @@ class SherpaASRService: ObservableObject {
     private static var logCounter = 0
     
     // Mock mode flag - 设置为 false 来启用真实模型
-    private let isMockMode = true
+    private let isMockMode = false
     
     // Audio configuration
     private let sampleRate: Double = 16000
@@ -184,11 +184,11 @@ class SherpaASRService: ObservableObject {
             return
         }
         
-        // 先不初始化 recognizer，避免崩溃
-        // initializeRecognizer()
+        // 直接初始化识别器
+        initializeRecognizer()
         
         isServiceRunning = true
-        addLog("✅ 语音识别服务已准备就绪（延迟初始化模式）")
+        addLog("✅ 语音识别服务已启动")
     }
     
     func stopService() {
@@ -214,9 +214,10 @@ class SherpaASRService: ObservableObject {
         
         addLog("🧠 开始语音识别处理...")
         
-        // 推迟初始化到真正需要时
-        if recognizer == nil {
-            initializeRecognizer()
+        // 确保识别器已初始化
+        guard recognizer != nil && stream != nil else {
+            addLog("❌ 识别器未初始化，无法开始识别")
+            return
         }
         
         isRecognizing = true
@@ -321,75 +322,73 @@ class SherpaASRService: ObservableObject {
             addLog("🔧 模拟模式：不创建真实识别器")
             addLog("✅ 模拟识别器初始化完成（音频流测试模式）")
         } else {
-            // 真实模式：创建Sherpa识别器（目前已注释）
+            // 真实模式：创建Sherpa识别器
             addLog("🔧 真实模式：创建Sherpa识别器...")
-            addLog("⚠️ 真实识别器代码暂时注释，需要修复结构体访问问题")
-        }
-        
-        // 以下代码暂时注释，等修复结构体访问问题后再启用
-        /*
-        // Check if model files exist
-        guard FileManager.default.fileExists(atPath: modelPath) else {
-            addLog("❌ 模型目录不存在: \(modelPath)")
-            return
-        }
-        
-        addLog("📂 检查模型文件...")
-        addLog("  - 编码器: \(encoderPath)")
-        addLog("  - 解码器: \(decoderPath)")
-        addLog("  - 词汇表: \(tokensPath)")
-        
-        // Use helper functions to create configuration
-        let paraformerConfig = sherpaOnnxOnlineParaformerModelConfig(
-            encoder: encoderPath,
-            decoder: decoderPath
-        )
-        
-        let modelConfig = sherpaOnnxOnlineModelConfig(
-            tokens: tokensPath,
-            paraformer: paraformerConfig,
-            numThreads: 2,
-            provider: "cpu",
-            debug: false,
-            modelType: "paraformer",
-            modelingUnit: "char"
-        )
-        
-        let featConfig = sherpaOnnxFeatureConfig(
-            sampleRate: Int(sampleRate),
-            featureDim: 80
-        )
-        
-        var config = sherpaOnnxOnlineRecognizerConfig(
-            featConfig: featConfig,
-            modelConfig: modelConfig,
-            decodingMethod: "greedy_search",
-            maxActivePaths: 4,
-            enableEndpoint: true,
-            rule1MinTrailingSilence: 2.4,
-            rule2MinTrailingSilence: 1.2,
-            rule3MinUtteranceLength: 20.0
-        )
-        
-        addLog("⚙️ 创建识别器实例...")
-        recognizer = SherpaOnnxCreateOnlineRecognizer(&config)
-        
-        if recognizer != nil {
-            addLog("✅ 识别器创建成功")
             
-            // Create stream
-            addLog("🌊 创建音频流...")
-            stream = SherpaOnnxCreateOnlineStream(recognizer)
+            // 检查模型文件是否存在
+            addLog("📂 检查模型文件...")
+            addLog("  - 编码器: \(encoderPath)")
+            addLog("  - 解码器: \(decoderPath)")
+            addLog("  - 词汇表: \(tokensPath)")
             
-            if stream != nil {
-                addLog("✅ 音频流创建成功")
-            } else {
-                addLog("❌ 音频流创建失败")
+            guard FileManager.default.fileExists(atPath: encoderPath),
+                  FileManager.default.fileExists(atPath: decoderPath),
+                  FileManager.default.fileExists(atPath: tokensPath) else {
+                addLog("❌ 模型文件不完整")
+                return
             }
-        } else {
-            addLog("❌ 识别器创建失败")
+            
+            // Use helper functions to create configuration
+            let paraformerConfig = sherpaOnnxOnlineParaformerModelConfig(
+                encoder: encoderPath,
+                decoder: decoderPath
+            )
+            
+            let modelConfig = sherpaOnnxOnlineModelConfig(
+                tokens: tokensPath,
+                paraformer: paraformerConfig,
+                numThreads: 2,
+                provider: "cpu",
+                debug: false,
+                modelType: "paraformer",
+                modelingUnit: "char"
+            )
+            
+            let featConfig = sherpaOnnxFeatureConfig(
+                sampleRate: Int(sampleRate),
+                featureDim: 80
+            )
+            
+            var config = sherpaOnnxOnlineRecognizerConfig(
+                featConfig: featConfig,
+                modelConfig: modelConfig,
+                decodingMethod: "greedy_search",
+                maxActivePaths: 4,
+                enableEndpoint: true,
+                rule1MinTrailingSilence: 2.4,
+                rule2MinTrailingSilence: 1.2,
+                rule3MinUtteranceLength: 20.0
+            )
+            
+            addLog("⚙️ 创建识别器实例...")
+            recognizer = SherpaOnnxCreateOnlineRecognizer(&config)
+            
+            if recognizer != nil {
+                addLog("✅ 识别器创建成功")
+                
+                // Create stream
+                addLog("🌊 创建音频流...")
+                stream = SherpaOnnxCreateOnlineStream(recognizer)
+                
+                if stream != nil {
+                    addLog("✅ 音频流创建成功")
+                } else {
+                    addLog("❌ 音频流创建失败")
+                }
+            } else {
+                addLog("❌ 识别器创建失败")
+            }
         }
-        */
     }
     
     private func cleanupRecognizer() {
@@ -530,11 +529,6 @@ class SherpaASRService: ObservableObject {
     }
     
     private func getFinalResult() -> String? {
-        if isMockMode {
-            // 模拟模式：返回模拟结果
-            return "模拟最终识别结果"
-        }
-        
         guard let recognizer = recognizer,
               let stream = stream else {
             return nil
