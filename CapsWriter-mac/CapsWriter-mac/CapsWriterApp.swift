@@ -32,24 +32,29 @@ struct CapsWriterApp: App {
             monitor.setCallbacks(
                 startRecording: {
                     print("🎤 全局回调: 开始录音")
+                    print("🔍 正在查找AppDelegate...")
+                    print("🔍 NSApplication.shared.delegate = \(String(describing: NSApplication.shared.delegate))")
                     DispatchQueue.main.async {
                         if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
                             print("✅ 找到AppDelegate，调用startRecording()")
                             appDelegate.startRecording()
                         } else {
                             print("❌ 找不到AppDelegate，只更新UI状态")
+                            print("❌ Delegate类型: \(type(of: NSApplication.shared.delegate))")
                             RecordingState.shared.startRecording()
                         }
                     }
                 },
                 stopRecording: {
                     print("⏹️ 全局回调: 停止录音")
+                    print("🔍 正在查找AppDelegate...")
                     DispatchQueue.main.async {
                         if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
                             print("✅ 找到AppDelegate，调用stopRecording()")
                             appDelegate.stopRecording()
                         } else {
                             print("❌ 找不到AppDelegate，只更新UI状态")
+                            print("❌ Delegate类型: \(type(of: NSApplication.shared.delegate))")
                             RecordingState.shared.stopRecording()
                         }
                     }
