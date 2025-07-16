@@ -213,8 +213,8 @@ struct MainDashboardView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     
-                    Button("强制初始化键盘监听") {
-                        print("🧪 强制初始化键盘监听器...")
+                    Button("重新初始化键盘监听") {
+                        print("🧪 重新初始化键盘监听器...")
                         
                         // 先停止现有监听器（如果存在）
                         if let existingMonitor = ContentView.globalKeyboardMonitor {
