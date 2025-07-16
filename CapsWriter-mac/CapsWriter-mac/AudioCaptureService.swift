@@ -71,17 +71,27 @@ class AudioCaptureService: ObservableObject {
         }
         
         addLog("🎤 开始音频采集...")
-        setupAudioEngine()
         
-        do {
-            try audioEngine?.start()
-            isCapturing = true
-            addLog("✅ 音频采集启动成功")
-            delegate?.audioCaptureDidStart()
-        } catch {
-            addLog("❌ 音频采集启动失败: \(error.localizedDescription)")
-            isCapturing = false
-            delegate?.audioCaptureDidFailWithError(error)
+        // 在音频队列中设置和启动音频引擎
+        audioQueue.async { [weak self] in
+            guard let self = self else { return }
+            
+            self.setupAudioEngine()
+            
+            do {
+                try self.audioEngine?.start()
+                DispatchQueue.main.async {
+                    self.isCapturing = true
+                    self.addLog("✅ 音频采集启动成功")
+                    self.delegate?.audioCaptureDidStart()
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.addLog("❌ 音频采集启动失败: \(error.localizedDescription)")
+                    self.isCapturing = false
+                    self.delegate?.audioCaptureDidFailWithError(error)
+                }
+            }
         }
     }
     
@@ -92,11 +102,20 @@ class AudioCaptureService: ObservableObject {
         }
         
         addLog("⏹️ 停止音频采集...")
-        audioEngine?.stop()
-        cleanupAudioEngine()
-        isCapturing = false
-        addLog("✅ 音频采集已停止")
-        delegate?.audioCaptureDidStop()
+        
+        // 在音频队列中停止音频引擎
+        audioQueue.async { [weak self] in
+            guard let self = self else { return }
+            
+            self.audioEngine?.stop()
+            self.cleanupAudioEngine()
+            
+            DispatchQueue.main.async {
+                self.isCapturing = false
+                self.addLog("✅ 音频采集已停止")
+                self.delegate?.audioCaptureDidStop()
+            }
+        }
     }
     
     // MARK: - Permission Management
@@ -120,20 +139,28 @@ class AudioCaptureService: ObservableObject {
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
         case .authorized:
             addLog("✅ 麦克风权限已授权")
-            completion(true)
+            DispatchQueue.main.async {
+                completion(true)
+            }
         case .notDetermined:
             addLog("🔍 请求麦克风权限...")
             AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
                 let message = granted ? "✅ 用户授予了麦克风权限" : "❌ 用户拒绝了麦克风权限"
                 self?.addLog(message)
-                completion(granted)
+                DispatchQueue.main.async {
+                    completion(granted)
+                }
             }
         case .denied, .restricted:
             addLog("❌ 麦克风权限被拒绝或受限")
-            completion(false)
+            DispatchQueue.main.async {
+                completion(false)
+            }
         @unknown default:
             addLog("❓ 未知麦克风权限状态")
-            completion(false)
+            DispatchQueue.main.async {
+                completion(false)
+            }
         }
     }
     
@@ -142,11 +169,17 @@ class AudioCaptureService: ObservableObject {
     private func setupAudioEngine() {
         addLog("🔧 配置音频引擎...")
         
+        // 清理之前的音频引擎（如果存在）
+        cleanupAudioEngine()
+        
         audioEngine = AVAudioEngine()
         guard let audioEngine = audioEngine else {
             addLog("❌ 无法创建音频引擎")
             return
         }
+        
+        // 预备音频引擎
+        audioEngine.prepare()
         
         let inputNode = audioEngine.inputNode
         let inputFormat = inputNode.outputFormat(forBus: 0)
@@ -165,6 +198,9 @@ class AudioCaptureService: ObservableObject {
         addLog("🎵 输入格式: \(inputFormat.sampleRate)Hz, \(inputFormat.channelCount)声道")
         addLog("🎵 目标格式: \(desiredFormat.sampleRate)Hz, \(desiredFormat.channelCount)声道")
         
+        // 确保没有已存在的 tap
+        inputNode.removeTap(onBus: 0)
+        
         // Install audio tap to capture audio data
         inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: desiredFormat) { [weak self] buffer, time in
             self?.processAudioBuffer(buffer)
@@ -177,8 +213,19 @@ class AudioCaptureService: ObservableObject {
         addLog("🧹 清理音频引擎...")
         
         if let audioEngine = audioEngine {
-            audioEngine.inputNode.removeTap(onBus: 0)
-            audioEngine.stop()
+            do {
+                // 安全地移除 tap
+                audioEngine.inputNode.removeTap(onBus: 0)
+                
+                // 停止音频引擎
+                if audioEngine.isRunning {
+                    audioEngine.stop()
+                }
+                
+                addLog("✅ 音频引擎已停止")
+            } catch {
+                addLog("⚠️ 清理音频引擎时出现警告: \(error.localizedDescription)")
+            }
         }
         
         audioEngine = nil

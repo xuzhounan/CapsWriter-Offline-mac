@@ -220,8 +220,10 @@ extension AppDelegate: AudioCaptureDelegate {
     
     func audioCaptureDidStart() {
         print("✅ 音频采集已开始")
-        // 更新权限状态
-        RecordingState.shared.updateMicrophonePermission(true)
+        // 确保在主线程更新UI状态
+        DispatchQueue.main.async {
+            RecordingState.shared.updateMicrophonePermission(true)
+        }
     }
     
     func audioCaptureDidStop() {
@@ -230,9 +232,10 @@ extension AppDelegate: AudioCaptureDelegate {
     
     func audioCaptureDidFailWithError(_ error: Error) {
         print("❌ 音频采集失败: \(error.localizedDescription)")
-        // 停止录音状态
+        // 确保在主线程停止录音状态
         DispatchQueue.main.async {
             RecordingState.shared.stopRecording()
+            RecordingState.shared.updateMicrophonePermission(false)
         }
     }
 }
