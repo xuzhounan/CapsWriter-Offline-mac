@@ -80,10 +80,8 @@ class KeyboardMonitor {
             RecordingState.shared.updateKeyboardMonitorStatus("正在启动...")
         }
         
-        // 在后台线程启动事件监听
-        monitorQueue?.async { [weak self] in
-            self?.setupEventTap()
-        }
+        // 直接在主线程设置事件监听，确保事件循环稳定
+        setupEventTap()
     }
     
     private func requestAccessibilityPermission() {
@@ -129,9 +127,9 @@ class KeyboardMonitor {
         }
         print("✅ 运行循环源创建成功")
         
-        // 添加到当前线程的运行循环
-        CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
-        print("✅ 已添加到运行循环")
+        // 添加到主线程的运行循环
+        CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+        print("✅ 已添加到主运行循环")
         
         // 启用事件监听
         CGEvent.tapEnable(tap: eventTap, enable: true)
@@ -142,15 +140,10 @@ class KeyboardMonitor {
         print("📝 监听 O 键 (键码: \(oKeyCode))")
         print("🎤 连击3下 O 键开始/结束录音")
         
-        // 确保状态更新在主线程
-        DispatchQueue.main.async {
-            RecordingState.shared.updateKeyboardMonitorStatus("正在监听")
-        }
+        // 更新状态
+        RecordingState.shared.updateKeyboardMonitorStatus("正在监听")
         
-        // 在后台线程中运行事件循环
-        print("🔄 开始运行事件循环...")
-        CFRunLoopRun()
-        print("⏹️ 事件循环已结束")
+        print("✅ 键盘监听器设置完成，使用主运行循环")
     }
     
     private func handleKeyEvent(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
@@ -279,28 +272,19 @@ class KeyboardMonitor {
         print("🛑 正在停止键盘监听器...")
         isRunning = false
         
-        // 在监听线程中停止
-        monitorQueue?.async { [weak self] in
-            guard let self = self else { return }
-            
-            // 停止事件监听
-            if let eventTap = self.eventTap {
-                CGEvent.tapEnable(tap: eventTap, enable: false)
-                CFMachPortInvalidate(eventTap)
-                self.eventTap = nil
-                print("✅ 事件监听已停用")
-            }
-            
-            // 移除运行循环源
-            if let runLoopSource = self.runLoopSource {
-                CFRunLoopRemoveSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
-                self.runLoopSource = nil
-                print("✅ 运行循环源已移除")
-            }
-            
-            // 停止运行循环
-            CFRunLoopStop(CFRunLoopGetCurrent())
-            print("✅ 运行循环已停止")
+        // 停止事件监听
+        if let eventTap = eventTap {
+            CGEvent.tapEnable(tap: eventTap, enable: false)
+            CFMachPortInvalidate(eventTap)
+            self.eventTap = nil
+            print("✅ 事件监听已停用")
+        }
+        
+        // 移除运行循环源
+        if let runLoopSource = runLoopSource {
+            CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+            self.runLoopSource = nil
+            print("✅ 运行循环源已移除")
         }
         
         RecordingState.shared.updateKeyboardMonitorStatus("已停止")
@@ -315,6 +299,22 @@ class KeyboardMonitor {
         print("✅ KeyboardMonitor: 回调函数已设置")
         print("📊 KeyboardMonitor: startRecordingCallback = \(startRecordingCallback != nil ? "存在" : "不存在")")
         print("📊 KeyboardMonitor: stopRecordingCallback = \(stopRecordingCallback != nil ? "存在" : "不存在")")
+    }
+    
+    // 重置监听器状态
+    func resetMonitoring() {
+        print("🔄 重置键盘监听器...")
+        stopMonitoring()
+        
+        // 重置状态
+        clickCount = 0
+        lastClickTime = 0
+        isRecording = false
+        
+        // 短暂延迟后重新启动
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.startMonitoring()
+        }
     }
 }
 

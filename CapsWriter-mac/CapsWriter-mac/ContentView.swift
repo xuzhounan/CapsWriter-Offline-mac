@@ -210,6 +210,15 @@ struct MainDashboardView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     
+                    Button("重置监听器") {
+                        print("🔄 重置键盘监听器...")
+                        if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
+                            appDelegate.keyboardMonitor?.resetMonitoring()
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    
                     Button("测试录音") {
                         print("🧪 测试录音状态切换")
                         if recordingState.isRecording {

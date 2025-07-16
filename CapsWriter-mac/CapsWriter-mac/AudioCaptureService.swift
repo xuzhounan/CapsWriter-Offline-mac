@@ -46,8 +46,10 @@ class AudioCaptureService: ObservableObject {
         
         requestMicrophonePermission { [weak self] granted in
             DispatchQueue.main.async {
+                self?.addLog("🎤 权限请求回调: granted=\(granted)")
                 if granted {
                     self?.hasPermission = true
+                    self?.addLog("✅ 麦克风权限已获取，开始启动音频采集...")
                     self?.startCapture()
                 } else {
                     self?.hasPermission = false
@@ -74,12 +76,25 @@ class AudioCaptureService: ObservableObject {
         
         // 在音频队列中设置和启动音频引擎
         audioQueue.async { [weak self] in
-            guard let self = self else { return }
+            guard let self = self else { 
+                print("⚠️ AudioCaptureService 实例已被释放")
+                return 
+            }
             
+            self.addLog("🎧 在音频队列中开始设置音频引擎...")
             self.setupAudioEngine()
             
+            guard let audioEngine = self.audioEngine else {
+                DispatchQueue.main.async {
+                    self.addLog("❌ 音频引擎创建失败")
+                    self.delegate?.audioCaptureDidFailWithError(AudioCaptureError.engineSetupFailed)
+                }
+                return
+            }
+            
             do {
-                try self.audioEngine?.start()
+                self.addLog("🚀 尝试启动音频引擎...")
+                try audioEngine.start()
                 DispatchQueue.main.async {
                     self.isCapturing = true
                     self.addLog("✅ 音频采集启动成功")
@@ -88,6 +103,7 @@ class AudioCaptureService: ObservableObject {
             } catch {
                 DispatchQueue.main.async {
                     self.addLog("❌ 音频采集启动失败: \(error.localizedDescription)")
+                    self.addLog("❌ 错误详情: \(error)")
                     self.isCapturing = false
                     self.delegate?.audioCaptureDidFailWithError(error)
                 }
@@ -172,17 +188,21 @@ class AudioCaptureService: ObservableObject {
         // 清理之前的音频引擎（如果存在）
         cleanupAudioEngine()
         
+        addLog("🏗️ 创建新的 AVAudioEngine...")
         audioEngine = AVAudioEngine()
         guard let audioEngine = audioEngine else {
             addLog("❌ 无法创建音频引擎")
             return
         }
         
-        // 预备音频引擎
+        addLog("⚙️ 预备音频引擎...")
         audioEngine.prepare()
         
+        addLog("🎤 获取音频输入节点...")
         let inputNode = audioEngine.inputNode
         let inputFormat = inputNode.outputFormat(forBus: 0)
+        
+        addLog("🎵 原始输入格式: \(inputFormat.sampleRate)Hz, \(inputFormat.channelCount)声道")
         
         // Configure desired format for speech recognition (16kHz, mono, PCM)
         guard let desiredFormat = AVAudioFormat(
@@ -198,10 +218,10 @@ class AudioCaptureService: ObservableObject {
         addLog("🎵 输入格式: \(inputFormat.sampleRate)Hz, \(inputFormat.channelCount)声道")
         addLog("🎵 目标格式: \(desiredFormat.sampleRate)Hz, \(desiredFormat.channelCount)声道")
         
-        // 确保没有已存在的 tap
+        addLog("🧹 移除已存在的 tap...")
         inputNode.removeTap(onBus: 0)
         
-        // Install audio tap to capture audio data
+        addLog("🔌 安装音频 tap...")
         inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: desiredFormat) { [weak self] buffer, time in
             self?.processAudioBuffer(buffer)
         }
