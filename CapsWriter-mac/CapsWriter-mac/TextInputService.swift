@@ -11,6 +11,11 @@ class TextInputService {
     private var lastInputTime: Date = Date()
     private let inputQueue = DispatchQueue(label: "com.capswriter.text-input", qos: .userInteractive)
     
+    // 权限状态缓存 - 避免重复日志输出
+    private var cachedPermissionStatus: Bool?
+    private var lastPermissionCheckTime: Date = Date.distantPast
+    private let permissionCheckCooldown: TimeInterval = 1.0 // 1秒内不重复检查
+    
     // 单例模式
     static let shared = TextInputService()
     
@@ -22,11 +27,25 @@ class TextInputService {
     
     /// 检查是否有辅助功能权限（键盘输入需要此权限）
     func checkAccessibilityPermission() -> Bool {
+        let now = Date()
+        
+        // 如果距离上次检查时间太短，直接返回缓存的结果
+        if now.timeIntervalSince(lastPermissionCheckTime) < permissionCheckCooldown,
+           let cached = cachedPermissionStatus {
+            return cached
+        }
+        
         let trusted = AXIsProcessTrustedWithOptions([
             kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false
         ] as CFDictionary)
         
-        print("⌨️ 辅助功能权限状态: \(trusted ? "✅ 已授权" : "❌ 未授权")")
+        // 只有在权限状态发生变化时才输出日志
+        if cachedPermissionStatus != trusted {
+            print("⌨️ 辅助功能权限状态变化: \(trusted ? "✅ 已授权" : "❌ 未授权")")
+            cachedPermissionStatus = trusted
+        }
+        
+        lastPermissionCheckTime = now
         return trusted
     }
     

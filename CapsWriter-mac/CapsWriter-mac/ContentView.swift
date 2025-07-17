@@ -4,6 +4,7 @@ struct ContentView: View {
     @StateObject private var recordingState = RecordingState.shared
     @State private var animationScale: CGFloat = 1.0
     @State private var selectedTab = 0
+    @State private var permissionCheckTimer: Timer?
     
     
     var body: some View {
@@ -37,6 +38,11 @@ struct ContentView: View {
             checkPermissionStatus()
             startPeriodicStatusCheck()
         }
+        .onDisappear {
+            // 停止定时器避免内存泄漏
+            permissionCheckTimer?.invalidate()
+            permissionCheckTimer = nil
+        }
     }
     
     // MARK: - 权限检查方法
@@ -45,8 +51,11 @@ struct ContentView: View {
     }
     
     private func startPeriodicStatusCheck() {
-        // 每2秒检查一次权限状态
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+        // 确保只有一个定时器运行
+        permissionCheckTimer?.invalidate()
+        
+        // 每5秒检查一次权限状态（减少频率）
+        permissionCheckTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
             checkPermissionStatus()
         }
     }
@@ -238,7 +247,7 @@ struct MainDashboardView: View {
                             KeyboardMonitor.requestAccessibilityPermission()
                             // 延迟检查权限状态
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                                checkPermissionStatus()
+                                recordingState.refreshPermissionStatus()
                             }
                         }
                         .buttonStyle(.borderedProminent)
@@ -260,7 +269,7 @@ struct MainDashboardView: View {
                         print("🔄 手动刷新权限状态...")
                         let hasPermission = KeyboardMonitor.checkAccessibilityPermission()
                         print("📋 权限状态: \(hasPermission)")
-                        checkPermissionStatus()
+                        recordingState.refreshPermissionStatus()
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
@@ -396,20 +405,6 @@ struct MainDashboardView: View {
         .navigationTitle("CapsWriter-mac")
         .onAppear {
             animationScale = 1.2
-            checkPermissionStatus()
-            startPeriodicStatusCheck()
-        }
-    }
-    
-    // MARK: - 权限检查方法
-    private func checkPermissionStatus() {
-        recordingState.refreshPermissionStatus()
-    }
-    
-    private func startPeriodicStatusCheck() {
-        // 每2秒检查一次权限状态
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
-            checkPermissionStatus()
         }
     }
     
