@@ -222,6 +222,8 @@ class VoiceInputController: ObservableObject {
         } catch {
             let voiceInputError = VoiceInputError.initializationFailed(error.localizedDescription)
             print("❌ VoiceInputController 初始化失败: \(error.localizedDescription)")
+            print("❌ 错误类型: \(type(of: error))")
+            print("❌ 详细错误: \(error)")
             
             // 执行回滚操作
             performInitializationRollback()
@@ -267,13 +269,17 @@ class VoiceInputController: ObservableObject {
             
             // 验证ASR服务是否成功创建
             guard let asr = asrService else {
+                print("❌ ASR服务解析失败 - 检查DIContainer注册")
                 throw VoiceInputError.initializationFailed("ASR服务创建失败")
             }
+            
+            print("✅ ASR服务已解析: \(type(of: asr))")
             
             // 启动ASR服务
             asr.startService()
             print("✅ ASR服务初始化完成")
         } catch {
+            print("❌ ASR服务初始化异常: \(error)")
             throw VoiceInputError.initializationFailed("ASR服务初始化失败: \(error.localizedDescription)")
         }
         
@@ -283,11 +289,15 @@ class VoiceInputController: ObservableObject {
             audioCaptureService = DIContainer.shared.resolve(AudioCaptureServiceProtocol.self)
             
             // 验证音频采集服务是否成功创建
-            guard audioCaptureService != nil else {
+            guard let audioService = audioCaptureService else {
+                print("❌ 音频采集服务解析失败 - 检查DIContainer注册")
                 throw VoiceInputError.initializationFailed("音频采集服务创建失败")
             }
+            
+            print("✅ 音频采集服务已解析: \(type(of: audioService))")
             print("✅ 音频采集服务初始化完成")
         } catch {
+            print("❌ 音频采集服务初始化异常: \(error)")
             throw VoiceInputError.initializationFailed("音频采集服务初始化失败: \(error.localizedDescription)")
         }
         
@@ -347,8 +357,27 @@ class VoiceInputController: ObservableObject {
     // MARK: - Private Methods - Event Handlers
     
     private func handleRecordingStartRequested() {
-        guard canStartRecording() else {
-            let error = VoiceInputError.permissionDenied("缺少必要权限或服务未就绪")
+        // 详细诊断检查
+        if !isInitialized {
+            let error = VoiceInputError.permissionDenied("服务未初始化")
+            handleError(error)
+            return
+        }
+        
+        if currentPhase != .ready {
+            let error = VoiceInputError.permissionDenied("服务状态不正确 (当前: \(currentPhase), 需要: ready)")
+            handleError(error)
+            return
+        }
+        
+        if !recordingState.hasMicrophonePermission {
+            let error = VoiceInputError.permissionDenied("缺少麦克风权限")
+            handleError(error)
+            return
+        }
+        
+        if !recordingState.hasAccessibilityPermission {
+            let error = VoiceInputError.permissionDenied("缺少辅助功能权限")
             handleError(error)
             return
         }
@@ -508,16 +537,20 @@ class VoiceInputController: ObservableObject {
     
     private func updatePhase(_ newPhase: VoiceInputPhase) {
         DispatchQueue.main.async { [weak self] in
-            self?.currentPhase = newPhase
+            guard let self = self else { return }
+            
+            let oldPhase = self.currentPhase
+            self.currentPhase = newPhase
+            print("🔄 VoiceInputController 阶段变更: \(oldPhase) -> \(newPhase)")
             
             // 同步更新状态管理器
             switch newPhase {
             case .recording:
-                self?.recordingState.startRecording()
+                self.recordingState.startRecording()
             case .ready, .idle:
-                self?.recordingState.stopRecording()
+                self.recordingState.stopRecording()
             case .error(let error):
-                self?.lastError = error
+                self.lastError = error
                 print("❌ VoiceInputController 状态错误: \(error.localizedDescription)")
             default:
                 break
