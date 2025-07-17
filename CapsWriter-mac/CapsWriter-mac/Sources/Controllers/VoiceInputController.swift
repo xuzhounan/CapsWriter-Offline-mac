@@ -2,67 +2,10 @@ import Foundation
 import Combine
 import AVFoundation
 
-// MARK: - Dependency Injection Container
+// MARK: - Imports and Dependencies
 
-/// 依赖注入容器协议
-protocol DependencyInjectionProtocol {
-    func register<T>(_ type: T.Type, factory: @escaping () -> T)
-    func register<T>(_ type: T.Type, instance: T)
-    func resolve<T>(_ type: T.Type) -> T
-    func resolve<T>(_ type: T.Type) -> T?
-}
-
-/// 简化的依赖注入容器实现
-class DIContainer: DependencyInjectionProtocol {
-    static let shared = DIContainer()
-    
-    private var registrations: [String: () -> Any] = [:]
-    private var singletons: [String: Any] = [:]
-    
-    private init() {
-        setupDefaultRegistrations()
-    }
-    
-    func register<T>(_ type: T.Type, factory: @escaping () -> T) {
-        let key = String(describing: type)
-        registrations[key] = factory
-    }
-    
-    func register<T>(_ type: T.Type, instance: T) {
-        let key = String(describing: type)
-        singletons[key] = instance
-        registrations[key] = { instance }
-    }
-    
-    func resolve<T>(_ type: T.Type) -> T {
-        guard let service: T = resolve(type) else {
-            fatalError("Service not registered: \(type)")
-        }
-        return service
-    }
-    
-    func resolve<T>(_ type: T.Type) -> T? {
-        let key = String(describing: type)
-        
-        if let singleton = singletons[key] as? T {
-            return singleton
-        }
-        
-        guard let factory = registrations[key] else {
-            return nil
-        }
-        
-        return factory() as? T
-    }
-    
-    private func setupDefaultRegistrations() {
-        register(ConfigurationManagerProtocol.self, instance: ConfigurationManager.shared)
-        register(TextInputServiceProtocol.self, instance: TextInputService.shared)
-        register(AudioCaptureServiceProtocol.self) { AudioCaptureService() }
-        register(SpeechRecognitionServiceProtocol.self) { SherpaASRService() }
-        register(KeyboardMonitorProtocol.self) { KeyboardMonitor() }
-    }
-}
+// 确保引用正确的依赖注入容器和协议
+// 需要确保能够访问各种协议定义
 
 /// 语音输入控制器 - 第二阶段任务2.1
 /// 统一协调语音输入流程，从 AppDelegate 中分离业务逻辑

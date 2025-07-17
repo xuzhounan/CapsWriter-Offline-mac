@@ -125,15 +125,7 @@ protocol ServiceLifecycleProtocol: AnyObject {
     func cleanup()
 }
 
-// MARK: - Dependency Injection Protocol
-
-/// 依赖注入协议
-protocol DependencyInjectionProtocol {
-    func register<T>(_ type: T.Type, factory: @escaping () -> T)
-    func register<T>(_ type: T.Type, instance: T)
-    func resolve<T>(_ type: T.Type) -> T
-    func resolve<T>(_ type: T.Type) -> T?
-}
+// MARK: - Dependency Injection (see DIContainer.swift for implementation)
 
 // MARK: - Mock Support Protocols
 

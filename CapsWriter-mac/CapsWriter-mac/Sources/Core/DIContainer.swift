@@ -1,5 +1,13 @@
 import Foundation
 
+/// 依赖注入协议
+protocol DependencyInjectionProtocol {
+    func register<T>(_ type: T.Type, factory: @escaping () -> T)
+    func register<T>(_ type: T.Type, instance: T)
+    func resolve<T>(_ type: T.Type) -> T
+    func resolve<T>(_ type: T.Type) -> T?
+}
+
 /// 依赖注入容器 - 第二阶段任务2.2
 /// 实现服务注册、解析和生命周期管理
 /// 支持单例模式、工厂模式和Mock服务替换
@@ -248,6 +256,11 @@ class DIContainer: DependencyInjectionProtocol {
             return KeyboardMonitor()
         }
         
+        // 注册错误处理器（单例） - 集成错误处理机制
+        registerSingleton(ErrorHandlerProtocol.self) {
+            return ErrorHandler()
+        }
+        
         print("✅ 默认服务注册完成")
     }
     
@@ -330,6 +343,10 @@ extension DIContainer {
         
         static func createConfigurationManager() -> ConfigurationManagerProtocol {
             return DIContainer.shared.resolve(ConfigurationManagerProtocol.self)
+        }
+        
+        static func createErrorHandler() -> ErrorHandlerProtocol {
+            return DIContainer.shared.resolve(ErrorHandlerProtocol.self)
         }
     }
 }

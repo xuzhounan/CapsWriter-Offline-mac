@@ -5,7 +5,8 @@ import OSLog
 
 /// 统一错误处理器 - CapsWriter-mac 第一阶段任务 1.3
 /// 负责错误收集、分类、恢复和用户通知
-class ErrorHandler: ObservableObject {
+/// 实现 ErrorHandlerProtocol 以支持依赖注入
+class ErrorHandler: ObservableObject, ErrorHandlerProtocol {
     
     // MARK: - Types
     
@@ -341,6 +342,64 @@ class ErrorHandler: ObservableObject {
         }
     }
     
+    // MARK: - ErrorHandlerProtocol Implementation
+    
+    /// 处理通用错误 (ErrorHandlerProtocol required method)
+    func handle(_ error: Error, context: String) {
+        let appError: AppError
+        if let appErr = error as? AppError {
+            appError = appErr
+        } else {
+            appError = .unknownError(error.localizedDescription)
+        }
+        
+        reportError(
+            appError,
+            context: ErrorContext(component: context, operation: "错误处理")
+        )
+    }
+    
+    /// 处理语音输入控制器错误 (ErrorHandlerProtocol required method)
+    func handleVoiceInputError(_ error: VoiceInputController.VoiceInputError) {
+        let appError: AppError
+        switch error {
+        case .initializationFailed(let message):
+            appError = .serviceInitializationFailed(message)
+        case .permissionDenied(let message):
+            appError = .permissionDenied(message)
+        case .recordingFailed(let message):
+            appError = .audioCaptureFailed(message)
+        case .recognitionFailed(let message):
+            appError = .speechRecognitionFailed(message)
+        case .textInputFailed(let message):
+            appError = .textInputFailed(message)
+        }
+        
+        reportError(
+            appError,
+            context: ErrorContext(component: "VoiceInputController", operation: "语音输入")
+        )
+    }
+    
+    /// 报告错误并提供用户信息 (ErrorHandlerProtocol required method)
+    func reportError(_ error: Error, userInfo: [String: Any]?) {
+        let appError: AppError
+        if let appErr = error as? AppError {
+            appError = appErr
+        } else {
+            appError = .unknownError(error.localizedDescription)
+        }
+        
+        // 从userInfo中提取上下文信息
+        let component = userInfo?["component"] as? String ?? "Unknown"
+        let operation = userInfo?["operation"] as? String ?? "未知操作"
+        
+        reportError(
+            appError,
+            context: ErrorContext(component: component, operation: operation)
+        )
+    }
+    
     deinit {
         retryTimers.values.forEach { $0.invalidate() }
     }
@@ -459,6 +518,64 @@ extension ErrorHandler {
         } else {
             let unresolvedCount = activeErrors.filter { !$0.isResolved }.count
             return "活跃错误: \(unresolvedCount)/\(activeErrors.count)"
+        }
+    }
+}
+
+// MARK: - AppError Definition
+
+/// 应用程序错误类型定义
+enum AppError: Error, LocalizedError, Equatable {
+    case permissionDenied(String)
+    case serviceInitializationFailed(String)
+    case modelLoadFailed(String)
+    case configurationLoadFailed(String)
+    case audioCaptureFailed(String)
+    case speechRecognitionFailed(String)
+    case textInputFailed(String)
+    case unknownError(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .permissionDenied(let message):
+            return "权限被拒绝: \(message)"
+        case .serviceInitializationFailed(let message):
+            return "服务初始化失败: \(message)"
+        case .modelLoadFailed(let message):
+            return "模型加载失败: \(message)"
+        case .configurationLoadFailed(let message):
+            return "配置加载失败: \(message)"
+        case .audioCaptureFailed(let message):
+            return "音频采集失败: \(message)"
+        case .speechRecognitionFailed(let message):
+            return "语音识别失败: \(message)"
+        case .textInputFailed(let message):
+            return "文本输入失败: \(message)"
+        case .unknownError(let message):
+            return "未知错误: \(message)"
+        }
+    }
+    
+    static func == (lhs: AppError, rhs: AppError) -> Bool {
+        switch (lhs, rhs) {
+        case (.permissionDenied(let lhsMsg), .permissionDenied(let rhsMsg)):
+            return lhsMsg == rhsMsg
+        case (.serviceInitializationFailed(let lhsMsg), .serviceInitializationFailed(let rhsMsg)):
+            return lhsMsg == rhsMsg
+        case (.modelLoadFailed(let lhsMsg), .modelLoadFailed(let rhsMsg)):
+            return lhsMsg == rhsMsg
+        case (.configurationLoadFailed(let lhsMsg), .configurationLoadFailed(let rhsMsg)):
+            return lhsMsg == rhsMsg
+        case (.audioCaptureFailed(let lhsMsg), .audioCaptureFailed(let rhsMsg)):
+            return lhsMsg == rhsMsg
+        case (.speechRecognitionFailed(let lhsMsg), .speechRecognitionFailed(let rhsMsg)):
+            return lhsMsg == rhsMsg
+        case (.textInputFailed(let lhsMsg), .textInputFailed(let rhsMsg)):
+            return lhsMsg == rhsMsg
+        case (.unknownError(let lhsMsg), .unknownError(let rhsMsg)):
+            return lhsMsg == rhsMsg
+        default:
+            return false
         }
     }
 }
