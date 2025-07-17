@@ -36,9 +36,32 @@ class KeyboardMonitor {
         return configManager.keyboard.requiredClicks
     }
     
-    // 回调函数
-    var startRecordingCallback: (() -> Void)?
-    var stopRecordingCallback: (() -> Void)?
+    // 回调函数 - 使用私有队列保护访问
+    private let callbackQueue = DispatchQueue(label: "com.capswriter.keyboard.callback", attributes: .concurrent)
+    private var _startRecordingCallback: (() -> Void)?
+    private var _stopRecordingCallback: (() -> Void)?
+    
+    var startRecordingCallback: (() -> Void)? {
+        get {
+            return callbackQueue.sync { _startRecordingCallback }
+        }
+        set {
+            callbackQueue.async(flags: .barrier) { [weak self] in
+                self?._startRecordingCallback = newValue
+            }
+        }
+    }
+    
+    var stopRecordingCallback: (() -> Void)? {
+        get {
+            return callbackQueue.sync { _stopRecordingCallback }
+        }
+        set {
+            callbackQueue.async(flags: .barrier) { [weak self] in
+                self?._stopRecordingCallback = newValue
+            }
+        }
+    }
     
     init() {
         print("🔧🔧🔧 KeyboardMonitor 初始化开始 🔧🔧🔧")
@@ -58,8 +81,10 @@ class KeyboardMonitor {
         print("🛑 KeyboardMonitor deinit 开始")
         stopMonitoring()
         // 清除回调函数引用，避免循环引用
-        startRecordingCallback = nil
-        stopRecordingCallback = nil
+        callbackQueue.async(flags: .barrier) { [weak self] in
+            self?._startRecordingCallback = nil
+            self?._stopRecordingCallback = nil
+        }
         print("🛑 KeyboardMonitor deinit 完成")
     }
     
@@ -237,7 +262,10 @@ class KeyboardMonitor {
         
         // 确保在主线程执行回调
         DispatchQueue.main.async { [weak self] in
-            if let callback = self?.startRecordingCallback {
+            guard let self = self else { return }
+            // 原子性地获取回调函数引用，避免线程安全问题
+            let callback = self.startRecordingCallback
+            if let callback = callback {
                 callback()
                 print("✅ 开始录音回调已执行")
             } else {
@@ -251,7 +279,10 @@ class KeyboardMonitor {
         
         // 确保在主线程执行回调
         DispatchQueue.main.async { [weak self] in
-            if let callback = self?.stopRecordingCallback {
+            guard let self = self else { return }
+            // 原子性地获取回调函数引用，避免线程安全问题
+            let callback = self.stopRecordingCallback
+            if let callback = callback {
                 callback()
                 print("✅ 停止录音回调已执行")
             } else {
