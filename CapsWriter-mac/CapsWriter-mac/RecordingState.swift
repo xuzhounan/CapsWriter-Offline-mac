@@ -38,6 +38,12 @@ class RecordingState: ObservableObject {
     /// 文本输入权限状态
     @Published var hasTextInputPermission: Bool = false
     
+    /// 转录历史记录
+    @Published var transcriptHistory: [TranscriptEntry] = []
+    
+    /// 当前部分转录文本
+    @Published var partialTranscript: String = ""
+    
     // MARK: - Private Properties
     
     // 暂时注释掉 StateManager 依赖，保持向后兼容
@@ -199,6 +205,40 @@ class RecordingState: ObservableObject {
     func updateTextInputPermission(_ hasPermission: Bool) {
         DispatchQueue.main.async {
             self.hasTextInputPermission = hasPermission
+        }
+    }
+    
+    /// 更新转录历史记录
+    func updateTranscriptHistory(_ entries: [TranscriptEntry]) {
+        DispatchQueue.main.async {
+            self.transcriptHistory = entries
+        }
+    }
+    
+    /// 添加转录条目
+    func addTranscriptEntry(_ entry: TranscriptEntry) {
+        DispatchQueue.main.async {
+            self.transcriptHistory.append(entry)
+            
+            // 保持历史记录不超过100条
+            if self.transcriptHistory.count > 100 {
+                self.transcriptHistory.removeFirst(self.transcriptHistory.count - 100)
+            }
+        }
+    }
+    
+    /// 更新部分转录文本
+    func updatePartialTranscript(_ text: String) {
+        DispatchQueue.main.async {
+            self.partialTranscript = text
+        }
+    }
+    
+    /// 清空转录历史记录
+    func clearTranscriptHistory() {
+        DispatchQueue.main.async {
+            self.transcriptHistory.removeAll()
+            self.partialTranscript = ""
         }
     }
     

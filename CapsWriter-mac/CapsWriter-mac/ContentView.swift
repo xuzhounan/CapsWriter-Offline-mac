@@ -650,19 +650,13 @@ struct ASRServicePlaceholderView: View {
 
 // MARK: - 实时转录视图
 struct RealTimeTranscriptionView: View {
-    @StateObject private var asrService: SherpaASRService
     @StateObject private var recordingState = RecordingState.shared
     @State private var isAutoScroll = true
+    @State private var asrService: SherpaASRService?
     
     init() {
-        // 获取现有的ASR服务实例
-        if let appDelegate = CapsWriterApp.sharedAppDelegate ?? (NSApplication.shared.delegate as? AppDelegate),
-           let existingService = appDelegate.asrService {
-            _asrService = StateObject(wrappedValue: existingService)
-        } else {
-            // 如果没有现有实例，创建新的（不应该发生）
-            _asrService = StateObject(wrappedValue: SherpaASRService())
-        }
+        // 暂时不直接获取ASR服务，使用RecordingState作为主要数据源
+        // 在 onAppear 中尝试获取服务实例
     }
     
     var body: some View {
@@ -687,19 +681,19 @@ struct RealTimeTranscriptionView: View {
                     Spacer()
                     
                     // 转录历史数量
-                    Text("共 \(asrService.transcriptHistory.count) 条记录")
+                    Text("共 \(recordingState.transcriptHistory.count) 条记录")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
                 
                 // 实时部分转录（当前正在识别的内容）
-                if !asrService.partialTranscript.isEmpty {
+                if !recordingState.partialTranscript.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("正在识别...")
                             .font(.caption)
                             .foregroundColor(.orange)
                         
-                        Text(asrService.partialTranscript)
+                        Text(recordingState.partialTranscript)
                             .font(.body)
                             .foregroundColor(.orange)
                             .padding(.horizontal, 12)
@@ -726,7 +720,7 @@ struct RealTimeTranscriptionView: View {
                     .tint(recordingState.isRecording ? .red : .blue)
                     
                     Button("清空转录") {
-                        asrService.clearTranscriptHistory()
+                        recordingState.clearTranscriptHistory()
                     }
                     .buttonStyle(.bordered)
                     .foregroundColor(.red)
@@ -758,7 +752,7 @@ struct RealTimeTranscriptionView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 12) {
-                            ForEach(asrService.transcriptHistory) { entry in
+                            ForEach(recordingState.transcriptHistory) { entry in
                                 TranscriptRowView(entry: entry)
                                     .id(entry.id)
                             }
@@ -768,10 +762,10 @@ struct RealTimeTranscriptionView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color(.textBackgroundColor))
                     .cornerRadius(8)
-                    .onChange(of: asrService.transcriptHistory.count) {
-                        if isAutoScroll && !asrService.transcriptHistory.isEmpty {
+                    .onChange(of: recordingState.transcriptHistory.count) {
+                        if isAutoScroll && !recordingState.transcriptHistory.isEmpty {
                             withAnimation(.easeInOut(duration: 0.3)) {
-                                proxy.scrollTo(asrService.transcriptHistory.last?.id, anchor: .bottom)
+                                proxy.scrollTo(recordingState.transcriptHistory.last?.id, anchor: .bottom)
                             }
                         }
                     }
@@ -791,6 +785,10 @@ struct RealTimeTranscriptionView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.windowBackgroundColor))
         .navigationTitle("实时转录")
+        .onAppear {
+            // 尝试获取ASR服务实例
+            tryToGetASRService()
+        }
     }
     
     private func toggleRecording() {
@@ -804,7 +802,7 @@ struct RealTimeTranscriptionView: View {
     }
     
     private func exportTranscript() {
-        let transcript = asrService.transcriptHistory
+        let transcript = recordingState.transcriptHistory
             .map { entry in "[\(entry.formattedTime)] \(entry.text)" }
             .joined(separator: "\n")
         
@@ -823,6 +821,23 @@ struct RealTimeTranscriptionView: View {
                 }
             }
         }
+    }
+    
+    private func tryToGetASRService() {
+        // 尝试通过VoiceInputController获取ASR服务实例
+        let controller = VoiceInputController.shared
+        
+        // 这里需要找到一种方式来获取ASR服务实例
+        // 由于当前架构的限制，我们暂时无法直接获取ASR服务
+        // 使用RecordingState作为主要数据源
+        
+        print("🔍 实时转录视图：尝试获取ASR服务实例")
+        print("   - 当前录音状态: \(recordingState.isRecording)")
+        print("   - ASR服务运行状态: \(recordingState.isASRServiceRunning)")
+        print("   - ASR服务初始化状态: \(recordingState.isASRServiceInitialized)")
+        
+        // 可以考虑在这里添加一个定时器来定期检查服务状态
+        // 或者使用通知机制来获取转录结果
     }
 }
 

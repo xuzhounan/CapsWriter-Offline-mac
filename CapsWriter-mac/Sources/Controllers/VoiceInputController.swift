@@ -430,6 +430,9 @@ class VoiceInputController: ObservableObject {
         DispatchQueue.main.async { [weak self] in
             // 更新识别状态 - 使用现有的状态管理
             self?.asrService?.partialTranscript = text
+            
+            // 同步到 RecordingState 供 UI 使用
+            self?.recordingState.updatePartialTranscript(text)
         }
     }
     
@@ -439,6 +442,11 @@ class VoiceInputController: ObservableObject {
         DispatchQueue.main.async { [weak self] in
             self?.asrService?.addTranscriptEntry(text: text, isPartial: false)
             self?.asrService?.partialTranscript = ""
+            
+            // 同步到 RecordingState 供 UI 使用
+            let entry = TranscriptEntry(timestamp: Date(), text: text, isPartial: false)
+            self?.recordingState.addTranscriptEntry(entry)
+            self?.recordingState.updatePartialTranscript("")
         }
         
         // 处理文本输入
