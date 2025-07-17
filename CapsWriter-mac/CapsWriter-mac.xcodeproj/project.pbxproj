@@ -27,6 +27,8 @@
 		A12345678901234567890060 /* libsherpa-onnx-c-api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */; };
 		A12345678901234567890070 /* models in Resources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890071 /* models */; };
 		149370E2BB564291900407A1 /* DIContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2146729669AF4727A24F3226 /* DIContainer.swift */; };
+		F3492769DEF14C418AF2B8BF /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = F018A89879EC4D848FBE8064 /* ServiceProtocols.swift */; };
+		D46CF322752A42C4A18CA8F0 /* ErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2765C79BC5314CD99DF2D45E /* ErrorHandler.swift */; };
 	/* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -67,6 +69,8 @@
 		A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libsherpa-onnx-c-api.dylib"; path = "CapsWriter-mac/Frameworks/libsherpa-onnx-c-api.dylib"; sourceTree = "<group>"; };
 		A12345678901234567890071 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = models; sourceTree = "<group>"; };
 		2146729669AF4727A24F3226 /* DIContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Core/DIContainer.swift"; sourceTree = "<group>"; };
+		F018A89879EC4D848FBE8064 /* ServiceProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Protocols/ServiceProtocols.swift"; sourceTree = "<group>"; };
+		2765C79BC5314CD99DF2D45E /* ErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Core/ErrorHandler.swift"; sourceTree = "<group>"; };
 	/* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,6 +133,8 @@
 				ST8E3D1B2B7F4E9C8A1D5626 /* RecognitionState.swift */,
 				ST8E3D1B2B7F4E9C8A1D5628 /* AppState.swift */,
 				7845C2A98AB741B0B2FEVIC2 /* VoiceInputController.swift */,
+				F018A89879EC4D848FBE8064 /* ServiceProtocols.swift */,
+				2765C79BC5314CD99DF2D45E /* ErrorHandler.swift */,
 			);
 			path = "CapsWriter-mac";
 			sourceTree = "<group>";
@@ -225,6 +231,8 @@
 				CF8E3D1A2B7F4E9C8A1D5621 /* ConfigurationManager.swift in Sources */,
 				38967C1F3C9E4DEAA6E9VIC1 /* VoiceInputController.swift in Sources */,
 							149370E2BB564291900407A1 /* DIContainer.swift in Sources */,
+				F3492769DEF14C418AF2B8BF /* ServiceProtocols.swift in Sources */,
+				D46CF322752A42C4A18CA8F0 /* ErrorHandler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
