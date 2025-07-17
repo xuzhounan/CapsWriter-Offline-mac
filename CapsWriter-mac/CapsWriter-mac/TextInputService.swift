@@ -2,8 +2,19 @@ import Foundation
 import ApplicationServices
 import AppKit
 
+/// 文本输入服务协议
+protocol TextInputServiceProtocol: AnyObject {
+    // MARK: - Methods
+    func checkAccessibilityPermission() -> Bool
+    func shouldInputText(_ text: String) -> Bool
+    func formatTextForInput(_ text: String) -> String
+    func inputText(_ text: String)
+    func inputTextWithAutoCorrection(_ text: String)
+    func simulateKeyPress(_ keyCode: CGKeyCode, modifiers: CGEventFlags)
+}
+
 /// 文本输入服务 - 负责将语音识别结果转换为键盘输入
-class TextInputService {
+class TextInputService: TextInputServiceProtocol {
     
     // MARK: - Properties
     
@@ -255,5 +266,16 @@ extension TextInputService {
         }
         
         return true
+    }
+    
+    /// 输入文本并应用自动纠错
+    func inputTextWithAutoCorrection(_ text: String) {
+        // 简单实现，直接调用普通输入
+        inputText(text)
+    }
+    
+    /// 模拟按键
+    func simulateKeyPress(_ keyCode: CGKeyCode, modifiers: CGEventFlags) {
+        performKeyInput(keyCode, withModifiers: modifiers)
     }
 }

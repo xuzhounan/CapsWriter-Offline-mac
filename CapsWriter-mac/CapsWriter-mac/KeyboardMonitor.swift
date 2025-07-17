@@ -2,10 +2,24 @@ import Foundation
 import ApplicationServices
 import Carbon
 
-class KeyboardMonitor {
+/// 键盘监听服务协议
+protocol KeyboardMonitorProtocol: AnyObject {
+    // MARK: - Properties
+    var isRunning: Bool { get }
+    var startRecordingCallback: (() -> Void)? { get set }
+    var stopRecordingCallback: (() -> Void)? { get set }
+    
+    // MARK: - Methods
+    func startMonitoring()
+    func stopMonitoring()
+    func setCallbacks(startRecording: @escaping () -> Void, stopRecording: @escaping () -> Void)
+    func checkAccessibilityPermission() -> Bool
+}
+
+class KeyboardMonitor: KeyboardMonitorProtocol {
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
-    private var isRunning = false
+    internal var isRunning = false
     
     // Configuration manager
     private let configManager = ConfigurationManager.shared
@@ -393,6 +407,10 @@ class KeyboardMonitor {
 extension KeyboardMonitor {
     static func checkAccessibilityPermission() -> Bool {
         return AXIsProcessTrusted()
+    }
+    
+    func checkAccessibilityPermission() -> Bool {
+        return Self.checkAccessibilityPermission()
     }
     
     static func requestAccessibilityPermission() {

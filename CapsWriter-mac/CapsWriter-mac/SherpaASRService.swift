@@ -142,9 +142,25 @@ protocol SpeechRecognitionDelegate: AnyObject {
     func speechRecognitionDidFailWithError(_ error: Error)
 }
 
+/// 语音识别服务协议
+protocol SpeechRecognitionServiceProtocol: AnyObject {
+    // MARK: - Properties
+    var isServiceRunning: Bool { get }
+    var partialTranscript: String { get set }
+    var delegate: SpeechRecognitionDelegate? { get set }
+    
+    // MARK: - Methods
+    func startService()
+    func stopService()
+    func startRecognition()
+    func stopRecognition()
+    func processAudioBuffer(_ buffer: AVAudioPCMBuffer)
+    func addTranscriptEntry(text: String, isPartial: Bool)
+}
+
 // MARK: - Pure ASR Service Class
 
-class SherpaASRService: ObservableObject {
+class SherpaASRService: ObservableObject, SpeechRecognitionServiceProtocol {
     // MARK: - Published Properties
     @Published var logs: [String] = []
     @Published var transcript: String = ""

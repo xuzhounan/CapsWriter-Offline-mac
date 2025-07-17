@@ -102,11 +102,43 @@ struct AppBehaviorConfiguration: Codable {
     }
 }
 
+/// 调试配置
+struct DebugConfiguration: Codable {
+    var enableVerboseLogging: Bool = false
+    var enablePerformanceMetrics: Bool = false
+    var logLevel: String = "info"
+    var maxLogEntries: Int = 1000
+    
+    func isValid() -> Bool {
+        return maxLogEntries > 0 && !logLevel.isEmpty
+    }
+}
+
+// MARK: - Configuration Manager Protocol
+
+/// 配置管理服务协议
+protocol ConfigurationManagerProtocol: AnyObject {
+    // MARK: - Properties
+    var audio: AudioConfiguration { get }
+    var keyboard: KeyboardConfiguration { get }
+    var appBehavior: AppBehaviorConfiguration { get }
+    var textProcessing: TextProcessingConfiguration { get }
+    var ui: UIConfiguration { get }
+    // var debug: DebugConfiguration { get }  // 暂时注释，避免编译错误
+    
+    // MARK: - Methods
+    func save()
+    func reset()
+    func resetToDefaults()
+    func exportConfiguration() -> Data?
+    func importConfiguration(from data: Data) -> Bool
+}
+
 // MARK: - Configuration Manager
 
 /// 统一配置管理器
 /// 负责管理应用的所有配置项，支持持久化存储、运行时更新和验证
-class ConfigurationManager: ObservableObject {
+class ConfigurationManager: ObservableObject, ConfigurationManagerProtocol {
     
     // MARK: - Singleton
     static let shared = ConfigurationManager()
@@ -118,6 +150,7 @@ class ConfigurationManager: ObservableObject {
     @Published var textProcessing: TextProcessingConfiguration
     @Published var ui: UIConfiguration
     @Published var appBehavior: AppBehaviorConfiguration
+    @Published var debug: DebugConfiguration
     
     // MARK: - Private Properties
     private let userDefaults = UserDefaults.standard
@@ -132,6 +165,7 @@ class ConfigurationManager: ObservableObject {
         static let textProcessing = "text_processing_configuration"
         static let ui = "ui_configuration"
         static let appBehavior = "app_behavior_configuration"
+        static let debug = "debug_configuration"
         static let lastSaveTime = "configuration_last_save_time"
     }
     
@@ -162,6 +196,10 @@ class ConfigurationManager: ObservableObject {
         self.appBehavior = ConfigurationManager.loadConfiguration(
             key: Keys.appBehavior, 
             defaultValue: AppBehaviorConfiguration()
+        )
+        self.debug = ConfigurationManager.loadConfiguration(
+            key: Keys.debug, 
+            defaultValue: DebugConfiguration()
         )
         
         // 设置自动保存监听器

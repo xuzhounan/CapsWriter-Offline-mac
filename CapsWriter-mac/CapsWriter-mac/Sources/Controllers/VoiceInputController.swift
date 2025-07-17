@@ -2,6 +2,68 @@ import Foundation
 import Combine
 import AVFoundation
 
+// MARK: - Dependency Injection Container
+
+/// 依赖注入容器协议
+protocol DependencyInjectionProtocol {
+    func register<T>(_ type: T.Type, factory: @escaping () -> T)
+    func register<T>(_ type: T.Type, instance: T)
+    func resolve<T>(_ type: T.Type) -> T
+    func resolve<T>(_ type: T.Type) -> T?
+}
+
+/// 简化的依赖注入容器实现
+class DIContainer: DependencyInjectionProtocol {
+    static let shared = DIContainer()
+    
+    private var registrations: [String: () -> Any] = [:]
+    private var singletons: [String: Any] = [:]
+    
+    private init() {
+        setupDefaultRegistrations()
+    }
+    
+    func register<T>(_ type: T.Type, factory: @escaping () -> T) {
+        let key = String(describing: type)
+        registrations[key] = factory
+    }
+    
+    func register<T>(_ type: T.Type, instance: T) {
+        let key = String(describing: type)
+        singletons[key] = instance
+        registrations[key] = { instance }
+    }
+    
+    func resolve<T>(_ type: T.Type) -> T {
+        guard let service: T = resolve(type) else {
+            fatalError("Service not registered: \(type)")
+        }
+        return service
+    }
+    
+    func resolve<T>(_ type: T.Type) -> T? {
+        let key = String(describing: type)
+        
+        if let singleton = singletons[key] as? T {
+            return singleton
+        }
+        
+        guard let factory = registrations[key] else {
+            return nil
+        }
+        
+        return factory() as? T
+    }
+    
+    private func setupDefaultRegistrations() {
+        register(ConfigurationManagerProtocol.self, instance: ConfigurationManager.shared)
+        register(TextInputServiceProtocol.self, instance: TextInputService.shared)
+        register(AudioCaptureServiceProtocol.self) { AudioCaptureService() }
+        register(SpeechRecognitionServiceProtocol.self) { SherpaASRService() }
+        register(KeyboardMonitorProtocol.self) { KeyboardMonitor() }
+    }
+}
+
 /// 语音输入控制器 - 第二阶段任务2.1
 /// 统一协调语音输入流程，从 AppDelegate 中分离业务逻辑
 /// 利用事件总线实现组件解耦，为功能扩展做准备
@@ -9,17 +71,18 @@ class VoiceInputController: ObservableObject {
     
     // MARK: - Dependencies
     
-    private let configManager = ConfigurationManager.shared
+    private let configManager: ConfigurationManagerProtocol
+    private let diContainer = DIContainer.shared
     
     // 使用现有的状态管理（向后兼容）
     private let recordingState = RecordingState.shared
     
-    // MARK: - Services
+    // MARK: - Services (通过协议接口访问)
     
-    private var keyboardMonitor: KeyboardMonitor?
-    private var asrService: SherpaASRService?
-    private var audioCaptureService: AudioCaptureService?
-    private var textInputService: TextInputService?
+    private var keyboardMonitor: KeyboardMonitorProtocol?
+    private var asrService: SpeechRecognitionServiceProtocol?
+    private var audioCaptureService: AudioCaptureServiceProtocol?
+    private var textInputService: TextInputServiceProtocol?
     
     // MARK: - State
     
@@ -99,8 +162,11 @@ class VoiceInputController: ObservableObject {
     static let shared = VoiceInputController()
     
     private init() {
+        // 通过 DI 容器获取配置管理器
+        self.configManager = diContainer.resolve(ConfigurationManagerProtocol.self)
+        
         setupEventSubscriptions()
-        print("🎙️ VoiceInputController 已初始化")
+        print("🎙️ VoiceInputController 已初始化（使用依赖注入）")
     }
     
     // MARK: - Event Subscriptions
@@ -218,12 +284,12 @@ class VoiceInputController: ObservableObject {
     }
     
     private func initializeServices() throws {
-        print("🔧 开始初始化各项服务...")
+        print("🔧 开始初始化各项服务（使用依赖注入）...")
         
-        // 1. 初始化键盘监听器
+        // 1. 通过DI容器初始化键盘监听器
         do {
             print("🔧 初始化键盘监听器...")
-            keyboardMonitor = KeyboardMonitor()
+            keyboardMonitor = diContainer.resolve(KeyboardMonitorProtocol.self)
             keyboardMonitor?.setCallbacks(
                 startRecording: { [weak self] in
                     self?.handleRecordingStartRequested()
@@ -237,19 +303,19 @@ class VoiceInputController: ObservableObject {
             throw VoiceInputError.initializationFailed("键盘监听器初始化失败: \(error.localizedDescription)")
         }
         
-        // 2. 初始化文本输入服务
+        // 2. 通过DI容器初始化文本输入服务
         do {
             print("🔧 初始化文本输入服务...")
-            textInputService = TextInputService.shared
+            textInputService = diContainer.resolve(TextInputServiceProtocol.self)
             print("✅ 文本输入服务初始化完成")
         } catch {
             throw VoiceInputError.initializationFailed("文本输入服务初始化失败: \(error.localizedDescription)")
         }
         
-        // 3. 初始化ASR服务
+        // 3. 通过DI容器初始化ASR服务
         do {
             print("🔧 初始化ASR服务...")
-            asrService = SherpaASRService()
+            asrService = diContainer.resolve(SpeechRecognitionServiceProtocol.self)
             
             // 验证ASR服务是否成功创建
             guard let asr = asrService else {
@@ -263,10 +329,10 @@ class VoiceInputController: ObservableObject {
             throw VoiceInputError.initializationFailed("ASR服务初始化失败: \(error.localizedDescription)")
         }
         
-        // 4. 初始化音频采集服务
+        // 4. 通过DI容器初始化音频采集服务
         do {
             print("🔧 初始化音频采集服务...")
-            audioCaptureService = AudioCaptureService()
+            audioCaptureService = diContainer.resolve(AudioCaptureServiceProtocol.self)
             
             // 验证音频采集服务是否成功创建
             guard audioCaptureService != nil else {
@@ -277,7 +343,7 @@ class VoiceInputController: ObservableObject {
             throw VoiceInputError.initializationFailed("音频采集服务初始化失败: \(error.localizedDescription)")
         }
         
-        print("✅ 所有服务初始化完成")
+        print("✅ 所有服务初始化完成（通过依赖注入）")
     }
     
     private func setupServiceCallbacks() {

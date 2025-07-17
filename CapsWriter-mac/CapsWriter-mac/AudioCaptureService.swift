@@ -9,7 +9,21 @@ protocol AudioCaptureDelegate: AnyObject {
     func audioCaptureDidFailWithError(_ error: Error)
 }
 
-class AudioCaptureService: ObservableObject {
+/// 音频采集服务协议
+protocol AudioCaptureServiceProtocol: AnyObject {
+    // MARK: - Properties
+    var isCapturing: Bool { get }
+    var hasPermission: Bool { get }
+    var delegate: AudioCaptureDelegate? { get set }
+    
+    // MARK: - Methods
+    func checkMicrophonePermission() -> Bool
+    func requestPermissionAndStartCapture()
+    func startCapture()
+    func stopCapture()
+}
+
+class AudioCaptureService: ObservableObject, AudioCaptureServiceProtocol {
     // MARK: - Published Properties
     @Published var isCapturing: Bool = false
     @Published var hasPermission: Bool = false
@@ -55,6 +69,12 @@ class AudioCaptureService: ObservableObject {
     }
     
     // MARK: - Public Methods
+    
+    /// 检查麦克风权限
+    func checkMicrophonePermission() -> Bool {
+        let status = AVAudioApplication.shared.recordPermission
+        return status == .granted
+    }
     
     func requestPermissionAndStartCapture() {
         addLog("🔍 请求麦克风权限并开始采集...")
