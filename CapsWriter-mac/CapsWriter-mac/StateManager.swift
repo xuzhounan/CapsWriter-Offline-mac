@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import SwiftUI
+import AVFoundation
 
 /// 统一状态管理器 - 协调各个状态类并避免职责重叠
 @MainActor
@@ -224,8 +225,6 @@ class StateManager: ObservableObject {
     }
     
     private func checkMicrophonePermission(completion: @escaping (Bool) -> Void) {
-        import AVFoundation
-        
         switch AVAudioSession.sharedInstance().recordPermission {
         case .granted:
             completion(true)
