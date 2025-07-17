@@ -2,20 +2,48 @@ import SwiftUI
 import Combine
 import AVFoundation
 
+/// 录音状态管理器 - 兼容性包装器，委托给 StateManager
+/// @deprecated 推荐直接使用 StateManager
 class RecordingState: ObservableObject {
+    
+    // MARK: - Published Properties
+    
+    /// 是否正在录音
     @Published var isRecording: Bool = false
+    
+    /// 录音开始时间
     @Published var recordingStartTime: Date?
+    
+    /// 键盘监听器状态
     @Published var keyboardMonitorStatus: String = "未知"
+    
+    /// 辅助功能权限状态
     @Published var hasAccessibilityPermission: Bool = false
+    
+    /// 麦克风权限状态
     @Published var hasMicrophonePermission: Bool = false
+    
+    /// ASR 服务运行状态
     @Published var isASRServiceRunning: Bool = false
+    
+    /// 音频采集服务就绪状态
     @Published var isAudioCaptureServiceReady: Bool = false
+    
+    /// ASR 服务初始化状态
     @Published var isASRServiceInitialized: Bool = false
+    
+    /// 初始化进度
     @Published var initializationProgress: String = "正在启动..."
+    
+    /// 文本输入权限状态
     @Published var hasTextInputPermission: Bool = false
     
-    // 添加一个标志位来跟踪用户是否手动停止了监听
-    // 使用队列保护以确保线程安全
+    // MARK: - Private Properties
+    
+    private let stateManager = StateManager.shared
+    private var cancellables = Set<AnyCancellable>()
+    
+    // 用户手动停止标志（保持向后兼容）
     private let stateQueue = DispatchQueue(label: "com.capswriter.recording-state", attributes: .concurrent)
     private var _isManuallyStoppedByUser: Bool = false
     
@@ -30,126 +58,187 @@ class RecordingState: ObservableObject {
         }
     }
     
+    // MARK: - Singleton
+    
     static let shared = RecordingState()
     
-    private init() {}
+    // MARK: - Initialization
     
+    private init() {
+        setupStateBindings()
+    }
+    
+    // MARK: - State Binding
+    
+    private func setupStateBindings() {
+        // 绑定音频录制状态
+        stateManager.audioState.$isRecording
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isRecording in
+                self?.isRecording = isRecording
+                if isRecording {
+                    self?.recordingStartTime = Date()
+                } else {
+                    self?.recordingStartTime = nil
+                }
+            }
+            .store(in: &cancellables)
+        
+        // 绑定权限状态
+        stateManager.appState.$permissions
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] permissions in
+                self?.hasAccessibilityPermission = permissions.accessibility.isGranted
+                self?.hasMicrophonePermission = permissions.microphone.isGranted
+                self?.hasTextInputPermission = permissions.accessibility.isGranted // 文本输入需要辅助功能权限
+            }
+            .store(in: &cancellables)
+        
+        // 绑定识别引擎状态
+        stateManager.recognitionState.$engineStatus
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] engineStatus in
+                self?.isASRServiceInitialized = engineStatus.isReady
+                self?.isASRServiceRunning = { 
+                    if case .initializing = engineStatus { return true }
+                    return false
+                }()
+                self?.initializationProgress = {
+                    switch engineStatus {
+                    case .uninitialized: return "未初始化"
+                    case .initializing: return "正在初始化..."
+                    case .ready: return "已就绪"
+                    case .error(let message): return "错误: \(message)"
+                    }
+                }()
+            }
+            .store(in: &cancellables)
+    }
+    
+    // MARK: - Public Methods
+    
+    /// 开始录音 - 委托给 StateManager
     func startRecording() {
-        print("📊 RecordingState: startRecording() 被调用")
-        print("📊 RecordingState: 当前录音状态 = \(isRecording)")
-        DispatchQueue.main.async {
-            print("📊 RecordingState: 在主线程中设置 isRecording = true")
-            self.isRecording = true
-            self.recordingStartTime = Date()
-            print("✅ RecordingState: 录音状态已更新为 \(self.isRecording)")
+        print("📊 RecordingState: startRecording() 被调用（委托给 StateManager）")
+        Task { @MainActor in
+            stateManager.startRecording()
         }
     }
     
+    /// 停止录音 - 委托给 StateManager
     func stopRecording() {
-        print("📊 RecordingState: stopRecording() 被调用")
-        print("📊 RecordingState: 当前录音状态 = \(isRecording)")
-        DispatchQueue.main.async {
-            print("📊 RecordingState: 在主线程中设置 isRecording = false")
-            self.isRecording = false
-            self.recordingStartTime = nil
-            print("✅ RecordingState: 录音状态已更新为 \(self.isRecording)")
+        print("📊 RecordingState: stopRecording() 被调用（委托给 StateManager）")
+        Task { @MainActor in
+            stateManager.stopRecording()
         }
     }
     
+    /// 录音时长 - 使用 StateManager 中的音频状态
     var recordingDuration: TimeInterval {
-        guard let startTime = recordingStartTime else { return 0 }
-        return Date().timeIntervalSince(startTime)
+        return stateManager.audioState.recordingDuration
     }
     
+    /// 更新键盘监听器状态
     func updateKeyboardMonitorStatus(_ status: String) {
         DispatchQueue.main.async {
             self.keyboardMonitorStatus = status
         }
+        // 同时通知 StateManager
+        stateManager.updateKeyboardMonitorStatus(status)
     }
     
-    // 用户手动启动监听器
+    /// 用户手动启动监听器
     func userStartedKeyboardMonitor() {
         isManuallyStoppedByUser = false
         updateKeyboardMonitorStatus("已启动")
     }
     
-    // 用户手动停止监听器
+    /// 用户手动停止监听器
     func userStoppedKeyboardMonitor() {
         isManuallyStoppedByUser = true
         updateKeyboardMonitorStatus("已停止")
     }
     
+    /// 更新辅助功能权限 - 同步到 StateManager
     func updateAccessibilityPermission(_ hasPermission: Bool) {
         DispatchQueue.main.async {
             self.hasAccessibilityPermission = hasPermission
         }
+        // 注意：状态绑定会自动同步，这里保持兼容性
     }
     
+    /// 更新麦克风权限 - 同步到 StateManager
     func updateMicrophonePermission(_ hasPermission: Bool) {
         DispatchQueue.main.async {
             self.hasMicrophonePermission = hasPermission
         }
+        // 注意：状态绑定会自动同步，这里保持兼容性
     }
     
+    /// 更新ASR服务状态 - 委托给 StateManager
     func updateASRServiceStatus(_ isRunning: Bool) {
-        DispatchQueue.main.async {
-            self.isASRServiceRunning = isRunning
+        let status: RecognitionState.EngineStatus = isRunning ? .initializing : .uninitialized
+        Task { @MainActor in
+            stateManager.updateRecognitionEngineStatus(status)
         }
     }
     
+    /// 更新音频采集服务状态
     func updateAudioCaptureServiceStatus(_ isReady: Bool) {
         DispatchQueue.main.async {
             self.isAudioCaptureServiceReady = isReady
         }
-    }
-    
-    func updateASRServiceInitialized(_ isInitialized: Bool) {
-        DispatchQueue.main.async {
-            self.isASRServiceInitialized = isInitialized
+        // 更新音频设备状态
+        let deviceStatus: AudioState.AudioDeviceStatus = isReady ? .available : .unavailable
+        Task { @MainActor in
+            stateManager.audioState.updateDeviceStatus(deviceStatus)
         }
     }
     
+    /// 更新ASR服务初始化状态 - 委托给 StateManager
+    func updateASRServiceInitialized(_ isInitialized: Bool) {
+        let status: RecognitionState.EngineStatus = isInitialized ? .ready : .uninitialized
+        Task { @MainActor in
+            stateManager.updateRecognitionEngineStatus(status)
+        }
+    }
+    
+    /// 更新初始化进度 - 委托给 StateManager
     func updateInitializationProgress(_ progress: String) {
         DispatchQueue.main.async {
             self.initializationProgress = progress
         }
+        // 如果进度包含错误信息，更新引擎状态
+        if progress.contains("错误") || progress.contains("失败") {
+            Task { @MainActor in
+                stateManager.updateRecognitionEngineStatus(.error(progress))
+            }
+        }
     }
     
+    /// 更新文本输入权限
     func updateTextInputPermission(_ hasPermission: Bool) {
         DispatchQueue.main.async {
             self.hasTextInputPermission = hasPermission
         }
     }
     
+    /// 刷新权限状态 - 委托给 StateManager
     func refreshPermissionStatus() {
-        // 检查辅助功能权限
-        let hasAccessibilityPermission = KeyboardMonitor.checkAccessibilityPermission()
-        updateAccessibilityPermission(hasAccessibilityPermission)
+        Task { @MainActor in
+            stateManager.updatePermissions()
+        }
         
-        // 检查麦克风权限
-        let microphoneStatus = AVCaptureDevice.authorizationStatus(for: .audio)
-        let hasMicrophonePermission = (microphoneStatus == .authorized)
-        updateMicrophonePermission(hasMicrophonePermission)
-        
-        // 检查文本输入权限（同样需要辅助功能权限）
-        let hasTextInputPermission = TextInputService.shared.checkAccessibilityPermission()
-        updateTextInputPermission(hasTextInputPermission)
-        
-        // 更新键盘监听器状态 - 只有在没有权限时才强制更新状态
-        // 如果有权限且用户没有手动停止，则不要覆盖当前状态
+        // 保持键盘监听器状态逻辑的兼容性
+        let hasAccessibilityPermission = hasAccessibilityPermission
         if !hasAccessibilityPermission {
             updateKeyboardMonitorStatus("等待权限")
-            // 权限丢失时重置手动停止标志
             isManuallyStoppedByUser = false
         } else {
-            // 有权限时，保持当前状态不变（默认停止，等待用户手动启动）
-            // 如果是第一次运行或状态为"等待权限"/"未知"，设置为停止状态
             if keyboardMonitorStatus == "等待权限" || keyboardMonitorStatus == "未知" {
                 updateKeyboardMonitorStatus("已停止")
-                isManuallyStoppedByUser = true // 标记为手动停止状态
-            }
-            // 如果当前是运行状态但用户手动停止了，应该保持停止状态
-            else if (keyboardMonitorStatus == "已启动" || keyboardMonitorStatus == "正在监听") && isManuallyStoppedByUser {
+                isManuallyStoppedByUser = true
+            } else if (keyboardMonitorStatus == "已启动" || keyboardMonitorStatus == "正在监听") && isManuallyStoppedByUser {
                 updateKeyboardMonitorStatus("已停止")
             }
         }
