@@ -479,6 +479,18 @@ class ConfigurationManager: ObservableObject, ConfigurationManagerProtocol {
     func forceSave() {
         saveAllConfigurations()
     }
+    
+    // MARK: - ConfigurationManagerProtocol Implementation
+    
+    /// 保存配置（协议要求）
+    func save() {
+        forceSave()
+    }
+    
+    /// 重置配置（协议要求）
+    func reset() {
+        resetToDefaults()
+    }
 }
 
 // MARK: - Export/Import Data Model
