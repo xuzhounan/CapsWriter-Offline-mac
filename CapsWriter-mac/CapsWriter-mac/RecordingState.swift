@@ -40,7 +40,8 @@ class RecordingState: ObservableObject {
     
     // MARK: - Private Properties
     
-    private let stateManager = StateManager.shared
+    // 暂时注释掉 StateManager 依赖，保持向后兼容
+    // private let stateManager = StateManager.shared
     private var cancellables = Set<AnyCancellable>()
     
     // 用户手动停止标志（保持向后兼容）
@@ -71,71 +72,41 @@ class RecordingState: ObservableObject {
     // MARK: - State Binding
     
     private func setupStateBindings() {
-        // 绑定音频录制状态
-        stateManager.audioState.$isRecording
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] isRecording in
-                self?.isRecording = isRecording
-                if isRecording {
-                    self?.recordingStartTime = Date()
-                } else {
-                    self?.recordingStartTime = nil
-                }
-            }
-            .store(in: &cancellables)
-        
-        // 绑定权限状态
-        stateManager.appState.$permissions
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] permissions in
-                self?.hasAccessibilityPermission = permissions.accessibility.isGranted
-                self?.hasMicrophonePermission = permissions.microphone.isGranted
-                self?.hasTextInputPermission = permissions.accessibility.isGranted // 文本输入需要辅助功能权限
-            }
-            .store(in: &cancellables)
-        
-        // 绑定识别引擎状态
-        stateManager.recognitionState.$engineStatus
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] engineStatus in
-                self?.isASRServiceInitialized = engineStatus.isReady
-                self?.isASRServiceRunning = { 
-                    if case .initializing = engineStatus { return true }
-                    return false
-                }()
-                self?.initializationProgress = {
-                    switch engineStatus {
-                    case .uninitialized: return "未初始化"
-                    case .initializing: return "正在初始化..."
-                    case .ready: return "已就绪"
-                    case .error(let message): return "错误: \(message)"
-                    }
-                }()
-            }
-            .store(in: &cancellables)
+        // 暂时移除 StateManager 绑定，保持向后兼容
+        // TODO: 在 StateManager 添加到项目后重新启用
+        print("🔧 RecordingState: 状态绑定已暂时禁用（等待 StateManager 集成）")
     }
     
     // MARK: - Public Methods
     
-    /// 开始录音 - 委托给 StateManager
+    /// 开始录音 - 暂时恢复原始实现
     func startRecording() {
-        print("📊 RecordingState: startRecording() 被调用（委托给 StateManager）")
-        Task { @MainActor in
-            stateManager.startRecording()
+        print("📊 RecordingState: startRecording() 被调用")
+        print("📊 RecordingState: 当前录音状态 = \(isRecording)")
+        DispatchQueue.main.async {
+            print("📊 RecordingState: 在主线程中设置 isRecording = true")
+            self.isRecording = true
+            self.recordingStartTime = Date()
+            print("✅ RecordingState: 录音状态已更新为 \(self.isRecording)")
         }
     }
     
-    /// 停止录音 - 委托给 StateManager
+    /// 停止录音 - 暂时恢复原始实现
     func stopRecording() {
-        print("📊 RecordingState: stopRecording() 被调用（委托给 StateManager）")
-        Task { @MainActor in
-            stateManager.stopRecording()
+        print("📊 RecordingState: stopRecording() 被调用")
+        print("📊 RecordingState: 当前录音状态 = \(isRecording)")
+        DispatchQueue.main.async {
+            print("📊 RecordingState: 在主线程中设置 isRecording = false")
+            self.isRecording = false
+            self.recordingStartTime = nil
+            print("✅ RecordingState: 录音状态已更新为 \(self.isRecording)")
         }
     }
     
-    /// 录音时长 - 使用 StateManager 中的音频状态
+    /// 录音时长 - 暂时恢复原始实现
     var recordingDuration: TimeInterval {
-        return stateManager.audioState.recordingDuration
+        guard let startTime = recordingStartTime else { return 0 }
+        return Date().timeIntervalSince(startTime)
     }
     
     /// 更新键盘监听器状态
@@ -143,8 +114,8 @@ class RecordingState: ObservableObject {
         DispatchQueue.main.async {
             self.keyboardMonitorStatus = status
         }
-        // 同时通知 StateManager
-        stateManager.updateKeyboardMonitorStatus(status)
+        // TODO: 同时通知 StateManager（暂时禁用）
+        // stateManager.updateKeyboardMonitorStatus(status)
     }
     
     /// 用户手动启动监听器
@@ -175,12 +146,16 @@ class RecordingState: ObservableObject {
         // 注意：状态绑定会自动同步，这里保持兼容性
     }
     
-    /// 更新ASR服务状态 - 委托给 StateManager
+    /// 更新ASR服务状态 - 暂时保持向后兼容
     func updateASRServiceStatus(_ isRunning: Bool) {
-        let status: RecognitionState.EngineStatus = isRunning ? .initializing : .uninitialized
-        Task { @MainActor in
-            stateManager.updateRecognitionEngineStatus(status)
+        DispatchQueue.main.async {
+            self.isASRServiceRunning = isRunning
         }
+        // TODO: 重新启用 StateManager 集成后恢复
+        // let status: RecognitionState.EngineStatus = isRunning ? .initializing : .uninitialized
+        // Task { @MainActor in
+        //     stateManager.updateRecognitionEngineStatus(status)
+        // }
     }
     
     /// 更新音频采集服务状态
@@ -188,32 +163,36 @@ class RecordingState: ObservableObject {
         DispatchQueue.main.async {
             self.isAudioCaptureServiceReady = isReady
         }
-        // 更新音频设备状态
-        let deviceStatus: AudioState.AudioDeviceStatus = isReady ? .available : .unavailable
-        Task { @MainActor in
-            stateManager.audioState.updateDeviceStatus(deviceStatus)
-        }
+        // TODO: 重新启用 StateManager 集成后恢复
+        // let deviceStatus: AudioState.AudioDeviceStatus = isReady ? .available : .unavailable
+        // Task { @MainActor in
+        //     stateManager.audioState.updateDeviceStatus(deviceStatus)
+        // }
     }
     
-    /// 更新ASR服务初始化状态 - 委托给 StateManager
+    /// 更新ASR服务初始化状态 - 暂时保持向后兼容
     func updateASRServiceInitialized(_ isInitialized: Bool) {
-        let status: RecognitionState.EngineStatus = isInitialized ? .ready : .uninitialized
-        Task { @MainActor in
-            stateManager.updateRecognitionEngineStatus(status)
+        DispatchQueue.main.async {
+            self.isASRServiceInitialized = isInitialized
         }
+        // TODO: 重新启用 StateManager 集成后恢复
+        // let status: RecognitionState.EngineStatus = isInitialized ? .ready : .uninitialized
+        // Task { @MainActor in
+        //     stateManager.updateRecognitionEngineStatus(status)
+        // }
     }
     
-    /// 更新初始化进度 - 委托给 StateManager
+    /// 更新初始化进度 - 暂时保持向后兼容
     func updateInitializationProgress(_ progress: String) {
         DispatchQueue.main.async {
             self.initializationProgress = progress
         }
-        // 如果进度包含错误信息，更新引擎状态
-        if progress.contains("错误") || progress.contains("失败") {
-            Task { @MainActor in
-                stateManager.updateRecognitionEngineStatus(.error(progress))
-            }
-        }
+        // TODO: 重新启用 StateManager 集成后恢复
+        // if progress.contains("错误") || progress.contains("失败") {
+        //     Task { @MainActor in
+        //         stateManager.updateRecognitionEngineStatus(.error(progress))
+        //     }
+        // }
     }
     
     /// 更新文本输入权限
@@ -223,11 +202,12 @@ class RecordingState: ObservableObject {
         }
     }
     
-    /// 刷新权限状态 - 委托给 StateManager
+    /// 刷新权限状态 - 暂时保持向后兼容
     func refreshPermissionStatus() {
-        Task { @MainActor in
-            stateManager.updatePermissions()
-        }
+        // TODO: 重新启用 StateManager 集成后恢复
+        // Task { @MainActor in
+        //     stateManager.updatePermissions()
+        // }
         
         // 保持键盘监听器状态逻辑的兼容性
         let hasAccessibilityPermission = hasAccessibilityPermission

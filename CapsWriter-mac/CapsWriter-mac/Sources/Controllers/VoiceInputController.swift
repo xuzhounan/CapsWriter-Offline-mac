@@ -532,16 +532,19 @@ class VoiceInputController: ObservableObject {
         case .recognitionFailed(let message):
             print("🚨 识别错误: \(message)")
             handleRecognitionError(message)
+        case .textInputFailed(let message):
+            print("🚨 文本输入错误: \(message)")
+            // 文本输入错误通常不需要特殊处理，只记录日志
         }
         
         DispatchQueue.main.async { [weak self] in
             self?.lastError = error
             self?.updatePhase(.error(error))
             
-            // 通知状态管理器
-            if let stateManager = StateManager.shared as? StateManager {
-                stateManager.handleRecognitionError(error.localizedDescription)
-            }
+            // TODO: 重新启用 StateManager 集成后恢复
+            // if let stateManager = StateManager.shared as? StateManager {
+            //     stateManager.handleRecognitionError(error.localizedDescription)
+            // }
         }
         
         // 错误记录到日志
@@ -558,10 +561,10 @@ class VoiceInputController: ObservableObject {
             self?.recordingState.updateASRServiceInitialized(false)
         }
         
-        // 通知状态管理器更新引擎状态
-        Task { @MainActor in
-            StateManager.shared.updateRecognitionEngineStatus(.error(message))
-        }
+        // TODO: 重新启用 StateManager 集成后恢复
+        // Task { @MainActor in
+        //     StateManager.shared.updateRecognitionEngineStatus(.error(message))
+        // }
     }
     
     /// 处理权限错误
@@ -582,7 +585,7 @@ class VoiceInputController: ObservableObject {
         }
     }
     
-    /// 处理识别错误
+    /// 处理识别错误（重载方法）
     private func handleRecognitionError(_ message: String) {
         print("🗣️ 处理识别错误: \(message)")
         
