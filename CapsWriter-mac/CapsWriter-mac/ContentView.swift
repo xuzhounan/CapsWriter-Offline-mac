@@ -48,6 +48,7 @@ struct ContentView: View {
 struct MainDashboardView: View {
     @ObservedObject var recordingState: RecordingState
     @Binding var animationScale: CGFloat
+    @State private var rotationAngle: Double = 0
     
     var headerSection: some View {
         VStack(spacing: 20) {
@@ -150,18 +151,44 @@ struct MainDashboardView: View {
                 
                 // 语音识别服务状态
                 HStack {
-                    Image(systemName: recordingState.isASRServiceRunning ? "checkmark.circle.fill" : "xmark.circle.fill")
-                        .foregroundColor(recordingState.isASRServiceRunning ? .green : .red)
+                    if recordingState.isASRServiceInitialized {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    } else if recordingState.isASRServiceRunning {
+                        Image(systemName: "gear")
+                            .foregroundColor(.orange)
+                            .rotationEffect(.degrees(rotationAngle))
+                            .onAppear {
+                                withAnimation(.linear(duration: 2.0).repeatForever(autoreverses: false)) {
+                                    rotationAngle = 360
+                                }
+                            }
+                    } else {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.red)
+                    }
                     
                     Text("语音识别服务")
                         .font(.subheadline)
                     
                     Spacer()
                     
-                    Text(recordingState.isASRServiceRunning ? "运行中" : "已停止")
-                        .font(.caption)
-                        .foregroundColor(recordingState.isASRServiceRunning ? .green : .red)
-                        .fontWeight(.medium)
+                    if recordingState.isASRServiceInitialized {
+                        Text("就绪")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.green)
+                    } else if recordingState.isASRServiceRunning {
+                        Text(recordingState.initializationProgress)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.orange)
+                    } else {
+                        Text("已停止")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.red)
+                    }
                 }
                 
                 // 音频采集服务状态

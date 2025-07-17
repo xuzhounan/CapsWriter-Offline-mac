@@ -134,6 +134,7 @@ class SherpaASRService: ObservableObject {
     @Published var transcript: String = ""
     @Published var isServiceRunning: Bool = false
     @Published var isRecognizing: Bool = false
+    @Published var isInitialized: Bool = false
     
     // MARK: - Private Properties
     private var recognizer: OpaquePointer?
@@ -189,11 +190,20 @@ class SherpaASRService: ObservableObject {
             return
         }
         
-        // 直接初始化识别器
-        initializeRecognizer()
-        
+        // 立即标记服务为启动状态，后台异步初始化识别器
         isServiceRunning = true
-        addLog("✅ 语音识别服务已启动")
+        
+        // 异步初始化识别器，避免阻塞调用线程
+        processingQueue.async { [weak self] in
+            RecordingState.shared.updateInitializationProgress("正在初始化识别器...")
+            self?.initializeRecognizer()
+            
+            DispatchQueue.main.async {
+                self?.isInitialized = true
+                RecordingState.shared.updateInitializationProgress("识别器已就绪")
+                self?.addLog("✅ 语音识别服务已启动")
+            }
+        }
     }
     
     func stopService() {
@@ -206,12 +216,22 @@ class SherpaASRService: ObservableObject {
         
         isServiceRunning = false
         isRecognizing = false
+        isInitialized = false
         addLog("✅ 语音识别服务已停止")
     }
     
     func startRecognition() {
         guard isServiceRunning else {
             addLog("❌ 服务未启动，无法开始识别")
+            return
+        }
+        
+        guard isInitialized else {
+            addLog("⏳ 识别器正在初始化中，请稍后再试...")
+            // 延迟重试
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.startRecognition()
+            }
             return
         }
         
@@ -311,6 +331,7 @@ class SherpaASRService: ObservableObject {
     
     private func initializeRecognizer() {
         addLog("🧠 初始化 Sherpa-ONNX 识别器...")
+        RecordingState.shared.updateInitializationProgress("正在检查模型文件...")
         
         // 检查模型文件是否存在
         addLog("📂 检查模型文件...")
@@ -322,6 +343,7 @@ class SherpaASRService: ObservableObject {
         guard FileManager.default.fileExists(atPath: modelPath) else {
             addLog("❌ 模型目录不存在: \(modelPath)")
             addLog("⚠️ 识别器初始化失败，无法处理音频")
+            RecordingState.shared.updateInitializationProgress("模型文件缺失")
             return
         }
         
@@ -332,6 +354,7 @@ class SherpaASRService: ObservableObject {
         } else {
             // 真实模式：创建Sherpa识别器
             addLog("🔧 真实模式：创建Sherpa识别器...")
+            RecordingState.shared.updateInitializationProgress("正在验证模型文件...")
             
             // 检查模型文件是否存在
             addLog("📂 检查模型文件...")
@@ -343,6 +366,7 @@ class SherpaASRService: ObservableObject {
                   FileManager.default.fileExists(atPath: decoderPath),
                   FileManager.default.fileExists(atPath: tokensPath) else {
                 addLog("❌ 模型文件不完整")
+                RecordingState.shared.updateInitializationProgress("模型文件不完整")
                 return
             }
             
@@ -379,6 +403,7 @@ class SherpaASRService: ObservableObject {
             )
             
             addLog("⚙️ 创建识别器实例...")
+            RecordingState.shared.updateInitializationProgress("正在创建识别器...")
             recognizer = SherpaOnnxCreateOnlineRecognizer(&config)
             
             if recognizer != nil {
@@ -386,12 +411,15 @@ class SherpaASRService: ObservableObject {
                 
                 // Create stream
                 addLog("🌊 创建音频流...")
+                RecordingState.shared.updateInitializationProgress("正在创建音频流...")
                 stream = SherpaOnnxCreateOnlineStream(recognizer)
                 
                 if stream != nil {
                     addLog("✅ 音频流创建成功")
+                    RecordingState.shared.updateInitializationProgress("初始化完成")
                 } else {
                     addLog("❌ 音频流创建失败")
+                    RecordingState.shared.updateInitializationProgress("音频流创建失败")
                 }
             } else {
                 addLog("❌ 识别器创建失败")

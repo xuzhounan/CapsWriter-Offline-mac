@@ -20,21 +20,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // 强制设置应用为正常应用，确保在 Dock 中显示
         NSApp.setActivationPolicy(.regular)
         
-        // 初始化状态栏控制器
+        // 立即初始化状态栏控制器（轻量级操作）
         statusBarController = StatusBarController()
         
-        // 初始化语音识别服务
-        print("🔧 开始初始化语音识别服务...")
-        setupASRService()
-        print("✅ 语音识别服务初始化完成")
-        
-        // 初始化键盘监听器
-        print("🔧 开始初始化键盘监听器...")
+        // 立即初始化键盘监听器（轻量级操作）
+        print("🔧 快速初始化键盘监听器...")
         setupKeyboardMonitor()
         print("✅ 键盘监听器初始化完成")
         
         // 手动激活应用，确保 Dock 图标显示
         NSApp.activate(ignoringOtherApps: true)
+        
+        // 异步初始化语音识别服务（耗时操作）
+        print("🔧 开始异步初始化语音识别服务...")
+        setupASRServiceAsync()
         
         // 调试：检查权限状态（延迟更久，确保监听器完全初始化）
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
@@ -92,8 +91,39 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
     // MARK: - 语音识别服务设置
+    private func setupASRServiceAsync() {
+        print("🚀 异步初始化语音服务...")
+        
+        // 更新初始化进度
+        RecordingState.shared.updateInitializationProgress("正在启动语音识别服务...")
+        
+        // 使用后台队列执行耗时的初始化操作
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            
+            print("🧠 后台线程：开始初始化ASR服务...")
+            RecordingState.shared.updateInitializationProgress("正在加载语音识别模型...")
+            
+            // 初始化纯识别服务（不涉及麦克风）
+            self.initializeASRService()
+            
+            // 回到主线程更新UI和初始化音频采集服务
+            DispatchQueue.main.async {
+                print("🎤 主线程：初始化音频采集服务...")
+                RecordingState.shared.updateInitializationProgress("正在初始化音频采集服务...")
+                
+                self.initializeAudioCaptureService()
+                
+                RecordingState.shared.updateInitializationProgress("启动完成")
+                RecordingState.shared.updateASRServiceInitialized(true)
+                print("✅ 语音识别服务异步初始化完成")
+            }
+        }
+    }
+    
+    // 保留原方法供需要时调用
     private func setupASRService() {
-        print("🚀 初始化语音服务...")
+        print("🚀 同步初始化语音服务...")
         
         // 初始化纯识别服务（不涉及麦克风）
         initializeASRService()

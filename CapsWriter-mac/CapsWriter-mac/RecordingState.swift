@@ -10,6 +10,8 @@ class RecordingState: ObservableObject {
     @Published var hasMicrophonePermission: Bool = false
     @Published var isASRServiceRunning: Bool = false
     @Published var isAudioCaptureServiceReady: Bool = false
+    @Published var isASRServiceInitialized: Bool = false
+    @Published var initializationProgress: String = "正在启动..."
     
     // 添加一个标志位来跟踪用户是否手动停止了监听
     // 使用队列保护以确保线程安全
@@ -97,6 +99,18 @@ class RecordingState: ObservableObject {
     func updateAudioCaptureServiceStatus(_ isReady: Bool) {
         DispatchQueue.main.async {
             self.isAudioCaptureServiceReady = isReady
+        }
+    }
+    
+    func updateASRServiceInitialized(_ isInitialized: Bool) {
+        DispatchQueue.main.async {
+            self.isASRServiceInitialized = isInitialized
+        }
+    }
+    
+    func updateInitializationProgress(_ progress: String) {
+        DispatchQueue.main.async {
+            self.initializationProgress = progress
         }
     }
     
