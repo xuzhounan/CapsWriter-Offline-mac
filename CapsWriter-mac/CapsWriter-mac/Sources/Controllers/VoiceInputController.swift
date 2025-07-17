@@ -33,6 +33,22 @@ class VoiceInputController: ObservableObject {
     private let controllerQueue = DispatchQueue(label: "com.capswriter.voice-input-controller", qos: .userInitiated)
     private var audioForwardCount: Int = 0
     
+    // 日志控制开关
+    private static let enableDetailedLogging: Bool = {
+        #if DEBUG
+        return true
+        #else
+        return false
+        #endif
+    }()
+    
+    /// 条件日志输出 - 只在调试模式或需要时输出
+    private func debugLog(_ message: String) {
+        if Self.enableDetailedLogging {
+            print("🔍 [VoiceInputController] \(message)")
+        }
+    }
+    
     // MARK: - Types
     
     enum VoiceInputPhase: Equatable {
@@ -603,14 +619,22 @@ struct VoiceInputStatusInfo {
 
 extension VoiceInputController: AudioCaptureDelegate {
     func audioCaptureDidReceiveBuffer(_ buffer: AVAudioPCMBuffer) {
-        // 音频数据转发日志（每200帧输出一次）
-        audioForwardCount += 1
-        if audioForwardCount % 200 == 0 {
-            print("🔄 已转发 \(audioForwardCount) 个音频缓冲区，缓冲区大小: \(buffer.frameLength)")
-        }
-        
         // 转发音频数据到ASR服务
         asrService?.processAudioBuffer(buffer)
+        
+        // 可选的详细日志输出（频率大幅降低）
+        audioForwardCount += 1
+        
+        // 只在调试模式或每1000次时输出日志，大幅减少日志频率
+        #if DEBUG
+        let shouldLog = audioForwardCount % 1000 == 0
+        #else
+        let shouldLog = audioForwardCount % 5000 == 0  // 发布版本更少的日志
+        #endif
+        
+        if shouldLog {
+            print("🔄 [音频处理] 已转发 \(audioForwardCount) 个音频缓冲区，当前缓冲区大小: \(buffer.frameLength)")
+        }
     }
     
     func audioCaptureDidStart() {
