@@ -18,6 +18,7 @@
 		A12345678901234567890040 /* RecordingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890041 /* RecordingState.swift */; };
 		A12345678901234567890050 /* SherpaASRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890051 /* SherpaASRService.swift */; };
 		A12345678901234567890055 /* AudioCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890056 /* AudioCaptureService.swift */; };
+		7B3049B1B62443569992B561 /* TextInputService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC7FD4270A1C4A01849E7770 /* TextInputService.swift */; };
 		A12345678901234567890060 /* libsherpa-onnx-c-api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */; };
 		A12345678901234567890070 /* models in Resources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890071 /* models */; };
 /* End PBXBuildFile section */
@@ -51,6 +52,7 @@
 		A12345678901234567890051 /* SherpaASRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaASRService.swift; sourceTree = "<group>"; };
 		A12345678901234567890052 /* SherpaONNX-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SherpaONNX-Bridging-Header.h"; sourceTree = "<group>"; };
 		A12345678901234567890056 /* AudioCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCaptureService.swift; sourceTree = "<group>"; };
+		FC7FD4270A1C4A01849E7770 /* TextInputService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextInputService.swift; sourceTree = "<group>"; };
 		A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libsherpa-onnx-c-api.dylib"; path = "CapsWriter-mac/Frameworks/libsherpa-onnx-c-api.dylib"; sourceTree = "<group>"; };
 		A12345678901234567890071 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = models; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -109,6 +111,7 @@
 				A12345678901234567890014 /* CapsWriter-mac.entitlements */,
 				A12345678901234567890015 /* Info.plist */,
 				A12345678901234567890006 /* Preview Content */,
+				FC7FD4270A1C4A01849E7770 /* TextInputService.swift */,
 			);
 			path = "CapsWriter-mac";
 			sourceTree = "<group>";
@@ -201,6 +204,7 @@
 				A12345678901234567890050 /* SherpaASRService.swift in Sources */,
 				A12345678901234567890055 /* AudioCaptureService.swift in Sources */,
 				A12345678901234567890001 /* CapsWriterApp.swift in Sources */,
+				7B3049B1B62443569992B561 /* TextInputService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
