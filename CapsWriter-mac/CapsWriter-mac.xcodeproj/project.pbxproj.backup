@@ -20,9 +20,6 @@
 		A12345678901234567890055 /* AudioCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890056 /* AudioCaptureService.swift */; };
 		7B3049B1B62443569992B561 /* TextInputService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC7FD4270A1C4A01849E7770 /* TextInputService.swift */; };
 		CF8E3D1A2B7F4E9C8A1D5621 /* ConfigurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF8E3D1B2B7F4E9C8A1D5622 /* ConfigurationManager.swift */; };
-		ST8E3D1A2B7F4E9C8A1D5623 /* AudioState.swift in Sources */ = {isa = PBXBuildFile; fileRef = ST8E3D1B2B7F4E9C8A1D5624 /* AudioState.swift */; };
-		ST8E3D1A2B7F4E9C8A1D5625 /* RecognitionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = ST8E3D1B2B7F4E9C8A1D5626 /* RecognitionState.swift */; };
-		ST8E3D1A2B7F4E9C8A1D5627 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = ST8E3D1B2B7F4E9C8A1D5628 /* AppState.swift */; };
 		A12345678901234567890060 /* libsherpa-onnx-c-api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */; };
 		A12345678901234567890070 /* models in Resources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890071 /* models */; };
 /* End PBXBuildFile section */
@@ -57,9 +54,6 @@
 		A12345678901234567890052 /* SherpaONNX-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SherpaONNX-Bridging-Header.h"; sourceTree = "<group>"; };
 		A12345678901234567890056 /* AudioCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCaptureService.swift; sourceTree = "<group>"; };
 		FC7FD4270A1C4A01849E7770 /* TextInputService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextInputService.swift; sourceTree = "<group>"; };
-		ST8E3D1B2B7F4E9C8A1D5624 /* AudioState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/States/AudioState.swift"; sourceTree = "<group>"; };
-		ST8E3D1B2B7F4E9C8A1D5626 /* RecognitionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/States/RecognitionState.swift"; sourceTree = "<group>"; };
-		ST8E3D1B2B7F4E9C8A1D5628 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/States/AppState.swift"; sourceTree = "<group>"; };
 		CF8E3D1B2B7F4E9C8A1D5622 /* ConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Configuration/ConfigurationManager.swift"; sourceTree = "<group>"; };
 		A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libsherpa-onnx-c-api.dylib"; path = "CapsWriter-mac/Frameworks/libsherpa-onnx-c-api.dylib"; sourceTree = "<group>"; };
 		A12345678901234567890071 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = models; sourceTree = "<group>"; };
@@ -121,9 +115,6 @@
 				A12345678901234567890006 /* Preview Content */,
 				FC7FD4270A1C4A01849E7770 /* TextInputService.swift */,
 				CF8E3D1B2B7F4E9C8A1D5622 /* ConfigurationManager.swift */,
-				ST8E3D1B2B7F4E9C8A1D5624 /* AudioState.swift */,
-				ST8E3D1B2B7F4E9C8A1D5626 /* RecognitionState.swift */,
-				ST8E3D1B2B7F4E9C8A1D5628 /* AppState.swift */,
 			);
 			path = "CapsWriter-mac";
 			sourceTree = "<group>";
