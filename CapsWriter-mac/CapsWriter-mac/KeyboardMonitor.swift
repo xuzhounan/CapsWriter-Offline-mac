@@ -100,17 +100,9 @@ class KeyboardMonitor {
             
             requestAccessibilityPermission()
             
-            // 给用户一些时间来授予权限，然后重试
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-                if AXIsProcessTrusted() {
-                    print("✅ 辅助功能权限已获得，重新启动监听器")
-                    RecordingState.shared.updateAccessibilityPermission(true)
-                    self?.startMonitoringOnMainThread()
-                } else {
-                    print("❌ 仍然缺少辅助功能权限，请手动授权")
-                    RecordingState.shared.updateKeyboardMonitorStatus("权限被拒绝")
-                }
-            }
+            // 不再自动重试，避免无限循环
+            // 权限检查由外部调用者（如VoiceInputController）管理
+            print("⏸️ 等待权限授权，请在系统设置中授权后重新启动监听")
             return
         }
         
