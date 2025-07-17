@@ -261,6 +261,16 @@ class DIContainer: DependencyInjectionProtocol {
             return ErrorHandler()
         }
         
+        // 注册热词服务（单例） - 任务2.3
+        registerSingleton(HotWordServiceProtocol.self) {
+            return HotWordService()
+        }
+        
+        // 注册文本处理服务（单例） - 任务2.3
+        registerSingleton(TextProcessingServiceProtocol.self) {
+            return TextProcessingService()
+        }
+        
         print("✅ 默认服务注册完成")
     }
     
@@ -347,6 +357,14 @@ extension DIContainer {
         
         static func createErrorHandler() -> ErrorHandlerProtocol {
             return DIContainer.shared.resolve(ErrorHandlerProtocol.self)
+        }
+        
+        static func createHotWordService() -> HotWordServiceProtocol {
+            return DIContainer.shared.resolve(HotWordServiceProtocol.self)
+        }
+        
+        static func createTextProcessingService() -> TextProcessingServiceProtocol {
+            return DIContainer.shared.resolve(TextProcessingServiceProtocol.self)
         }
     }
 }

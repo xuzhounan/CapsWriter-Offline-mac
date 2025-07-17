@@ -70,6 +70,11 @@ protocol ServiceFactoryProtocol {
     // ConfigurationManagerProtocol 定义在 ConfigurationManager.swift
 }
 
+// MARK: - Hot Word Service Protocol (引用)
+
+// HotWordServiceProtocol 和 TextProcessingServiceProtocol 在各自的服务文件中定义
+// 这里仅做协议引用声明，避免循环依赖
+
 // MARK: - Event Bus Protocol
 
 /// 事件总线协议 (为后续扩展预留)

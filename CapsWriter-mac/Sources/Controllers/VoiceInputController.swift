@@ -15,6 +15,7 @@ class VoiceInputController: ObservableObject {
     // MARK: - Dependencies
     
     private let configManager: ConfigurationManagerProtocol
+    private let textProcessingService: TextProcessingServiceProtocol
     
     // 使用现有的状态管理（向后兼容）
     private let recordingState = RecordingState.shared
@@ -104,8 +105,9 @@ class VoiceInputController: ObservableObject {
     static let shared = VoiceInputController()
     
     private init() {
-        // 通过 DI 容器获取配置管理器
+        // 通过 DI 容器获取依赖服务
         self.configManager = DIContainer.shared.resolve(ConfigurationManagerProtocol.self)
+        self.textProcessingService = DIContainer.shared.resolve(TextProcessingServiceProtocol.self)
         
         setupEventSubscriptions()
         print("🎙️ VoiceInputController 已初始化（使用依赖注入）")
@@ -196,7 +198,11 @@ class VoiceInputController: ObservableObject {
         updatePhase(.initializing)
         
         do {
-            // 初始化服务
+            // 初始化文本处理服务
+            try textProcessingService.initialize()
+            try textProcessingService.start()
+            
+            // 初始化其他服务
             try initializeServices()
             
             // 设置服务回调
@@ -326,6 +332,9 @@ class VoiceInputController: ObservableObject {
         
         // 清理文本输入服务引用
         textInputService = nil
+        
+        // 清理文本处理服务
+        textProcessingService.cleanup()
         
         // 重置状态
         DispatchQueue.main.async { [weak self] in
@@ -491,18 +500,8 @@ class VoiceInputController: ObservableObject {
     }
     
     private func applyTextProcessing(_ text: String) -> String {
-        let processedText = text
-        
-        // 这里为后续的热词替换和文本处理功能预留接口
-        if configManager.textProcessing.enableHotwordReplacement {
-            // TODO: 实现热词替换
-            print("🔄 热词替换功能将在后续版本中实现")
-        }
-        
-        // TODO: 标点符号处理功能将在后续版本中实现
-        print("📝 标点符号处理功能将在后续版本中实现")
-        
-        return processedText
+        // 使用TextProcessingService进行完整的文本处理
+        return textProcessingService.processText(text)
     }
     
     // MARK: - Private Methods - State Management
@@ -638,6 +637,7 @@ class VoiceInputController: ObservableObject {
         keyboardMonitor?.stopMonitoring()
         audioCaptureService?.stopCapture()
         asrService?.stopService()
+        textProcessingService.cleanup()
         
         // 清理delegate引用
         asrService?.delegate = nil

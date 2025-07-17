@@ -64,9 +64,17 @@ struct TextProcessingConfiguration: Codable {
     var minTextLength: Int = 1
     var maxTextLength: Int = 1000
     
+    // 热词文件路径配置
+    var hotWordChinesePath: String = "hot-zh.txt"
+    var hotWordEnglishPath: String = "hot-en.txt"  
+    var hotWordRulePath: String = "hot-rule.txt"
+    var enableHotWordFileWatching: Bool = true
+    var hotWordProcessingTimeout: Double = 5.0  // 热词处理超时时间（秒）
+    
     func isValid() -> Bool {
         return minTextLength >= 0 && 
-               maxTextLength > minTextLength
+               maxTextLength > minTextLength &&
+               hotWordProcessingTimeout > 0
     }
 }
 
