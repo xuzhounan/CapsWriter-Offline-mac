@@ -266,6 +266,11 @@ class DIContainer: DependencyInjectionProtocol {
             return HotWordService()
         }
         
+        // 注册标点符号处理服务（单例） - 任务3.1
+        registerSingleton(PunctuationServiceProtocol.self) {
+            return PunctuationService()
+        }
+        
         // 注册文本处理服务（单例） - 任务2.3
         registerSingleton(TextProcessingServiceProtocol.self) {
             return TextProcessingService()
@@ -365,6 +370,10 @@ extension DIContainer {
         
         static func createTextProcessingService() -> TextProcessingServiceProtocol {
             return DIContainer.shared.resolve(TextProcessingServiceProtocol.self)
+        }
+        
+        static func createPunctuationService() -> PunctuationServiceProtocol {
+            return DIContainer.shared.resolve(PunctuationServiceProtocol.self)
         }
     }
 }

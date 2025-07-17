@@ -89,6 +89,7 @@ class TextProcessingService: ObservableObject, TextProcessingServiceProtocol {
     
     private let configManager: ConfigurationManagerProtocol
     private let hotWordService: HotWordServiceProtocol
+    private let punctuationService: PunctuationServiceProtocol
     private let logger = Logger(subsystem: "com.capswriter.textprocessing", category: "TextProcessingService")
     
     // MARK: - Published Properties
@@ -111,7 +112,8 @@ class TextProcessingService: ObservableObject, TextProcessingServiceProtocol {
     
     init(
         configManager: ConfigurationManagerProtocol = DIContainer.shared.resolve(ConfigurationManagerProtocol.self),
-        hotWordService: HotWordServiceProtocol? = nil
+        hotWordService: HotWordServiceProtocol? = nil,
+        punctuationService: PunctuationServiceProtocol? = nil
     ) {
         self.configManager = configManager
         
@@ -121,6 +123,14 @@ class TextProcessingService: ObservableObject, TextProcessingServiceProtocol {
         } else {
             // 创建热词服务实例
             self.hotWordService = HotWordService(configManager: configManager)
+        }
+        
+        // 如果没有提供标点服务，通过DI容器获取
+        if let providedService = punctuationService {
+            self.punctuationService = providedService
+        } else {
+            // 创建标点服务实例
+            self.punctuationService = PunctuationService(configManager: configManager)
         }
         
         logger.info("📝 TextProcessingService 已创建")
@@ -134,6 +144,9 @@ class TextProcessingService: ObservableObject, TextProcessingServiceProtocol {
         do {
             // 初始化热词服务
             try hotWordService.initialize()
+            
+            // 初始化标点服务
+            try punctuationService.initialize()
             
             // 设置配置监听
             setupConfigurationObserver()
@@ -154,12 +167,14 @@ class TextProcessingService: ObservableObject, TextProcessingServiceProtocol {
         }
         
         try hotWordService.start()
+        try punctuationService.start()
         isRunning = true
         logger.info("▶️ 文本处理服务已启动")
     }
     
     func stop() {
         hotWordService.stop()
+        punctuationService.stop()
         isRunning = false
         logger.info("⏹️ 文本处理服务已停止")
     }
@@ -167,6 +182,7 @@ class TextProcessingService: ObservableObject, TextProcessingServiceProtocol {
     func cleanup() {
         stop()
         hotWordService.cleanup()
+        punctuationService.cleanup()
         cancellables.removeAll()
         
         isInitialized = false
@@ -207,10 +223,7 @@ class TextProcessingService: ObservableObject, TextProcessingServiceProtocol {
             return text
         }
         
-        // TODO: 实现标点符号处理逻辑
-        // 暂时返回原文本，标点符号处理将在后续版本中实现
-        logger.debug("⚠️ 标点符号处理功能将在后续版本中实现")
-        return text
+        return punctuationService.processText(text)
     }
     
     func applyFormatting(_ text: String) -> String {

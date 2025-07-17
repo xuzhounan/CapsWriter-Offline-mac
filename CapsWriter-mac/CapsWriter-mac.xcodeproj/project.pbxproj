@@ -29,6 +29,9 @@
 		149370E2BB564291900407A1 /* DIContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2146729669AF4727A24F3226 /* DIContainer.swift */; };
 		D46CF322752A42C4A18CA8F0 /* ErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2765C79BC5314CD99DF2D45E /* ErrorHandler.swift */; };
 		34B8E7F512B543C8A1DECF93 /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F812A3F7B142D8B3C9A871 /* ServiceProtocols.swift */; };
+		C0711444E47048E2934B5F38 /* PunctuationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7105282447924AA48102DDCF /* PunctuationService.swift */; };
+		9DB2D0740940412BBE1F9EDE /* HotWordService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD6292715284430A827DA1C /* HotWordService.swift */; };
+		278C1CA8D79A423E8C16D6AD /* TextProcessingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 249D9293FD8541D986570261 /* TextProcessingService.swift */; };
 	/* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -71,6 +74,9 @@
 		2146729669AF4727A24F3226 /* DIContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DIContainer.swift; path = Sources/Core/DIContainer.swift; sourceTree = SOURCE_ROOT; };
 		2765C79BC5314CD99DF2D45E /* ErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ErrorHandler.swift; path = Sources/Core/ErrorHandler.swift; sourceTree = SOURCE_ROOT; };
 		E4F812A3F7B142D8B3C9A871 /* ServiceProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ServiceProtocols.swift; path = Sources/Protocols/ServiceProtocols.swift; sourceTree = SOURCE_ROOT; };
+		7105282447924AA48102DDCF /* PunctuationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PunctuationService.swift; path = Sources/Services/PunctuationService.swift; sourceTree = SOURCE_ROOT; };
+		0AD6292715284430A827DA1C /* HotWordService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HotWordService.swift; path = Sources/Services/HotWordService.swift; sourceTree = SOURCE_ROOT; };
+		249D9293FD8541D986570261 /* TextProcessingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TextProcessingService.swift; path = Sources/Services/TextProcessingService.swift; sourceTree = SOURCE_ROOT; };
 	/* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,6 +141,9 @@
 				7845C2A98AB741B0B2FEVIC2 /* VoiceInputController.swift */,
 				2765C79BC5314CD99DF2D45E /* ErrorHandler.swift */,
 				E4F812A3F7B142D8B3C9A871 /* ServiceProtocols.swift */,
+				7105282447924AA48102DDCF /* PunctuationService.swift */,
+				0AD6292715284430A827DA1C /* HotWordService.swift */,
+				249D9293FD8541D986570261 /* TextProcessingService.swift */,
 			);
 			path = "CapsWriter-mac";
 			sourceTree = "<group>";
@@ -233,6 +242,9 @@
 							149370E2BB564291900407A1 /* DIContainer.swift in Sources */,
 				D46CF322752A42C4A18CA8F0 /* ErrorHandler.swift in Sources */,
 				34B8E7F512B543C8A1DECF93 /* ServiceProtocols.swift in Sources */,
+				C0711444E47048E2934B5F38 /* PunctuationService.swift in Sources */,
+				9DB2D0740940412BBE1F9EDE /* HotWordService.swift in Sources */,
+				278C1CA8D79A423E8C16D6AD /* TextProcessingService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

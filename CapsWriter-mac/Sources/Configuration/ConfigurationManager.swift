@@ -71,10 +71,23 @@ struct TextProcessingConfiguration: Codable {
     var enableHotWordFileWatching: Bool = true
     var hotWordProcessingTimeout: Double = 5.0  // 热词处理超时时间（秒）
     
+    // 标点符号处理配置
+    var punctuationIntensity: String = "medium"  // light, medium, heavy
+    var enableSmartPunctuation: Bool = true      // 智能标点符号处理
+    var punctuationProcessingTimeout: Double = 2.0  // 标点处理超时时间（秒）
+    var autoAddPeriod: Bool = true               // 自动添加句号
+    var autoAddComma: Bool = true                // 自动添加逗号
+    var autoAddQuestionMark: Bool = true         // 自动添加问号
+    var autoAddExclamationMark: Bool = true      // 自动添加感叹号
+    var skipExistingPunctuation: Bool = true     // 跳过已有标点的文本
+    
     func isValid() -> Bool {
+        let validIntensities = ["light", "medium", "heavy"]
         return minTextLength >= 0 && 
                maxTextLength > minTextLength &&
-               hotWordProcessingTimeout > 0
+               hotWordProcessingTimeout > 0 &&
+               punctuationProcessingTimeout > 0 &&
+               validIntensities.contains(punctuationIntensity)
     }
 }
 
@@ -125,7 +138,7 @@ struct DebugConfiguration: Codable {
 // MARK: - Configuration Manager Protocol
 
 /// 配置管理服务协议
-protocol ConfigurationManagerProtocol: AnyObject {
+protocol ConfigurationManagerProtocol: AnyObject, ObservableObject {
     // MARK: - Properties
     var audio: AudioConfiguration { get }
     var keyboard: KeyboardConfiguration { get }
