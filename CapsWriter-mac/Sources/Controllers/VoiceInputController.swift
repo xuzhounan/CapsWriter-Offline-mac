@@ -282,6 +282,11 @@ class VoiceInputController: ObservableObject {
             // 启动ASR服务
             asr.startService()
             print("✅ ASR服务初始化完成")
+            
+            // 立即更新状态
+            DispatchQueue.main.async { [weak self] in
+                self?.updateServiceStatusesImmediately()
+            }
         } catch {
             print("❌ ASR服务初始化异常: \(error)")
             throw VoiceInputError.initializationFailed("ASR服务初始化失败: \(error.localizedDescription)")
@@ -331,6 +336,11 @@ class VoiceInputController: ObservableObject {
             asr.stopService()
             asr.delegate = nil
             asrService = nil
+            
+            // 立即更新状态
+            DispatchQueue.main.async { [weak self] in
+                self?.updateServiceStatusesImmediately()
+            }
         }
         
         // 清理音频采集服务
@@ -648,10 +658,16 @@ class VoiceInputController: ObservableObject {
     func startStatusUpdateTimer() {
         stopStatusUpdateTimer()
         
-        statusUpdateTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+        // 降低定时器频率到2秒，提高响应性
+        statusUpdateTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             self?.updateServiceStatuses()
         }
-        print("⏰ 状态更新定时器已启动")
+        print("⏰ 状态更新定时器已启动（2秒间隔）")
+    }
+    
+    /// 立即更新服务状态（用于重要状态变化时）
+    func updateServiceStatusesImmediately() {
+        updateServiceStatuses()
     }
     
     /// 停止状态更新定时器
@@ -662,23 +678,25 @@ class VoiceInputController: ObservableObject {
     
     /// 更新服务状态到RecordingState
     private func updateServiceStatuses() {
-        print("📊 VoiceInputController: 更新服务状态...")
+        print("📊 VoiceInputController: 更新服务状态... (定时器运行中)")
         
         // 更新ASR服务状态 - 修复状态同步逻辑
         let asrRunning = asrService?.isServiceRunning ?? false
         let asrInitialized = asrService?.isInitialized ?? false
         
-        // 重要：只有当服务运行且初始化完成时，才认为服务真正可用
-        let asrServiceReady = asrRunning && asrInitialized
-        
+        // 修复状态同步逻辑：分别更新运行状态和初始化状态
         recordingState.updateASRServiceStatus(asrRunning)
-        recordingState.updateASRServiceInitialized(asrServiceReady)
+        recordingState.updateASRServiceInitialized(asrInitialized)
         
-        if asrServiceReady {
+        // 调试信息
+        print("📊 ASR状态更新: 运行=\(asrRunning), 初始化=\(asrInitialized)")
+        
+        // 更新初始化进度文本
+        if asrInitialized {
             recordingState.updateInitializationProgress("语音识别服务已就绪")
-        } else if asrRunning && !asrInitialized {
+        } else if asrRunning {
             recordingState.updateInitializationProgress("语音识别服务正在初始化...")
-        } else if !asrRunning {
+        } else {
             recordingState.updateInitializationProgress("语音识别服务未启动")
         }
         
@@ -692,7 +710,6 @@ class VoiceInputController: ObservableObject {
         print("📊 VoiceInputController: 服务状态更新完成")
         print("   - ASR服务运行: \(asrRunning)")
         print("   - ASR服务初始化: \(asrInitialized)")
-        print("   - ASR服务就绪: \(asrServiceReady)")
         print("   - 音频采集就绪: \(audioReady)")
     }
     

@@ -495,25 +495,53 @@ struct MainDashboardView: View {
 
 // MARK: - 临时占位符视图
 struct ASRServicePlaceholderView: View {
-    @StateObject private var asrService = SherpaASRService()
+    @StateObject private var recordingState = RecordingState.shared
     @State private var isAutoScroll = true
+    
+    // 使用统一的ASR服务实例
+    private var asrService: SherpaASRService? {
+        if let appDelegate = CapsWriterApp.sharedAppDelegate ?? (NSApplication.shared.delegate as? AppDelegate) {
+            return appDelegate.asrService
+        }
+        return nil
+    }
     
     var body: some View {
         VStack(spacing: 20) {
             // 服务控制区域
             VStack(spacing: 16) {
-                // 服务状态
+                // 服务状态 - 使用统一的状态管理
                 HStack {
-                    Image(systemName: asrService.isServiceRunning ? "checkmark.circle.fill" : "xmark.circle.fill")
-                        .foregroundColor(asrService.isServiceRunning ? .green : .red)
-                        .font(.title2)
+                    if recordingState.isASRServiceInitialized {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.title2)
+                    } else if recordingState.isASRServiceRunning {
+                        Image(systemName: "gear")
+                            .foregroundColor(.orange)
+                            .font(.title2)
+                    } else {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.red)
+                            .font(.title2)
+                    }
                     
                     VStack(alignment: .leading) {
                         Text("语音识别服务")
                             .font(.headline)
-                        Text(asrService.isServiceRunning ? "运行中" : "已停止")
-                            .font(.caption)
-                            .foregroundColor(asrService.isServiceRunning ? .green : .red)
+                        if recordingState.isASRServiceInitialized {
+                            Text("已就绪")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        } else if recordingState.isASRServiceRunning {
+                            Text(recordingState.initializationProgress)
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                        } else {
+                            Text("已停止")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
                     }
                     
                     Spacer()
@@ -521,17 +549,19 @@ struct ASRServicePlaceholderView: View {
                 
                 // 控制按钮
                 HStack(spacing: 12) {
-                    Button(asrService.isServiceRunning ? "停止服务" : "启动服务") {
-                        if asrService.isServiceRunning {
-                            asrService.stopService()
-                        } else {
-                            asrService.startService()
+                    Button(recordingState.isASRServiceRunning ? "停止服务" : "启动服务") {
+                        if let service = asrService {
+                            if recordingState.isASRServiceRunning {
+                                service.stopService()
+                            } else {
+                                service.startService()
+                            }
                         }
                     }
                     .buttonStyle(.borderedProminent)
                     
                     Button("清空日志") {
-                        asrService.logs.removeAll()
+                        asrService?.logs.removeAll()
                     }
                     .buttonStyle(.bordered)
                     .foregroundColor(.red)
@@ -555,7 +585,7 @@ struct ASRServicePlaceholderView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 2) {
-                            ForEach(Array(asrService.logs.enumerated()), id: \.offset) { index, log in
+                            ForEach(Array((asrService?.logs ?? []).enumerated()), id: \.offset) { index, log in
                                 HStack(alignment: .top) {
                                     Text("\(index + 1)")
                                         .font(.caption2)
@@ -581,10 +611,10 @@ struct ASRServicePlaceholderView: View {
                     .frame(maxHeight: .infinity)
                     .background(Color(.textBackgroundColor))
                     .cornerRadius(8)
-                    .onChange(of: asrService.logs.count) {
-                        if isAutoScroll && !asrService.logs.isEmpty {
+                    .onChange(of: asrService?.logs.count ?? 0) {
+                        if isAutoScroll && !(asrService?.logs.isEmpty ?? true) {
                             withAnimation(.easeInOut(duration: 0.3)) {
-                                proxy.scrollTo(asrService.logs.count - 1, anchor: .bottom)
+                                proxy.scrollTo((asrService?.logs.count ?? 1) - 1, anchor: .bottom)
                             }
                         }
                     }
