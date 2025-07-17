@@ -317,7 +317,7 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
                 logger.info("✅ 加载 \(type.displayName): \(path)")
             } catch {
                 // 文件不存在不算错误，只是警告
-                if (error as NSError).code == NSFileReadNoSuchFileError {
+                if case HotWordServiceError.fileNotFound(_) = error {
                     logger.warning("⚠️ 热词文件不存在: \(path)")
                 } else {
                     logger.error("❌ 加载热词文件失败: \(path), 错误: \(error.localizedDescription)")
@@ -508,7 +508,7 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
     private func setupFileWatchers() {
         logger.info("👁️ 设置文件监听器...")
         
-        for (type, path) in hotWordPaths {
+        for (_, path) in hotWordPaths {
             if FileManager.default.fileExists(atPath: path) {
                 let watcher = FileWatcher(path: path) { [weak self] in
                     self?.logger.info("📁 检测到文件变化: \(path)")

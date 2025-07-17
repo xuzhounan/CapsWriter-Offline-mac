@@ -146,6 +146,7 @@ protocol SpeechRecognitionDelegate: AnyObject {
 protocol SpeechRecognitionServiceProtocol: AnyObject {
     // MARK: - Properties
     var isServiceRunning: Bool { get }
+    var isInitialized: Bool { get }
     var partialTranscript: String { get set }
     var delegate: SpeechRecognitionDelegate? { get set }
     

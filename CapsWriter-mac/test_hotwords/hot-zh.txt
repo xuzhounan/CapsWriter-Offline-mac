@@ -1,0 +1,11 @@
+# 测试中文热词替换
+张3=张三
+李4=李四
+cups writer=CapsWriter
+视频会议=视频会议系统
+人工智能=AI技术
+深度学习=Deep Learning
+机器学习=Machine Learning
+大数据=Big Data
+云计算=Cloud Computing
+物联网=IoT

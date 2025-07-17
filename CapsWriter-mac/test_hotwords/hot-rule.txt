@@ -1,0 +1,6 @@
+# 测试正则规则替换
+\b(\d+)点(\d+)\b=$1:$2
+\bcaps writer\b=CapsWriter
+\bmac os\b=macOS
+\biphone (\d+)\b=iPhone $1
+\bwindows (\d+)\b=Windows $1

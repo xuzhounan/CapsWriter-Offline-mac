@@ -37,7 +37,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             if !statusInfo.isInitialized {
                 print("🔄 VoiceInputController 未初始化，尝试重新初始化...")
                 self.voiceInputController.reinitializeController()
+            } else {
+                print("✅ VoiceInputController 已成功初始化")
             }
+            
+            // 无论如何都启动状态更新，确保UI与服务状态同步
+            self.voiceInputController.startStatusUpdateTimer()
         }
     }
     

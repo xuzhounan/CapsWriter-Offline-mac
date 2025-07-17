@@ -1,0 +1,11 @@
+# 测试英文热词替换
+ai=AI
+ml=Machine Learning
+api=API
+sdk=Software Development Kit
+github=GitHub
+stackoverflow=Stack Overflow
+javascript=JavaScript
+typescript=TypeScript
+macos=macOS
+ios=iOS

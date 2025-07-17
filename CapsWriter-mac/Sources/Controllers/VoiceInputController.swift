@@ -14,7 +14,7 @@ class VoiceInputController: ObservableObject {
     
     // MARK: - Dependencies
     
-    private let configManager: ConfigurationManagerProtocol
+    private let configManager: any ConfigurationManagerProtocol
     private let textProcessingService: TextProcessingServiceProtocol
     
     // 使用现有的状态管理（向后兼容）
@@ -38,6 +38,7 @@ class VoiceInputController: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private let controllerQueue = DispatchQueue(label: "com.capswriter.voice-input-controller", qos: .userInitiated)
     private var audioForwardCount: Int = 0
+    private var statusUpdateTimer: Timer?
     
     // 日志控制开关
     private static let enableDetailedLogging: Bool = {
@@ -217,6 +218,9 @@ class VoiceInputController: ObservableObject {
                 
                 // 更新服务状态到RecordingState
                 self?.updateServiceStatuses()
+                
+                // 启动定期状态更新（每5秒检查一次状态）
+                self?.startStatusUpdateTimer()
             }
             
         } catch {
@@ -317,6 +321,9 @@ class VoiceInputController: ObservableObject {
     /// 初始化失败时的回滚操作
     private func performInitializationRollback() {
         print("🔄 执行初始化回滚操作...")
+        
+        // 停止状态更新定时器
+        stopStatusUpdateTimer()
         
         // 清理ASR服务
         if let asr = asrService {
@@ -637,18 +644,42 @@ class VoiceInputController: ObservableObject {
     
     // MARK: - Status Update Methods
     
+    /// 启动状态更新定时器
+    func startStatusUpdateTimer() {
+        stopStatusUpdateTimer()
+        
+        statusUpdateTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+            self?.updateServiceStatuses()
+        }
+        print("⏰ 状态更新定时器已启动")
+    }
+    
+    /// 停止状态更新定时器
+    private func stopStatusUpdateTimer() {
+        statusUpdateTimer?.invalidate()
+        statusUpdateTimer = nil
+    }
+    
     /// 更新服务状态到RecordingState
     private func updateServiceStatuses() {
         print("📊 VoiceInputController: 更新服务状态...")
         
-        // 更新ASR服务状态
+        // 更新ASR服务状态 - 修复状态同步逻辑
         let asrRunning = asrService?.isServiceRunning ?? false
-        let asrInitialized = asrService != nil && asrRunning
-        recordingState.updateASRServiceStatus(asrRunning)
-        recordingState.updateASRServiceInitialized(asrInitialized)
+        let asrInitialized = asrService?.isInitialized ?? false
         
-        if asrInitialized {
+        // 重要：只有当服务运行且初始化完成时，才认为服务真正可用
+        let asrServiceReady = asrRunning && asrInitialized
+        
+        recordingState.updateASRServiceStatus(asrRunning)
+        recordingState.updateASRServiceInitialized(asrServiceReady)
+        
+        if asrServiceReady {
             recordingState.updateInitializationProgress("语音识别服务已就绪")
+        } else if asrRunning && !asrInitialized {
+            recordingState.updateInitializationProgress("语音识别服务正在初始化...")
+        } else if !asrRunning {
+            recordingState.updateInitializationProgress("语音识别服务未启动")
         }
         
         // 更新音频采集服务状态
@@ -661,12 +692,16 @@ class VoiceInputController: ObservableObject {
         print("📊 VoiceInputController: 服务状态更新完成")
         print("   - ASR服务运行: \(asrRunning)")
         print("   - ASR服务初始化: \(asrInitialized)")
+        print("   - ASR服务就绪: \(asrServiceReady)")
         print("   - 音频采集就绪: \(audioReady)")
     }
     
     // MARK: - Cleanup
     
     deinit {
+        // 停止状态更新定时器
+        stopStatusUpdateTimer()
+        
         keyboardMonitor?.stopMonitoring()
         audioCaptureService?.stopCapture()
         asrService?.stopService()
