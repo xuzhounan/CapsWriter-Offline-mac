@@ -487,4 +487,8 @@ extension VoiceInputController: SpeechRecognitionDelegate {
     func speechRecognitionDidDetectEndpoint() {
         handleEndpointDetected()
     }
+    
+    func speechRecognitionDidFailWithError(_ error: Error) {
+        handleRecognitionError(error)
+    }
 }

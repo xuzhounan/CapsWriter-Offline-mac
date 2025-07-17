@@ -139,6 +139,7 @@ protocol SpeechRecognitionDelegate: AnyObject {
     func speechRecognitionDidReceivePartialResult(_ text: String)
     func speechRecognitionDidReceiveFinalResult(_ text: String)
     func speechRecognitionDidDetectEndpoint()
+    func speechRecognitionDidFailWithError(_ error: Error)
 }
 
 // MARK: - Pure ASR Service Class
