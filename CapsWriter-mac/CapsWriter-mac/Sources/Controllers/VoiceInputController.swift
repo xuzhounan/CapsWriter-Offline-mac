@@ -15,7 +15,6 @@ class VoiceInputController: ObservableObject {
     // MARK: - Dependencies
     
     private let configManager: ConfigurationManagerProtocol
-    private let diContainer = DIContainer.shared
     
     // 使用现有的状态管理（向后兼容）
     private let recordingState = RecordingState.shared
@@ -106,7 +105,7 @@ class VoiceInputController: ObservableObject {
     
     private init() {
         // 通过 DI 容器获取配置管理器
-        self.configManager = diContainer.resolve(ConfigurationManagerProtocol.self)
+        self.configManager = DIContainer.shared.resolve(ConfigurationManagerProtocol.self)
         
         setupEventSubscriptions()
         print("🎙️ VoiceInputController 已初始化（使用依赖注入）")
@@ -232,7 +231,7 @@ class VoiceInputController: ObservableObject {
         // 1. 通过DI容器初始化键盘监听器
         do {
             print("🔧 初始化键盘监听器...")
-            keyboardMonitor = diContainer.resolve(KeyboardMonitorProtocol.self)
+            keyboardMonitor = DIContainer.shared.resolve(KeyboardMonitorProtocol.self)
             keyboardMonitor?.setCallbacks(
                 startRecording: { [weak self] in
                     self?.handleRecordingStartRequested()
@@ -249,7 +248,7 @@ class VoiceInputController: ObservableObject {
         // 2. 通过DI容器初始化文本输入服务
         do {
             print("🔧 初始化文本输入服务...")
-            textInputService = diContainer.resolve(TextInputServiceProtocol.self)
+            textInputService = DIContainer.shared.resolve(TextInputServiceProtocol.self)
             print("✅ 文本输入服务初始化完成")
         } catch {
             throw VoiceInputError.initializationFailed("文本输入服务初始化失败: \(error.localizedDescription)")
@@ -258,7 +257,7 @@ class VoiceInputController: ObservableObject {
         // 3. 通过DI容器初始化ASR服务
         do {
             print("🔧 初始化ASR服务...")
-            asrService = diContainer.resolve(SpeechRecognitionServiceProtocol.self)
+            asrService = DIContainer.shared.resolve(SpeechRecognitionServiceProtocol.self)
             
             // 验证ASR服务是否成功创建
             guard let asr = asrService else {
@@ -275,7 +274,7 @@ class VoiceInputController: ObservableObject {
         // 4. 通过DI容器初始化音频采集服务
         do {
             print("🔧 初始化音频采集服务...")
-            audioCaptureService = diContainer.resolve(AudioCaptureServiceProtocol.self)
+            audioCaptureService = DIContainer.shared.resolve(AudioCaptureServiceProtocol.self)
             
             // 验证音频采集服务是否成功创建
             guard audioCaptureService != nil else {

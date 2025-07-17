@@ -26,7 +26,8 @@
 		38967C1F3C9E4DEAA6E9VIC1 /* VoiceInputController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7845C2A98AB741B0B2FEVIC2 /* VoiceInputController.swift */; };
 		A12345678901234567890060 /* libsherpa-onnx-c-api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */; };
 		A12345678901234567890070 /* models in Resources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890071 /* models */; };
-/* End PBXBuildFile section */
+		149370E2BB564291900407A1 /* DIContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2146729669AF4727A24F3226 /* DIContainer.swift */; };
+	/* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		8A0E46386F774048994E5E89 /* Embed Libraries */ = {
@@ -65,7 +66,8 @@
 		7845C2A98AB741B0B2FEVIC2 /* VoiceInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Controllers/VoiceInputController.swift"; sourceTree = "<group>"; };
 		A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libsherpa-onnx-c-api.dylib"; path = "CapsWriter-mac/Frameworks/libsherpa-onnx-c-api.dylib"; sourceTree = "<group>"; };
 		A12345678901234567890071 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = models; sourceTree = "<group>"; };
-/* End PBXFileReference section */
+		2146729669AF4727A24F3226 /* DIContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Core/DIContainer.swift"; sourceTree = "<group>"; };
+	/* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A12345678901234567890016 /* Frameworks */ = {
@@ -222,6 +224,7 @@
 				7B3049B1B62443569992B561 /* TextInputService.swift in Sources */,
 				CF8E3D1A2B7F4E9C8A1D5621 /* ConfigurationManager.swift in Sources */,
 				38967C1F3C9E4DEAA6E9VIC1 /* VoiceInputController.swift in Sources */,
+							149370E2BB564291900407A1 /* DIContainer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

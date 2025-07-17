@@ -26,7 +26,14 @@
 		38967C1F3C9E4DEAA6E9VIC1 /* VoiceInputController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7845C2A98AB741B0B2FEVIC2 /* VoiceInputController.swift */; };
 		A12345678901234567890060 /* libsherpa-onnx-c-api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */; };
 		A12345678901234567890070 /* models in Resources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890071 /* models */; };
-/* End PBXBuildFile section */
+		10914285B914440E993AA29C /* DIContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B39FCE9E4E674D8EBF03AD56 /* DIContainer.swift */; };
+		D74C2DEACF0446208C57869D /* ErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD87E1E760C4FD69D300837 /* ErrorHandler.swift */; };
+		4284DA1F14B94700AC3E9A27 /* AppEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885DA9F8BF0C4CB394DA3DFC /* AppEvents.swift */; };
+		A4FB045EFB2D44C89C3162DF /* EventBus.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B3E748FF2148AABADC0CBD /* EventBus.swift */; };
+		7AF77F47229946FE920B18E4 /* StateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73C50FCDA814475CA107A8D9 /* StateManager.swift */; };
+		CD44EB3CB9494ADDB7ADD1B6 /* ErrorHandlerIntegration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A7452F18D5646999CD8AC01 /* ErrorHandlerIntegration.swift */; };
+		577B0EB09E074DAEB1791445 /* EventBusAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5256A5464324745B1BBA419 /* EventBusAdapter.swift */; };
+	/* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		8A0E46386F774048994E5E89 /* Embed Libraries */ = {
@@ -65,7 +72,14 @@
 		7845C2A98AB741B0B2FEVIC2 /* VoiceInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Controllers/VoiceInputController.swift"; sourceTree = "<group>"; };
 		A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libsherpa-onnx-c-api.dylib"; path = "CapsWriter-mac/Frameworks/libsherpa-onnx-c-api.dylib"; sourceTree = "<group>"; };
 		A12345678901234567890071 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = models; sourceTree = "<group>"; };
-/* End PBXFileReference section */
+		B39FCE9E4E674D8EBF03AD56 /* DIContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DIContainer.swift"; sourceTree = "<group>"; };
+		FAD87E1E760C4FD69D300837 /* ErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ErrorHandler.swift"; sourceTree = "<group>"; };
+		885DA9F8BF0C4CB394DA3DFC /* AppEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppEvents.swift"; sourceTree = "<group>"; };
+		B8B3E748FF2148AABADC0CBD /* EventBus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EventBus.swift"; sourceTree = "<group>"; };
+		73C50FCDA814475CA107A8D9 /* StateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StateManager.swift"; sourceTree = "<group>"; };
+		0A7452F18D5646999CD8AC01 /* ErrorHandlerIntegration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ErrorHandlerIntegration.swift"; sourceTree = "<group>"; };
+		F5256A5464324745B1BBA419 /* EventBusAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EventBusAdapter.swift"; sourceTree = "<group>"; };
+	/* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A12345678901234567890016 /* Frameworks */ = {
@@ -139,7 +153,21 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-/* End PBXGroup section */
+		5548DC409C7245B2B382F31C /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				B39FCE9E4E674D8EBF03AD56 /* DIContainer.swift */,
+				FAD87E1E760C4FD69D300837 /* ErrorHandler.swift */,
+				885DA9F8BF0C4CB394DA3DFC /* AppEvents.swift */,
+				B8B3E748FF2148AABADC0CBD /* EventBus.swift */,
+				73C50FCDA814475CA107A8D9 /* StateManager.swift */,
+				0A7452F18D5646999CD8AC01 /* ErrorHandlerIntegration.swift */,
+				F5256A5464324745B1BBA419 /* EventBusAdapter.swift */,
+			);
+			path = "Sources/Core";
+			sourceTree = "<group>";
+		};
+	/* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
 		A12345678901234567890032 /* CapsWriter-mac */ = {
@@ -222,6 +250,13 @@
 				7B3049B1B62443569992B561 /* TextInputService.swift in Sources */,
 				CF8E3D1A2B7F4E9C8A1D5621 /* ConfigurationManager.swift in Sources */,
 				38967C1F3C9E4DEAA6E9VIC1 /* VoiceInputController.swift in Sources */,
+							10914285B914440E993AA29C /* DIContainer.swift in Sources */,
+							D74C2DEACF0446208C57869D /* ErrorHandler.swift in Sources */,
+							4284DA1F14B94700AC3E9A27 /* AppEvents.swift in Sources */,
+							A4FB045EFB2D44C89C3162DF /* EventBus.swift in Sources */,
+							7AF77F47229946FE920B18E4 /* StateManager.swift in Sources */,
+							CD44EB3CB9494ADDB7ADD1B6 /* ErrorHandlerIntegration.swift in Sources */,
+							577B0EB09E074DAEB1791445 /* EventBusAdapter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
