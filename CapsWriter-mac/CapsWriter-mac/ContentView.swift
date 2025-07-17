@@ -215,6 +215,22 @@ struct MainDashboardView: View {
                         .fontWeight(.medium)
                 }
                 
+                // 语音输入服务状态
+                HStack {
+                    Image(systemName: recordingState.hasTextInputPermission ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .foregroundColor(recordingState.hasTextInputPermission ? .green : .orange)
+                    
+                    Text("语音输入服务")
+                        .font(.subheadline)
+                    
+                    Spacer()
+                    
+                    Text(recordingState.hasTextInputPermission ? "已授权" : "等待授权")
+                        .font(.caption)
+                        .foregroundColor(recordingState.hasTextInputPermission ? .green : .orange)
+                        .fontWeight(.medium)
+                }
+                
                 // 权限请求按钮
                 VStack(spacing: 8) {
                     if !recordingState.hasAccessibilityPermission {

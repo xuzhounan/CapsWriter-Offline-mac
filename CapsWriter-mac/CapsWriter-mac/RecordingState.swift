@@ -12,6 +12,7 @@ class RecordingState: ObservableObject {
     @Published var isAudioCaptureServiceReady: Bool = false
     @Published var isASRServiceInitialized: Bool = false
     @Published var initializationProgress: String = "正在启动..."
+    @Published var hasTextInputPermission: Bool = false
     
     // 添加一个标志位来跟踪用户是否手动停止了监听
     // 使用队列保护以确保线程安全
@@ -114,6 +115,12 @@ class RecordingState: ObservableObject {
         }
     }
     
+    func updateTextInputPermission(_ hasPermission: Bool) {
+        DispatchQueue.main.async {
+            self.hasTextInputPermission = hasPermission
+        }
+    }
+    
     func refreshPermissionStatus() {
         // 检查辅助功能权限
         let hasAccessibilityPermission = KeyboardMonitor.checkAccessibilityPermission()
@@ -123,6 +130,10 @@ class RecordingState: ObservableObject {
         let microphoneStatus = AVCaptureDevice.authorizationStatus(for: .audio)
         let hasMicrophonePermission = (microphoneStatus == .authorized)
         updateMicrophonePermission(hasMicrophonePermission)
+        
+        // 检查文本输入权限（同样需要辅助功能权限）
+        let hasTextInputPermission = TextInputService.shared.checkAccessibilityPermission()
+        updateTextInputPermission(hasTextInputPermission)
         
         // 更新键盘监听器状态 - 只有在没有权限时才强制更新状态
         // 如果有权限且用户没有手动停止，则不要覆盖当前状态

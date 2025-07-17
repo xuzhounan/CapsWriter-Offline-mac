@@ -7,6 +7,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var keyboardMonitor: KeyboardMonitor?
     var asrService: SherpaASRService?
     var audioCaptureService: AudioCaptureService?
+    var textInputService: TextInputService?
     
     // Audio forwarding counter
     private static var forwardCount = 0
@@ -17,7 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // 禁用窗口恢复功能
         UserDefaults.standard.register(defaults: ["NSQuitAlwaysKeepsWindows": false])
         
-        // 强制设置应用为正常应用，确保在 Dock 中显示
+        // 设置应用为正常应用，可在需要时切换为代理模式
         NSApp.setActivationPolicy(.regular)
         
         // 立即初始化状态栏控制器（轻量级操作）
@@ -30,6 +31,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         
         // 手动激活应用，确保 Dock 图标显示
         NSApp.activate(ignoringOtherApps: true)
+        
+        // 初始化文本输入服务（轻量级操作）
+        print("⌨️ 初始化文本输入服务...")
+        setupTextInputService()
         
         // 异步初始化语音识别服务（耗时操作）
         print("🔧 开始异步初始化语音识别服务...")
@@ -62,11 +67,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         asrService = nil
         print("✅ 语音识别服务已清理")
         
-        // 4. 清理状态栏控制器
+        // 4. 清理文本输入服务
+        textInputService = nil
+        print("✅ 文本输入服务已清理")
+        
+        // 5. 清理状态栏控制器
         statusBarController = nil
         print("✅ 状态栏控制器已清理")
         
-        // 5. 清理静态AppDelegate引用
+        // 6. 清理静态AppDelegate引用
         CapsWriterApp.sharedAppDelegate = nil
         print("✅ 静态引用已清理")
         
@@ -159,6 +168,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         RecordingState.shared.updateAudioCaptureServiceStatus(true)
         
         print("✅ 音频采集服务已初始化")
+    }
+    
+    // MARK: - 文本输入服务设置
+    private func setupTextInputService() {
+        print("⌨️ 初始化文本输入服务...")
+        textInputService = TextInputService.shared
+        print("✅ 文本输入服务已初始化")
     }
     
     // MARK: - 键盘监听器设置
@@ -256,6 +272,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             print("🧠 ASR服务: ❌ 未创建")
         }
         
+        // 检查文本输入服务状态
+        if let textInput = textInputService {
+            let hasInputPermission = textInput.checkAccessibilityPermission()
+            print("⌨️ 文本输入服务: 已创建，输入权限: \(hasInputPermission ? "✅ 已授权" : "❌ 未授权")")
+        } else {
+            print("⌨️ 文本输入服务: ❌ 未创建")
+        }
+        
         print("🔍 === 调试完成 ===")
         
         // 如果没有辅助功能权限，提示用户
@@ -321,9 +345,60 @@ extension AppDelegate: SpeechRecognitionDelegate {
             self.asrService?.addTranscriptEntry(text: text, isPartial: false)
             self.asrService?.partialTranscript = "" // 清空部分结果
         }
+        
+        // 语音输入：将识别结果转换为键盘输入
+        self.performVoiceInput(text)
     }
     
     func speechRecognitionDidDetectEndpoint() {
         print("🔚 检测到语音端点")
+    }
+    
+    // MARK: - 语音输入方法
+    
+    /// 执行语音输入：将语音识别结果转换为键盘输入
+    /// - Parameter text: 识别到的文本
+    private func performVoiceInput(_ text: String) {
+        guard let textInputService = textInputService else {
+            print("❌ 文本输入服务未初始化")
+            return
+        }
+        
+        // 检查文本是否适合输入
+        guard textInputService.shouldInputText(text) else {
+            print("⚠️ 文本不适合输入，跳过: \(text)")
+            return
+        }
+        
+        // 格式化文本
+        let formattedText = textInputService.formatTextForInput(text)
+        
+        print("🎤➡️⌨️ 语音输入: \(text) -> \(formattedText)")
+        
+        // 延迟一小段时间，确保当前应用有时间处理录音结束
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            textInputService.inputText(formattedText)
+        }
+    }
+    
+    // MARK: - 后台模式管理
+    
+    /// 切换应用的激活策略
+    /// - Parameter toBackground: true表示切换到后台代理模式，false表示正常模式
+    func switchActivationPolicy(toBackground: Bool) {
+        if toBackground {
+            print("🔄 切换到后台代理模式...")
+            NSApp.setActivationPolicy(.accessory)
+        } else {
+            print("🔄 切换到正常模式...")
+            NSApp.setActivationPolicy(.regular)
+            // 激活应用到前台
+            NSApp.activate(ignoringOtherApps: true)
+        }
+    }
+    
+    /// 检查应用是否可以在后台运行语音输入
+    func canRunInBackground() -> Bool {
+        return textInputService?.checkAccessibilityPermission() ?? false
     }
 }
