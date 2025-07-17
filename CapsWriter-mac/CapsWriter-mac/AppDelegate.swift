@@ -182,11 +182,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         )
         print("✅ 键盘监听器回调函数已设置")
         
-        // 修复：不应该调用resetMonitoring，而是直接启动监听
-        // resetMonitoring会先停止再启动，在初始化阶段是不必要的
-        print("🚀 AppDelegate: 启动键盘监听器...")
-        keyboardMonitor?.startMonitoring()
-        print("✅ AppDelegate: 键盘监听器启动完成")
+        // 默认不启动监听器，等待用户手动启动
+        print("⏸️ AppDelegate: 键盘监听器已准备就绪，等待用户启动...")
+        RecordingState.shared.updateKeyboardMonitorStatus("已停止")
     }
     
     // MARK: - 语音识别回调

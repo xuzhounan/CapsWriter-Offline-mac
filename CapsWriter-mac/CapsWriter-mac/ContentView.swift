@@ -253,16 +253,23 @@ struct MainDashboardView: View {
                     .cornerRadius(8)
                     .controlSize(.small)
                     
-                    Button("测试录音") {
-                        print("🧪 测试录音状态切换")
+                    Button(recordingState.isRecording ? "停止录音" : "开始录音") {
+                        print("🎤 手动录音状态切换")
                         if recordingState.isRecording {
-                            recordingState.stopRecording()
+                            // 调用AppDelegate的停止录音方法
+                            if let appDelegate = CapsWriterApp.sharedAppDelegate ?? (NSApplication.shared.delegate as? AppDelegate) {
+                                appDelegate.stopRecording()
+                            }
                         } else {
-                            recordingState.startRecording()
+                            // 调用AppDelegate的开始录音方法
+                            if let appDelegate = CapsWriterApp.sharedAppDelegate ?? (NSApplication.shared.delegate as? AppDelegate) {
+                                appDelegate.startRecording()
+                            }
                         }
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
+                    .foregroundColor(recordingState.isRecording ? .red : .blue)
                 }
         }
         .padding()

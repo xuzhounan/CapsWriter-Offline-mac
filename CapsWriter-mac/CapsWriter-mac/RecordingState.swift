@@ -131,12 +131,11 @@ class RecordingState: ObservableObject {
             // 权限丢失时重置手动停止标志
             isManuallyStoppedByUser = false
         } else {
-            // 有权限时，只有在状态是"等待权限"或"未知"时才自动设置为启动
-            // 如果用户手动停止了，就保持停止状态
+            // 有权限时，保持当前状态不变（默认停止，等待用户手动启动）
+            // 如果是第一次运行或状态为"等待权限"/"未知"，设置为停止状态
             if keyboardMonitorStatus == "等待权限" || keyboardMonitorStatus == "未知" {
-                if !isManuallyStoppedByUser {
-                    updateKeyboardMonitorStatus("已启动")
-                }
+                updateKeyboardMonitorStatus("已停止")
+                isManuallyStoppedByUser = true // 标记为手动停止状态
             }
             // 如果当前是运行状态但用户手动停止了，应该保持停止状态
             else if (keyboardMonitorStatus == "已启动" || keyboardMonitorStatus == "正在监听") && isManuallyStoppedByUser {
