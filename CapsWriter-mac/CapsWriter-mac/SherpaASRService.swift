@@ -238,18 +238,24 @@ class SherpaASRService: ObservableObject, SpeechRecognitionServiceProtocol {
             return
         }
         
-        // 立即标记服务为启动状态，后台异步初始化识别器
-        isServiceRunning = true
-        
         // 异步初始化识别器，避免阻塞调用线程
         processingQueue.async { [weak self] in
+            guard let self = self else { return }
+            
             RecordingState.shared.updateInitializationProgress("正在初始化识别器...")
-            self?.initializeRecognizer()
+            self.initializeRecognizer()
             
             DispatchQueue.main.async {
-                self?.isInitialized = true
-                RecordingState.shared.updateInitializationProgress("识别器已就绪")
-                self?.addLog("✅ 语音识别服务已启动")
+                // 只有初始化成功后才标记服务为运行状态
+                if self.isInitialized {
+                    self.isServiceRunning = true
+                    RecordingState.shared.updateInitializationProgress("识别器已就绪")
+                    self.addLog("✅ 语音识别服务已启动")
+                } else {
+                    self.isServiceRunning = false
+                    RecordingState.shared.updateInitializationProgress("识别器初始化失败")
+                    self.addLog("❌ 语音识别服务启动失败")
+                }
             }
         }
     }
@@ -413,6 +419,9 @@ class SherpaASRService: ObservableObject, SpeechRecognitionServiceProtocol {
         addLog("🧠 初始化 Sherpa-ONNX 识别器...")
         RecordingState.shared.updateInitializationProgress("正在检查模型文件...")
         
+        // 重置初始化状态
+        isInitialized = false
+        
         // 检查模型文件是否存在
         addLog("📂 检查模型文件...")
         addLog("  - 模型路径: \(modelPath)")
@@ -431,6 +440,7 @@ class SherpaASRService: ObservableObject, SpeechRecognitionServiceProtocol {
             // 模拟模式：不创建真实的Sherpa对象，保持nil状态
             addLog("🔧 模拟模式：不创建真实识别器")
             addLog("✅ 模拟识别器初始化完成（音频流测试模式）")
+            isInitialized = true
         } else {
             // 真实模式：创建Sherpa识别器
             addLog("🔧 真实模式：创建Sherpa识别器...")
@@ -497,12 +507,15 @@ class SherpaASRService: ObservableObject, SpeechRecognitionServiceProtocol {
                 if stream != nil {
                     addLog("✅ 音频流创建成功")
                     RecordingState.shared.updateInitializationProgress("初始化完成")
+                    isInitialized = true
                 } else {
                     addLog("❌ 音频流创建失败")
                     RecordingState.shared.updateInitializationProgress("音频流创建失败")
+                    isInitialized = false
                 }
             } else {
                 addLog("❌ 识别器创建失败")
+                isInitialized = false
             }
         }
     }

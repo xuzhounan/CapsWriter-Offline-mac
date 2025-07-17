@@ -1,0 +1,42 @@
+# 自定义规则热词替换文件
+# 支持正则表达式规则
+# 格式: 正则表达式	替换模板
+
+# 数字格式化
+\b(\d{4})(\d{2})(\d{2})\b	$1-$2-$3
+\b(\d{3})(\d{4})(\d{4})\b	$1-$2-$3
+
+# 邮箱域名修正
+@qq\.con	@qq.com
+@163\.con	@163.com
+@gmail\.con	@gmail.com
+@sina\.con	@sina.com
+
+# 常用标点符号修正
+，，	，
+。。	。
+！！	！
+？？	？
+
+# URL 修正
+htpp://	http://
+htpps://	https://
+www\.\.	www.
+
+# 空格清理
+\s+	 
+^\s+|\s+$	
+
+# 常用词汇规则
+\b(ios|IOS)\b	iOS
+\b(macos|MacOS|MACOS)\b	macOS
+\b(iphone|IPhone|IPHONE)\b	iPhone
+\b(ipad|IPad|IPAD)\b	iPad
+\b(macbook|MacBook|MACBOOK)\b	MacBook
+
+# 编程相关大小写
+\bjavascript\b	JavaScript
+\btypescript\b	TypeScript
+\bpython\b	Python
+\bswift\b	Swift
+\bc\+\+\b	C++

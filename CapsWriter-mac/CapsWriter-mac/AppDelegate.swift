@@ -31,6 +31,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // 调试：检查权限状态（延迟更久，确保服务完全初始化）
         DispatchQueue.main.asyncAfter(deadline: .now() + configManager.appBehavior.permissionCheckDelay) {
             self.debugPermissionStatus()
+            
+            // 检查 VoiceInputController 是否初始化成功，如果失败则重新初始化
+            let statusInfo = self.voiceInputController.getStatusInfo()
+            if !statusInfo.isInitialized {
+                print("🔄 VoiceInputController 未初始化，尝试重新初始化...")
+                self.voiceInputController.reinitializeController()
+            }
         }
     }
     

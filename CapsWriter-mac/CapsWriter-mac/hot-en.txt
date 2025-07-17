@@ -1,0 +1,47 @@
+# 英文热词替换文件
+# 格式: 原词	替换词
+
+# 常用缩写展开
+ai	artificial intelligence
+ml	machine learning
+dl	deep learning
+nlp	natural language processing
+api	Application Programming Interface
+sdk	Software Development Kit
+ui	User Interface
+ux	User Experience
+
+# 专业词汇
+vs	versus
+etc	et cetera
+eg	for example
+ie	that is
+aka	also known as
+
+# 技术术语
+js	JavaScript
+css	Cascading Style Sheets
+html	HyperText Markup Language
+sql	Structured Query Language
+json	JavaScript Object Notation
+xml	eXtensible Markup Language
+url	Uniform Resource Locator
+http	HyperText Transfer Protocol
+https	HTTP Secure
+ftp	File Transfer Protocol
+
+# 编程语言
+py	Python
+rb	Ruby
+go	Golang
+kt	Kotlin
+ts	TypeScript
+php	PHP
+
+# 常用英文纠错
+teh	the
+recieve	receive
+seperate	separate
+occured	occurred
+definately	definitely
+accomodate	accommodate
