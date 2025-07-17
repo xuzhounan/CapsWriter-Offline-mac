@@ -1,0 +1,456 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8A0E46386F774048994E5E88 /* libsherpa-onnx-c-api.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		A12345678901234567890001 /* CapsWriterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890000 /* CapsWriterApp.swift */; };
+		A12345678901234567890003 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890002 /* ContentView.swift */; };
+		A12345678901234567890005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890004 /* Assets.xcassets */; };
+		A12345678901234567890008 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890007 /* Preview Assets.xcassets */; };
+		A12345678901234567890010 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890009 /* StatusBarController.swift */; };
+		A12345678901234567890012 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890011 /* AppDelegate.swift */; };
+		A12345678901234567890030 /* KeyboardMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890031 /* KeyboardMonitor.swift */; };
+		A12345678901234567890040 /* RecordingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890041 /* RecordingState.swift */; };
+		A12345678901234567890050 /* SherpaASRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890051 /* SherpaASRService.swift */; };
+		A12345678901234567890055 /* AudioCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890056 /* AudioCaptureService.swift */; };
+		7B3049B1B62443569992B561 /* TextInputService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC7FD4270A1C4A01849E7770 /* TextInputService.swift */; };
+		CF8E3D1A2B7F4E9C8A1D5621 /* ConfigurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF8E3D1B2B7F4E9C8A1D5622 /* ConfigurationManager.swift */; };
+		ST8E3D1A2B7F4E9C8A1D5623 /* AudioState.swift in Sources */ = {isa = PBXBuildFile; fileRef = ST8E3D1B2B7F4E9C8A1D5624 /* AudioState.swift */; };
+		ST8E3D1A2B7F4E9C8A1D5625 /* RecognitionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = ST8E3D1B2B7F4E9C8A1D5626 /* RecognitionState.swift */; };
+		ST8E3D1A2B7F4E9C8A1D5627 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = ST8E3D1B2B7F4E9C8A1D5628 /* AppState.swift */; };
+		38967C1F3C9E4DEAA6E9VIC1 /* VoiceInputController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7845C2A98AB741B0B2FEVIC2 /* VoiceInputController.swift */; };
+		A12345678901234567890060 /* libsherpa-onnx-c-api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */; };
+		A12345678901234567890070 /* models in Resources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890071 /* models */; };
+		149370E2BB564291900407A1 /* DIContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2146729669AF4727A24F3226 /* DIContainer.swift */; };
+	/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8A0E46386F774048994E5E89 /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				8A0E46386F774048994E5E88 /* libsherpa-onnx-c-api.dylib in Embed Libraries */,
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		A12345678901234567890000 /* CapsWriterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapsWriterApp.swift; sourceTree = "<group>"; };
+		A12345678901234567890002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A12345678901234567890004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A12345678901234567890007 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		A12345678901234567890009 /* StatusBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarController.swift; sourceTree = "<group>"; };
+		A12345678901234567890011 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A12345678901234567890013 /* CapsWriter-mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CapsWriter-mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A12345678901234567890014 /* CapsWriter-mac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "CapsWriter-mac.entitlements"; sourceTree = "<group>"; };
+		A12345678901234567890015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A12345678901234567890031 /* KeyboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardMonitor.swift; sourceTree = "<group>"; };
+		A12345678901234567890041 /* RecordingState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingState.swift; sourceTree = "<group>"; };
+		A12345678901234567890051 /* SherpaASRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaASRService.swift; sourceTree = "<group>"; };
+		A12345678901234567890052 /* SherpaONNX-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SherpaONNX-Bridging-Header.h"; sourceTree = "<group>"; };
+		A12345678901234567890056 /* AudioCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCaptureService.swift; sourceTree = "<group>"; };
+		FC7FD4270A1C4A01849E7770 /* TextInputService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextInputService.swift; sourceTree = "<group>"; };
+		ST8E3D1B2B7F4E9C8A1D5624 /* AudioState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/States/AudioState.swift"; sourceTree = "<group>"; };
+		ST8E3D1B2B7F4E9C8A1D5626 /* RecognitionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/States/RecognitionState.swift"; sourceTree = "<group>"; };
+		ST8E3D1B2B7F4E9C8A1D5628 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/States/AppState.swift"; sourceTree = "<group>"; };
+		CF8E3D1B2B7F4E9C8A1D5622 /* ConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Configuration/ConfigurationManager.swift"; sourceTree = "<group>"; };
+		7845C2A98AB741B0B2FEVIC2 /* VoiceInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Controllers/VoiceInputController.swift"; sourceTree = "<group>"; };
+		A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libsherpa-onnx-c-api.dylib"; path = "CapsWriter-mac/Frameworks/libsherpa-onnx-c-api.dylib"; sourceTree = "<group>"; };
+		A12345678901234567890071 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = models; sourceTree = "<group>"; };
+		2146729669AF4727A24F3226 /* DIContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Core/DIContainer.swift"; sourceTree = "<group>"; };
+	/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A12345678901234567890016 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A12345678901234567890060 /* libsherpa-onnx-c-api.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A12345678901234567890006 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				A12345678901234567890007 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		A12345678901234567890017 = {
+			isa = PBXGroup;
+			children = (
+				A12345678901234567890019 /* CapsWriter-mac */,
+				A12345678901234567890018 /* Products */,
+				A12345678901234567890062 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		A12345678901234567890018 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A12345678901234567890013 /* CapsWriter-mac.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A12345678901234567890019 /* CapsWriter-mac */ = {
+			isa = PBXGroup;
+			children = (
+				A12345678901234567890000 /* CapsWriterApp.swift */,
+				A12345678901234567890011 /* AppDelegate.swift */,
+				A12345678901234567890002 /* ContentView.swift */,
+				A12345678901234567890009 /* StatusBarController.swift */,
+				A12345678901234567890031 /* KeyboardMonitor.swift */,
+				A12345678901234567890041 /* RecordingState.swift */,
+				A12345678901234567890051 /* SherpaASRService.swift */,
+				A12345678901234567890056 /* AudioCaptureService.swift */,
+				A12345678901234567890052 /* SherpaONNX-Bridging-Header.h */,
+				A12345678901234567890071 /* models */,
+				A12345678901234567890004 /* Assets.xcassets */,
+				A12345678901234567890014 /* CapsWriter-mac.entitlements */,
+				A12345678901234567890015 /* Info.plist */,
+				A12345678901234567890006 /* Preview Content */,
+				FC7FD4270A1C4A01849E7770 /* TextInputService.swift */,
+				CF8E3D1B2B7F4E9C8A1D5622 /* ConfigurationManager.swift */,
+				ST8E3D1B2B7F4E9C8A1D5624 /* AudioState.swift */,
+				ST8E3D1B2B7F4E9C8A1D5626 /* RecognitionState.swift */,
+				ST8E3D1B2B7F4E9C8A1D5628 /* AppState.swift */,
+				7845C2A98AB741B0B2FEVIC2 /* VoiceInputController.swift */,
+			);
+			path = "CapsWriter-mac";
+			sourceTree = "<group>";
+		};
+		A12345678901234567890062 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A12345678901234567890032 /* CapsWriter-mac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A12345678901234567890033 /* Build configuration list for PBXNativeTarget "CapsWriter-mac" */;
+			buildPhases = (
+				A12345678901234567890022 /* Sources */,
+				A12345678901234567890016 /* Frameworks */,
+				A12345678901234567890023 /* Resources */,
+				8A0E46386F774048994E5E89 /* Embed Libraries */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "CapsWriter-mac";
+			productName = "CapsWriter-mac";
+			productReference = A12345678901234567890013 /* CapsWriter-mac.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A12345678901234567890024 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					A12345678901234567890032 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = A12345678901234567890025 /* Build configuration list for PBXProject "CapsWriter-mac" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A12345678901234567890017;
+			productRefGroup = A12345678901234567890018 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A12345678901234567890032 /* CapsWriter-mac */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A12345678901234567890023 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A12345678901234567890008 /* Preview Assets.xcassets in Resources */,
+				A12345678901234567890005 /* Assets.xcassets in Resources */,
+				A12345678901234567890070 /* models in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A12345678901234567890022 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A12345678901234567890003 /* ContentView.swift in Sources */,
+				A12345678901234567890012 /* AppDelegate.swift in Sources */,
+				A12345678901234567890010 /* StatusBarController.swift in Sources */,
+				A12345678901234567890030 /* KeyboardMonitor.swift in Sources */,
+				A12345678901234567890040 /* RecordingState.swift in Sources */,
+				A12345678901234567890050 /* SherpaASRService.swift in Sources */,
+				A12345678901234567890055 /* AudioCaptureService.swift in Sources */,
+				A12345678901234567890001 /* CapsWriterApp.swift in Sources */,
+				7B3049B1B62443569992B561 /* TextInputService.swift in Sources */,
+				CF8E3D1A2B7F4E9C8A1D5621 /* ConfigurationManager.swift in Sources */,
+				38967C1F3C9E4DEAA6E9VIC1 /* VoiceInputController.swift in Sources */,
+							149370E2BB564291900407A1 /* DIContainer.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A12345678901234567890026 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A12345678901234567890027 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		A12345678901234567890028 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "CapsWriter-mac/CapsWriter-mac.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_ASSET_PATHS = "\"CapsWriter-mac/Preview Content\"";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/CapsWriter-mac",
+				);
+				INFOPLIST_FILE = "CapsWriter-mac/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "CapsWriter-mac";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/CapsWriter-mac/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.CapsWriterMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "CapsWriter-mac/SherpaONNX-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A12345678901234567890029 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "CapsWriter-mac/CapsWriter-mac.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_ASSET_PATHS = "\"CapsWriter-mac/Preview Content\"";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/CapsWriter-mac",
+				);
+				INFOPLIST_FILE = "CapsWriter-mac/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "CapsWriter-mac";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/CapsWriter-mac/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.CapsWriterMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "CapsWriter-mac/SherpaONNX-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A12345678901234567890025 /* Build configuration list for PBXProject "CapsWriter-mac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A12345678901234567890026 /* Debug */,
+				A12345678901234567890027 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A12345678901234567890033 /* Build configuration list for PBXNativeTarget "CapsWriter-mac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A12345678901234567890028 /* Debug */,
+				A12345678901234567890029 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A12345678901234567890024 /* Project object */;
+}
