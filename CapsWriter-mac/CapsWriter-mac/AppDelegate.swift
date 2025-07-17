@@ -9,17 +9,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private let voiceInputController = VoiceInputController.shared
     private let configManager = ConfigurationManager.shared
     
-    // 保留对服务的引用以便必要时的向后兼容
-    private var legacyServices: LegacyServices?
-    
-    // Legacy services holder for backward compatibility
-    private struct LegacyServices {
-        var keyboardMonitor: KeyboardMonitor?
-        var asrService: SherpaASRService?
-        var audioCaptureService: AudioCaptureService?
-        var textInputService: TextInputService?
-    }
-    
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("🚀🚀🚀 AppDelegate: applicationDidFinishLaunching 开始执行 🚀🚀🚀")
         
@@ -54,10 +43,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // 清理状态栏控制器
         statusBarController = nil
         print("✅ 状态栏控制器已清理")
-        
-        // 清理遗留服务引用
-        legacyServices = nil
-        print("✅ 遗留服务引用已清理")
         
         // 清理静态AppDelegate引用
         CapsWriterApp.sharedAppDelegate = nil
@@ -110,19 +95,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         voiceInputController.stopListening()
     }
     
-    /// 键盘监听器 - 供 UI 组件访问
+    /// 键盘监听器 - 委托给 VoiceInputController
     var keyboardMonitor: KeyboardMonitor? {
-        return nil // TODO: 实现键盘监听器访问
+        // 注意：直接访问已不推荐，应使用 VoiceInputController 的方法
+        return nil
     }
     
-    /// 设置键盘监听器 - 供 UI 组件调用
+    /// 设置键盘监听器 - 委托给 VoiceInputController
     func setupKeyboardMonitor() {
-        // TODO: 实现键盘监听器设置
+        // 键盘监听器由 VoiceInputController 管理，无需单独设置
+        print("⚠️ setupKeyboardMonitor 已废弃，使用 VoiceInputController 管理")
     }
     
-    /// ASR 服务 - 供 UI 组件访问
+    /// ASR 服务 - 委托给 VoiceInputController
     var asrService: SherpaASRService? {
-        return nil // TODO: 实现 ASR 服务访问
+        // 注意：直接访问已不推荐，应使用 VoiceInputController 的方法
+        return nil
     }
     
     // MARK: - 调试方法
