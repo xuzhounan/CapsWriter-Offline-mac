@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 struct ContentView: View {
     @StateObject private var recordingState = RecordingState.shared
@@ -255,11 +256,19 @@ struct MainDashboardView: View {
                     }
                     
                     if !recordingState.hasMicrophonePermission {
-                        Button("打开系统设置授权麦克风") {
-                            openMicrophonePermissionSettings()
+                        HStack(spacing: 8) {
+                            Button("请求麦克风权限") {
+                                requestMicrophonePermission()
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                            
+                            Button("打开系统设置") {
+                                openMicrophonePermissionSettings()
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                         }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
                     }
                 }
                 
@@ -408,6 +417,36 @@ struct MainDashboardView: View {
         }
     }
     
+    private func requestMicrophonePermission() {
+        print("🎤 请求麦克风权限...")
+        
+        let currentStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+        print("🎤 当前麦克风权限状态: \(currentStatus.rawValue)")
+        
+        switch currentStatus {
+        case .authorized:
+            print("✅ 麦克风权限已授权")
+            recordingState.refreshPermissionStatus()
+            
+        case .notDetermined:
+            print("🔍 请求麦克风权限...")
+            AVCaptureDevice.requestAccess(for: .audio) { granted in
+                DispatchQueue.main.async {
+                    print("🎤 麦克风权限请求结果: \(granted ? "已授权" : "被拒绝")")
+                    self.recordingState.refreshPermissionStatus()
+                }
+            }
+            
+        case .denied, .restricted:
+            print("❌ 麦克风权限被拒绝或受限，需要在系统设置中手动授权")
+            openMicrophonePermissionSettings()
+            
+        @unknown default:
+            print("⚠️ 未知的麦克风权限状态")
+            openMicrophonePermissionSettings()
+        }
+    }
+    
     private func openMicrophonePermissionSettings() {
         // 打开系统设置的隐私与安全性 -> 麦克风页面
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
@@ -431,25 +470,8 @@ struct MainDashboardView: View {
             return
         }
         
-        guard let monitor = appDelegate.keyboardMonitor else {
-            print("⚠️ 监听器不存在，重新初始化...")
-            appDelegate.setupKeyboardMonitor()
-            
-            // 延迟启动新创建的监听器
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                if let newMonitor = appDelegate.keyboardMonitor {
-                    newMonitor.startMonitoring()
-                    self.recordingState.userStartedKeyboardMonitor()
-                    print("✅ 监听器重新初始化并启动完成")
-                } else {
-                    print("❌ 重新初始化监听器失败")
-                    self.recordingState.updateKeyboardMonitorStatus("初始化失败")
-                }
-            }
-            return
-        }
-        
-        monitor.startMonitoring()
+        // 由于键盘监听器现在由 VoiceInputController 管理，直接调用其方法
+        appDelegate.startKeyboardMonitoring()
         recordingState.userStartedKeyboardMonitor()
         print("✅ 键盘监听已启动")
     }
@@ -464,13 +486,8 @@ struct MainDashboardView: View {
             return
         }
         
-        guard let monitor = appDelegate.keyboardMonitor else {
-            print("❌ 监听器不存在")
-            recordingState.userStoppedKeyboardMonitor()
-            return
-        }
-        
-        monitor.stopMonitoring()
+        // 由于键盘监听器现在由 VoiceInputController 管理，直接调用其方法
+        appDelegate.stopKeyboardMonitoring()
         recordingState.userStoppedKeyboardMonitor()
         print("✅ 键盘监听已停止")
     }
