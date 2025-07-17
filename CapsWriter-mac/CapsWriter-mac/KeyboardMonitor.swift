@@ -7,19 +7,34 @@ class KeyboardMonitor {
     private var runLoopSource: CFRunLoopSource?
     private var isRunning = false
     
-    // O 键的键码（美式键盘）
-    private let oKeyCode: CGKeyCode = 31
+    // Configuration manager
+    private let configManager = ConfigurationManager.shared
     
-    // 备用的 O 键码（一些键盘可能使用不同的码）
-    private let alternativeOKeyCodes: [CGKeyCode] = [31] // 标准美式键盘布局中的 O 键
+    // 键盘配置 (now from config manager)
+    private var primaryKeyCode: CGKeyCode {
+        return CGKeyCode(configManager.keyboard.primaryKeyCode)
+    }
+    
+    private var alternativeOKeyCodes: [CGKeyCode] {
+        return [primaryKeyCode] // 使用配置的主键码
+    }
     
     // 状态跟踪
     private var isRecording = false
     private var clickCount = 0
     private var lastClickTime: TimeInterval = 0
-    private let clickInterval: TimeInterval = 0.8 // 800ms 连击间隔
-    private let debounceInterval: TimeInterval = 0.1 // 100ms 防抖间隔
-    private let requiredClicks = 3 // 需要连击3次
+    
+    private var clickInterval: TimeInterval {
+        return configManager.keyboard.clickInterval
+    }
+    
+    private var debounceInterval: TimeInterval {
+        return configManager.keyboard.debounceInterval
+    }
+    
+    private var requiredClicks: Int {
+        return configManager.keyboard.requiredClicks
+    }
     
     // 回调函数
     var startRecordingCallback: (() -> Void)?
@@ -30,11 +45,12 @@ class KeyboardMonitor {
         // 不再使用单独的队列
         print("🔧 KeyboardMonitor 对象创建中...")
         print("📝 监听配置:")
-        print("  - O 键码: \(oKeyCode)")
+        print("  - 主键码: \(primaryKeyCode)")
         print("  - 备用键码: \(alternativeOKeyCodes)")
         print("  - 连击间隔: \(clickInterval)s")
         print("  - 防抖间隔: \(debounceInterval)s")
         print("  - 需要连击次数: \(requiredClicks)")
+        print("  - 监听启用: \(configManager.keyboard.enabled)")
         print("✅✅✅ KeyboardMonitor 初始化完成 ✅✅✅")
     }
     
@@ -121,7 +137,7 @@ class KeyboardMonitor {
         // 只监听 keyDown 事件
         let eventMask = (1 << CGEventType.keyDown.rawValue)
         print("📋 事件掩码: \(eventMask)")
-        print("🔍 O键码设定为: \(oKeyCode)")
+        print("🔍 主键码设定为: \(primaryKeyCode)")
         
         eventTap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
@@ -163,8 +179,8 @@ class KeyboardMonitor {
         
         isRunning = true
         print("✅ 键盘监听器已完全启动")
-        print("📝 监听 O 键 (键码: \(oKeyCode))")
-        print("🎤 连击3下 O 键开始/结束录音")
+        print("📝 监听主键 (键码: \(primaryKeyCode))")
+        print("🎤 连击\(requiredClicks)下主键开始/结束录音")
         
         // 不再直接设置状态，让调用方控制状态更新
         // RecordingState.shared.updateKeyboardMonitorStatus("正在监听")
@@ -180,15 +196,15 @@ class KeyboardMonitor {
         // 获取键名（用于调试）
         let keyName = getKeyNameFromKeyCode(keyCode)
         
-        // 检查是否是 O 键
+        // 检查是否是配置的主键
         if alternativeOKeyCodes.contains(keyCode) && type == .keyDown {
-            print("🔍 检测到 O 键按下，键码: \(keyCode), 键名: \(keyName)")
+            print("🔍 检测到主键按下，键码: \(keyCode), 键名: \(keyName)")
             
             let currentTime = Date().timeIntervalSince1970
             
             // 防抖检查
             if (currentTime - lastClickTime) < debounceInterval {
-                print("⏱️ O 键按下过快，防抖忽略 (间隔: \(String(format: "%.3f", currentTime - lastClickTime))s)")
+                print("⏱️ 主键按下过快，防抖忽略 (间隔: \(String(format: "%.3f", currentTime - lastClickTime))s)")
                 return Unmanaged.passUnretained(event)
             }
             
@@ -202,20 +218,20 @@ class KeyboardMonitor {
             clickCount += 1
             lastClickTime = currentTime
             
-            print("🔢 O 键第 \(clickCount) 次点击 (需要 \(requiredClicks) 次)")
+            print("🔢 主键第 \(clickCount) 次点击 (需要 \(requiredClicks) 次)")
             
             if clickCount >= requiredClicks {
-                // 连击3次，切换录音状态
+                // 连击达到要求次数，切换录音状态
                 clickCount = 0
                 isRecording = !isRecording
                 
-                print("🎯 连击3次触发！当前录音状态: \(isRecording)")
+                print("🎯 连击\(requiredClicks)次触发！当前录音状态: \(isRecording)")
                 
                 if isRecording {
-                    print("🟢 连击3次 - 开始识别")
+                    print("🟢 连击\(requiredClicks)次 - 开始识别")
                     handleStartRecording()
                 } else {
-                    print("🔴 连击3次 - 停止识别")
+                    print("🔴 连击\(requiredClicks)次 - 停止识别")
                     handleStopRecording()
                 }
             }

@@ -163,29 +163,43 @@ class SherpaASRService: ObservableObject {
     // Mock mode flag - 设置为 false 来启用真实模型
     private let isMockMode = false
     
-    // Audio configuration
-    private let sampleRate: Double = 16000
+    // Configuration manager
+    private let configManager = ConfigurationManager.shared
     
-    // Model configuration
-    private let modelPath: String
-    private let tokensPath: String
-    private let encoderPath: String
-    private let decoderPath: String
+    // Audio configuration (now from config manager)
+    private var sampleRate: Double {
+        return configManager.audio.sampleRate
+    }
+    
+    // Model configuration (now from config manager)
+    private var modelPath: String {
+        let bundle = Bundle.main
+        return bundle.path(forResource: configManager.recognition.modelPath, ofType: nil) ?? configManager.recognition.modelPath
+    }
+    
+    private var tokensPath: String {
+        return "\(modelPath)/tokens.txt"
+    }
+    
+    private var encoderPath: String {
+        return "\(modelPath)/encoder.onnx"
+    }
+    
+    private var decoderPath: String {
+        return "\(modelPath)/decoder.onnx"
+    }
     
     // Delegate
     weak var delegate: SpeechRecognitionDelegate?
     
     // MARK: - Initialization
     init() {
-        // Initialize model paths
-        let bundle = Bundle.main
-        self.modelPath = bundle.path(forResource: "paraformer-zh-streaming", ofType: nil, inDirectory: "models") ?? ""
-        self.tokensPath = "\(modelPath)/tokens.txt"
-        self.encoderPath = "\(modelPath)/encoder.onnx"
-        self.decoderPath = "\(modelPath)/decoder.onnx"
-        
         addLog("🧠 SherpaASRService 初始化（纯识别服务）")
         addLog("📁 模型路径: \(modelPath)")
+        addLog("⚙️ 配置信息:")
+        addLog("  - 采样率: \(sampleRate)Hz")
+        addLog("  - 识别线程: \(configManager.recognition.numThreads)")
+        addLog("  - 解码方法: \(configManager.recognition.decodingMethod)")
     }
     
     deinit {
@@ -428,11 +442,11 @@ class SherpaASRService: ObservableObject {
             let modelConfig = sherpaOnnxOnlineModelConfig(
                 tokens: tokensPath,
                 paraformer: paraformerConfig,
-                numThreads: 2,
-                provider: "cpu",
-                debug: false,
-                modelType: "paraformer",
-                modelingUnit: "char"
+                numThreads: configManager.recognition.numThreads,
+                provider: configManager.recognition.provider,
+                debug: configManager.recognition.debug,
+                modelType: configManager.recognition.modelType,
+                modelingUnit: configManager.recognition.modelingUnit
             )
             
             let featConfig = sherpaOnnxFeatureConfig(
@@ -443,12 +457,12 @@ class SherpaASRService: ObservableObject {
             var config = sherpaOnnxOnlineRecognizerConfig(
                 featConfig: featConfig,
                 modelConfig: modelConfig,
-                decodingMethod: "greedy_search",
-                maxActivePaths: 4,
-                enableEndpoint: true,
-                rule1MinTrailingSilence: 2.4,
-                rule2MinTrailingSilence: 1.2,
-                rule3MinUtteranceLength: 20.0
+                decodingMethod: configManager.recognition.decodingMethod,
+                maxActivePaths: configManager.recognition.maxActivePaths,
+                enableEndpoint: configManager.recognition.enableEndpoint,
+                rule1MinTrailingSilence: configManager.recognition.rule1MinTrailingSilence,
+                rule2MinTrailingSilence: configManager.recognition.rule2MinTrailingSilence,
+                rule3MinUtteranceLength: configManager.recognition.rule3MinUtteranceLength
             )
             
             addLog("⚙️ 创建识别器实例...")

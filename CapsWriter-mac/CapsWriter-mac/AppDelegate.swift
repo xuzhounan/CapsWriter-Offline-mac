@@ -9,6 +9,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var audioCaptureService: AudioCaptureService?
     var textInputService: TextInputService?
     
+    // Configuration manager
+    private let configManager = ConfigurationManager.shared
+    
     // Audio forwarding counter
     private static var forwardCount = 0
     
@@ -41,7 +44,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         setupASRServiceAsync()
         
         // 调试：检查权限状态（延迟更久，确保监听器完全初始化）
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + configManager.appBehavior.permissionCheckDelay) {
             self.debugPermissionStatus()
         }
     }
@@ -214,7 +217,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         audioCaptureService?.requestPermissionAndStartCapture()
         
         // 延迟启动语音识别，确保音频采集已经开始
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + configManager.appBehavior.recognitionStartDelay) {
             self.asrService?.startRecognition()
             print("🧠 AppDelegate: 延迟启动语音识别")
         }
@@ -346,6 +349,11 @@ extension AppDelegate: SpeechRecognitionDelegate {
             self.asrService?.partialTranscript = "" // 清空部分结果
         }
         
+        // 检查是否启用文本处理
+        if configManager.textProcessing.enableHotwordReplacement {
+            // TODO: 在这里添加热词替换处理
+        }
+        
         // 语音输入：将识别结果转换为键盘输入
         self.performVoiceInput(text)
     }
@@ -376,7 +384,7 @@ extension AppDelegate: SpeechRecognitionDelegate {
         print("🎤➡️⌨️ 语音输入: \(text) -> \(formattedText)")
         
         // 延迟一小段时间，确保当前应用有时间处理录音结束
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + configManager.appBehavior.startupDelay) {
             textInputService.inputText(formattedText)
         }
     }

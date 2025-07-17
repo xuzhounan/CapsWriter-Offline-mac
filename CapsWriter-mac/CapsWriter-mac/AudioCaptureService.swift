@@ -19,10 +19,21 @@ class AudioCaptureService: ObservableObject {
     private var audioEngine: AVAudioEngine?
     private let audioQueue = DispatchQueue(label: "com.capswriter.audio-capture", qos: .userInitiated)
     
-    // Audio configuration
-    private let sampleRate: Double = 16000
-    private let channels: Int = 1
-    private let bufferSize: UInt32 = 1024
+    // Configuration manager
+    private let configManager = ConfigurationManager.shared
+    
+    // Audio configuration (now from config manager)
+    private var sampleRate: Double {
+        return configManager.audio.sampleRate
+    }
+    
+    private var channels: Int {
+        return configManager.audio.channels
+    }
+    
+    private var bufferSize: UInt32 {
+        return configManager.audio.bufferSize
+    }
     
     // Audio processing counter
     private static var bufferCount = 0
@@ -33,6 +44,7 @@ class AudioCaptureService: ObservableObject {
     // MARK: - Initialization
     init() {
         addLog("🎤 AudioCaptureService 初始化")
+        addLog("⚙️ 音频配置: \(sampleRate)Hz, \(channels)声道, 缓冲区 \(bufferSize)")
         // 不在初始化时检查权限，避免触发 TCC 访问
         // 权限检查将在实际需要时进行
     }
