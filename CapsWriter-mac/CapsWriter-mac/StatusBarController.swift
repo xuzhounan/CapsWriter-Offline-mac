@@ -41,6 +41,18 @@ class StatusBarController: ObservableObject {
             // 分隔线
             menu.addItem(NSMenuItem.separator())
             
+            // 键盘监听控制菜单项
+            let startMonitoringItem = NSMenuItem(title: "启动键盘监听", action: #selector(startKeyboardMonitoring), keyEquivalent: "")
+            startMonitoringItem.target = self
+            menu.addItem(startMonitoringItem)
+            
+            let stopMonitoringItem = NSMenuItem(title: "停止键盘监听", action: #selector(stopKeyboardMonitoring), keyEquivalent: "")
+            stopMonitoringItem.target = self
+            menu.addItem(stopMonitoringItem)
+            
+            // 分隔线
+            menu.addItem(NSMenuItem.separator())
+            
             // 退出应用菜单项
             let quitItem = NSMenuItem(title: "退出 CapsWriter", action: #selector(quitApp), keyEquivalent: "q")
             quitItem.target = self
@@ -62,6 +74,19 @@ class StatusBarController: ObservableObject {
         }
     }
     
+    @objc private func startKeyboardMonitoring() {
+        // 获取AppDelegate实例并启动键盘监听
+        if let appDelegate = NSApp.delegate as? AppDelegate {
+            appDelegate.startKeyboardMonitoring()
+        }
+    }
+    
+    @objc private func stopKeyboardMonitoring() {
+        // 获取AppDelegate实例并停止键盘监听
+        if let appDelegate = NSApp.delegate as? AppDelegate {
+            appDelegate.stopKeyboardMonitoring()
+        }
+    }
     
     @objc private func quitApp() {
         NSApp.terminate(nil)
