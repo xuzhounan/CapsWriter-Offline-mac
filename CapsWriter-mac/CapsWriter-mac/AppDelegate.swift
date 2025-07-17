@@ -306,10 +306,21 @@ extension AppDelegate: AudioCaptureDelegate {
 extension AppDelegate: SpeechRecognitionDelegate {
     func speechRecognitionDidReceivePartialResult(_ text: String) {
         print("📝 部分识别结果: \(text)")
+        
+        // 更新ASR服务的部分转录结果
+        DispatchQueue.main.async {
+            self.asrService?.partialTranscript = text
+        }
     }
     
     func speechRecognitionDidReceiveFinalResult(_ text: String) {
         print("✅ 最终识别结果: \(text)")
+        
+        // 将最终结果添加到转录历史
+        DispatchQueue.main.async {
+            self.asrService?.addTranscriptEntry(text: text, isPartial: false)
+            self.asrService?.partialTranscript = "" // 清空部分结果
+        }
     }
     
     func speechRecognitionDidDetectEndpoint() {

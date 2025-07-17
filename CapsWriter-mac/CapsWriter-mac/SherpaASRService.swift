@@ -2,6 +2,21 @@ import Foundation
 import AVFoundation
 import Combine
 
+// MARK: - Transcript Data Models
+
+struct TranscriptEntry: Identifiable, Equatable {
+    let id = UUID()
+    let timestamp: Date
+    let text: String
+    let isPartial: Bool
+    
+    var formattedTime: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter.string(from: timestamp)
+    }
+}
+
 // MARK: - Sherpa-ONNX C API Helper Functions
 
 /// Convert a String from swift to a `const char*` so that we can pass it to
@@ -135,6 +150,8 @@ class SherpaASRService: ObservableObject {
     @Published var isServiceRunning: Bool = false
     @Published var isRecognizing: Bool = false
     @Published var isInitialized: Bool = false
+    @Published var transcriptHistory: [TranscriptEntry] = []
+    @Published var partialTranscript: String = ""
     
     // MARK: - Private Properties
     private var recognizer: OpaquePointer?
@@ -288,6 +305,38 @@ class SherpaASRService: ObservableObject {
         }
         
         addLog("✅ 语音识别处理已停止")
+    }
+    
+    // MARK: - Transcript Management
+    
+    func addTranscriptEntry(text: String, isPartial: Bool) {
+        guard !text.isEmpty else { return }
+        
+        let entry = TranscriptEntry(
+            timestamp: Date(),
+            text: text,
+            isPartial: isPartial
+        )
+        
+        // 在主线程更新UI
+        DispatchQueue.main.async {
+            self.transcriptHistory.append(entry)
+            
+            // 保持历史记录不超过100条
+            if self.transcriptHistory.count > 100 {
+                self.transcriptHistory.removeFirst(self.transcriptHistory.count - 100)
+            }
+        }
+        
+        addLog("📝 添加转录条目: \(text)")
+    }
+    
+    func clearTranscriptHistory() {
+        DispatchQueue.main.async {
+            self.transcriptHistory.removeAll()
+            self.partialTranscript = ""
+        }
+        addLog("🗑️ 转录历史已清空")
     }
     
     // MARK: - Audio Processing Interface
@@ -474,6 +523,8 @@ class SherpaASRService: ObservableObject {
                     DispatchQueue.main.async {
                         self.transcript = mockResult
                         self.addLog("📝 模拟识别结果: \(mockResult)")
+                        // 添加到转录历史
+                        self.addTranscriptEntry(text: mockResult, isPartial: false)
                         self.delegate?.speechRecognitionDidReceivePartialResult(mockResult)
                     }
                 }

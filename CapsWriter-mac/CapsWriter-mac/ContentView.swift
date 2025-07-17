@@ -23,6 +23,14 @@ struct ContentView: View {
                     Text("识别服务")
                 }
                 .tag(1)
+            
+            // 实时转录页面
+            RealTimeTranscriptionView()
+                .tabItem {
+                    Image(systemName: "text.bubble")
+                    Text("实时转录")
+                }
+                .tag(2)
         }
         .onAppear {
             animationScale = 1.2
@@ -568,6 +576,225 @@ struct ASRServicePlaceholderView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.windowBackgroundColor))
         .navigationTitle("识别服务")
+    }
+}
+
+// MARK: - 实时转录视图
+struct RealTimeTranscriptionView: View {
+    @StateObject private var asrService: SherpaASRService
+    @StateObject private var recordingState = RecordingState.shared
+    @State private var isAutoScroll = true
+    
+    init() {
+        // 获取现有的ASR服务实例
+        if let appDelegate = CapsWriterApp.sharedAppDelegate ?? (NSApplication.shared.delegate as? AppDelegate),
+           let existingService = appDelegate.asrService {
+            _asrService = StateObject(wrappedValue: existingService)
+        } else {
+            // 如果没有现有实例，创建新的（不应该发生）
+            _asrService = StateObject(wrappedValue: SherpaASRService())
+        }
+    }
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            // 转录控制区域
+            VStack(spacing: 16) {
+                // 录音状态和控制
+                HStack {
+                    // 录音状态指示器
+                    HStack {
+                        Circle()
+                            .fill(recordingState.isRecording ? Color.red : Color.gray)
+                            .frame(width: 12, height: 12)
+                            .scaleEffect(recordingState.isRecording ? 1.2 : 1.0)
+                            .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: recordingState.isRecording)
+                        
+                        Text(recordingState.isRecording ? "正在录音" : "未录音")
+                            .font(.headline)
+                            .foregroundColor(recordingState.isRecording ? .red : .secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    // 转录历史数量
+                    Text("共 \(asrService.transcriptHistory.count) 条记录")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                // 实时部分转录（当前正在识别的内容）
+                if !asrService.partialTranscript.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("正在识别...")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                        
+                        Text(asrService.partialTranscript)
+                            .font(.body)
+                            .foregroundColor(.orange)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.orange.opacity(0.1))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                                    )
+                            )
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                
+                // 控制按钮
+                HStack(spacing: 12) {
+                    Button(recordingState.isRecording ? "停止录音" : "开始录音") {
+                        toggleRecording()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .foregroundColor(.white)
+                    .tint(recordingState.isRecording ? .red : .blue)
+                    
+                    Button("清空转录") {
+                        asrService.clearTranscriptHistory()
+                    }
+                    .buttonStyle(.bordered)
+                    .foregroundColor(.red)
+                    
+                    Button("导出文本") {
+                        exportTranscript()
+                    }
+                    .buttonStyle(.bordered)
+                    
+                    Toggle("自动滚动", isOn: $isAutoScroll)
+                        .toggleStyle(.switch)
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.controlBackgroundColor))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color(.separatorColor), lineWidth: 1)
+                    )
+            )
+            
+            // 转录历史区域
+            VStack(alignment: .leading, spacing: 8) {
+                Text("转录历史")
+                    .font(.headline)
+                
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 12) {
+                            ForEach(asrService.transcriptHistory) { entry in
+                                TranscriptRowView(entry: entry)
+                                    .id(entry.id)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color(.textBackgroundColor))
+                    .cornerRadius(8)
+                    .onChange(of: asrService.transcriptHistory.count) {
+                        if isAutoScroll && !asrService.transcriptHistory.isEmpty {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                proxy.scrollTo(asrService.transcriptHistory.last?.id, anchor: .bottom)
+                            }
+                        }
+                    }
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.controlBackgroundColor))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color(.separatorColor), lineWidth: 1)
+                    )
+            )
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.windowBackgroundColor))
+        .navigationTitle("实时转录")
+    }
+    
+    private func toggleRecording() {
+        if let appDelegate = CapsWriterApp.sharedAppDelegate ?? (NSApplication.shared.delegate as? AppDelegate) {
+            if recordingState.isRecording {
+                appDelegate.stopRecording()
+            } else {
+                appDelegate.startRecording()
+            }
+        }
+    }
+    
+    private func exportTranscript() {
+        let transcript = asrService.transcriptHistory
+            .map { entry in "[\(entry.formattedTime)] \(entry.text)" }
+            .joined(separator: "\n")
+        
+        let savePanel = NSSavePanel()
+        savePanel.title = "导出转录文本"
+        savePanel.allowedContentTypes = [.plainText]
+        savePanel.nameFieldStringValue = "转录结果_\(Date().timeIntervalSince1970).txt"
+        
+        if savePanel.runModal() == .OK {
+            if let url = savePanel.url {
+                do {
+                    try transcript.write(to: url, atomically: true, encoding: String.Encoding.utf8)
+                    print("✅ 转录文本已导出到: \(url.path)")
+                } catch {
+                    print("❌ 导出失败: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+}
+
+// MARK: - 转录条目行视图
+struct TranscriptRowView: View {
+    let entry: TranscriptEntry
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            // 时间戳
+            Text(entry.formattedTime)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .frame(width: 60, alignment: .leading)
+            
+            // 转录文本
+            Text(entry.text)
+                .font(.body)
+                .foregroundColor(.primary)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            
+            // 类型标识
+            if entry.isPartial {
+                Text("部分")
+                    .font(.caption2)
+                    .foregroundColor(.orange)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.orange.opacity(0.2))
+                    )
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(.controlBackgroundColor).opacity(0.5))
+        )
     }
 }
 
