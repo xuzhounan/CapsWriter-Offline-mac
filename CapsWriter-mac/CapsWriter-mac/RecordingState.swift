@@ -204,13 +204,30 @@ class RecordingState: ObservableObject {
     
     /// 刷新权限状态 - 暂时保持向后兼容
     func refreshPermissionStatus() {
+        // 直接检查权限状态并更新（绕过StateManager）
+        print("🔄 RecordingState: 开始刷新权限状态...")
+        
+        // 检查辅助功能权限
+        let accessibilityPermission = KeyboardMonitor.checkAccessibilityPermission()
+        updateAccessibilityPermission(accessibilityPermission)
+        print("🔐 RecordingState: 辅助功能权限 = \(accessibilityPermission)")
+        
+        // 检查麦克风权限
+        let microphonePermission = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
+        updateMicrophonePermission(microphonePermission)
+        print("🎤 RecordingState: 麦克风权限 = \(microphonePermission)")
+        
+        // 检查文本输入权限（与辅助功能权限相同）
+        updateTextInputPermission(accessibilityPermission)
+        print("📝 RecordingState: 文本输入权限 = \(accessibilityPermission)")
+        
         // TODO: 重新启用 StateManager 集成后恢复
         // Task { @MainActor in
         //     stateManager.updatePermissions()
         // }
         
         // 保持键盘监听器状态逻辑的兼容性
-        let hasAccessibilityPermission = hasAccessibilityPermission
+        let hasAccessibilityPermission = accessibilityPermission
         if !hasAccessibilityPermission {
             updateKeyboardMonitorStatus("等待权限")
             isManuallyStoppedByUser = false

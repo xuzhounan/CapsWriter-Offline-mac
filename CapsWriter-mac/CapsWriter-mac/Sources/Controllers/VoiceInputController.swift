@@ -200,6 +200,9 @@ class VoiceInputController: ObservableObject {
                 self?.updatePhase(.ready)
                 print("✅ VoiceInputController 控制器已初始化完成")
                 print("✅ VoiceInputController 初始化完成")
+                
+                // 更新服务状态到RecordingState
+                self?.updateServiceStatuses()
             }
             
         } catch {
@@ -590,6 +593,35 @@ class VoiceInputController: ObservableObject {
         print("🗣️ 处理识别错误: \(message)")
         
         // 可以在这里添加识别错误的特殊处理逻辑
+    }
+    
+    // MARK: - Status Update Methods
+    
+    /// 更新服务状态到RecordingState
+    private func updateServiceStatuses() {
+        print("📊 VoiceInputController: 更新服务状态...")
+        
+        // 更新ASR服务状态
+        let asrRunning = asrService?.isServiceRunning ?? false
+        let asrInitialized = asrService != nil && asrRunning
+        recordingState.updateASRServiceStatus(asrRunning)
+        recordingState.updateASRServiceInitialized(asrInitialized)
+        
+        if asrInitialized {
+            recordingState.updateInitializationProgress("语音识别服务已就绪")
+        }
+        
+        // 更新音频采集服务状态
+        let audioReady = audioCaptureService != nil
+        recordingState.updateAudioCaptureServiceStatus(audioReady)
+        
+        // 刷新权限状态
+        recordingState.refreshPermissionStatus()
+        
+        print("📊 VoiceInputController: 服务状态更新完成")
+        print("   - ASR服务运行: \(asrRunning)")
+        print("   - ASR服务初始化: \(asrInitialized)")
+        print("   - 音频采集就绪: \(audioReady)")
     }
     
     // MARK: - Cleanup
