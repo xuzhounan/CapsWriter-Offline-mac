@@ -78,7 +78,8 @@ class ErrorHandler: ObservableObject, ErrorHandlerProtocol {
     
     static let shared = ErrorHandler()
     
-    private init() {
+    // DI Container 需要访问初始化器
+    init() {
         setupErrorMonitoring()
         logger.info("🔧 ErrorHandler: 错误处理器已初始化")
     }
@@ -288,6 +289,12 @@ class ErrorHandler: ObservableObject, ErrorHandlerProtocol {
             return .high
         case .configurationLoadFailed:
             return .medium
+        case .audioCaptureFailed:
+            return .high
+        case .speechRecognitionFailed:
+            return .medium
+        case .textInputFailed:
+            return .medium
         case .unknownError:
             return .medium
         }
@@ -302,6 +309,12 @@ class ErrorHandler: ObservableObject, ErrorHandlerProtocol {
         case .modelLoadFailed:
             return .retry
         case .configurationLoadFailed:
+            return .fallback
+        case .audioCaptureFailed:
+            return .retry
+        case .speechRecognitionFailed:
+            return .retry
+        case .textInputFailed:
             return .fallback
         case .unknownError:
             return .retry
@@ -329,7 +342,7 @@ class ErrorHandler: ObservableObject, ErrorHandlerProtocol {
     
     private func setupErrorMonitoring() {
         NotificationCenter.default.addObserver(
-            forName: .appErrorDidOccur,
+            forName: NSNotification.Name("appErrorDidOccur"),
             object: nil,
             queue: .main
         ) { [weak self] notification in
