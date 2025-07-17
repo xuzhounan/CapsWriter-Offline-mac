@@ -106,6 +106,19 @@ class VoiceInputController: ObservableObject {
         }
     }
     
+    /// 重新初始化控制器（在初始化失败后可调用）
+    func reinitializeController() {
+        print("🔄 重新初始化 VoiceInputController")
+        
+        // 先清理当前状态
+        performInitializationRollback()
+        
+        // 等待一段时间后重新初始化
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.initializeController()
+        }
+    }
+    
     /// 启动键盘监听
     func startKeyboardMonitoring() {
         guard isInitialized else {
@@ -175,33 +188,77 @@ class VoiceInputController: ObservableObject {
             
         } catch {
             let voiceInputError = VoiceInputError.initializationFailed(error.localizedDescription)
+            print("❌ VoiceInputController 初始化失败: \(error.localizedDescription)")
+            
+            // 执行回滚操作
+            performInitializationRollback()
+            
+            // 处理错误
             handleError(voiceInputError)
         }
     }
     
     private func initializeServices() throws {
-        // 初始化键盘监听器
-        keyboardMonitor = KeyboardMonitor()
-        keyboardMonitor?.setCallbacks(
-            startRecording: { [weak self] in
-                self?.handleRecordingStartRequested()
-            },
-            stopRecording: { [weak self] in
-                self?.handleRecordingStopRequested()
+        print("🔧 开始初始化各项服务...")
+        
+        // 1. 初始化键盘监听器
+        do {
+            print("🔧 初始化键盘监听器...")
+            keyboardMonitor = KeyboardMonitor()
+            keyboardMonitor?.setCallbacks(
+                startRecording: { [weak self] in
+                    self?.handleRecordingStartRequested()
+                },
+                stopRecording: { [weak self] in
+                    self?.handleRecordingStopRequested()
+                }
+            )
+            print("✅ 键盘监听器初始化完成")
+        } catch {
+            throw VoiceInputError.initializationFailed("键盘监听器初始化失败: \(error.localizedDescription)")
+        }
+        
+        // 2. 初始化文本输入服务
+        do {
+            print("🔧 初始化文本输入服务...")
+            textInputService = TextInputService.shared
+            print("✅ 文本输入服务初始化完成")
+        } catch {
+            throw VoiceInputError.initializationFailed("文本输入服务初始化失败: \(error.localizedDescription)")
+        }
+        
+        // 3. 初始化ASR服务
+        do {
+            print("🔧 初始化ASR服务...")
+            asrService = SherpaASRService()
+            
+            // 验证ASR服务是否成功创建
+            guard let asr = asrService else {
+                throw VoiceInputError.initializationFailed("ASR服务创建失败")
             }
-        )
+            
+            // 启动ASR服务
+            asr.startService()
+            print("✅ ASR服务初始化完成")
+        } catch {
+            throw VoiceInputError.initializationFailed("ASR服务初始化失败: \(error.localizedDescription)")
+        }
         
-        // 初始化文本输入服务
-        textInputService = TextInputService.shared
+        // 4. 初始化音频采集服务
+        do {
+            print("🔧 初始化音频采集服务...")
+            audioCaptureService = AudioCaptureService()
+            
+            // 验证音频采集服务是否成功创建
+            guard audioCaptureService != nil else {
+                throw VoiceInputError.initializationFailed("音频采集服务创建失败")
+            }
+            print("✅ 音频采集服务初始化完成")
+        } catch {
+            throw VoiceInputError.initializationFailed("音频采集服务初始化失败: \(error.localizedDescription)")
+        }
         
-        // 初始化ASR服务
-        asrService = SherpaASRService()
-        asrService?.startService()
-        
-        // 初始化音频采集服务
-        audioCaptureService = AudioCaptureService()
-        
-        print("🔧 所有服务初始化完成")
+        print("✅ 所有服务初始化完成")
     }
     
     private func setupServiceCallbacks() {
@@ -212,6 +269,43 @@ class VoiceInputController: ObservableObject {
         audioCaptureService?.delegate = self
         
         print("📞 服务回调设置完成")
+    }
+    
+    /// 初始化失败时的回滚操作
+    private func performInitializationRollback() {
+        print("🔄 执行初始化回滚操作...")
+        
+        // 清理ASR服务
+        if let asr = asrService {
+            print("🧹 清理ASR服务...")
+            asr.stopService()
+            asr.delegate = nil
+            asrService = nil
+        }
+        
+        // 清理音频采集服务
+        if let audio = audioCaptureService {
+            print("🧹 清理音频采集服务...")
+            audio.delegate = nil
+            audioCaptureService = nil
+        }
+        
+        // 清理键盘监听器
+        if let keyboard = keyboardMonitor {
+            print("🧹 清理键盘监听器...")
+            keyboard.stopMonitoring()
+            keyboardMonitor = nil
+        }
+        
+        // 清理文本输入服务引用
+        textInputService = nil
+        
+        // 重置状态
+        DispatchQueue.main.async { [weak self] in
+            self?.isInitialized = false
+            self?.updatePhase(.idle)
+            print("🔄 回滚操作完成，控制器已重置为初始状态")
+        }
     }
     
     // MARK: - Private Methods - Event Handlers
@@ -408,16 +502,75 @@ class VoiceInputController: ObservableObject {
     private func handleError(_ error: VoiceInputError) {
         print("❌ VoiceInputController 错误: \(error.localizedDescription)")
         
+        // 根据错误类型采取不同的处理策略
+        switch error {
+        case .initializationFailed(let message):
+            print("🚨 初始化失败，需要特殊处理: \(message)")
+            handleInitializationError(message)
+        case .permissionDenied(let message):
+            print("🚨 权限错误: \(message)")
+            handlePermissionError(message)
+        case .recordingFailed(let message):
+            print("🚨 录音错误: \(message)")
+            handleRecordingError(message)
+        case .recognitionFailed(let message):
+            print("🚨 识别错误: \(message)")
+            handleRecognitionError(message)
+        }
+        
         DispatchQueue.main.async { [weak self] in
             self?.lastError = error
             self?.updatePhase(.error(error))
             
-            // 发布错误事件 (暂时注释，待AppEvents完善)
-            // self?.eventBus.publish(AppEvents.System.ErrorOccurred(error: error))
+            // 通知状态管理器
+            if let stateManager = StateManager.shared as? StateManager {
+                stateManager.handleRecognitionError(error.localizedDescription)
+            }
         }
         
         // 错误记录到日志
-        print("❌ VoiceInputController 处理错误: \(error.localizedDescription)")
+        print("❌ VoiceInputController 处理错误完成: \(error.localizedDescription)")
+    }
+    
+    /// 处理初始化错误
+    private func handleInitializationError(_ message: String) {
+        print("🔧 处理初始化错误: \(message)")
+        
+        // 设置识别引擎状态为错误
+        DispatchQueue.main.async { [weak self] in
+            self?.recordingState.updateInitializationProgress("初始化失败: \(message)")
+            self?.recordingState.updateASRServiceInitialized(false)
+        }
+        
+        // 通知状态管理器更新引擎状态
+        Task { @MainActor in
+            StateManager.shared.updateRecognitionEngineStatus(.error(message))
+        }
+    }
+    
+    /// 处理权限错误
+    private func handlePermissionError(_ message: String) {
+        print("🔐 处理权限错误: \(message)")
+        
+        // 刷新权限状态
+        recordingState.refreshPermissionStatus()
+    }
+    
+    /// 处理录音错误
+    private func handleRecordingError(_ message: String) {
+        print("🎤 处理录音错误: \(message)")
+        
+        // 停止当前录音流程
+        if currentPhase == .recording {
+            stopRecordingFlow()
+        }
+    }
+    
+    /// 处理识别错误
+    private func handleRecognitionError(_ message: String) {
+        print("🗣️ 处理识别错误: \(message)")
+        
+        // 可以在这里添加识别错误的特殊处理逻辑
     }
     
     // MARK: - Cleanup
