@@ -187,7 +187,16 @@ class AppState: ObservableObject {
     /// 更新权限状态
     func updatePermission(_ permission: KeyPath<PermissionStatus, PermissionStatus.PermissionState>, 
                          state: PermissionStatus.PermissionState) {
-        permissions[keyPath: permission] = state
+        switch permission {
+        case \PermissionStatus.microphone:
+            permissions.microphone = state
+        case \PermissionStatus.accessibility:
+            permissions.accessibility = state
+        case \PermissionStatus.fileAccess:
+            permissions.fileAccess = state
+        default:
+            break
+        }
     }
     
     /// 更新网络状态
@@ -202,7 +211,9 @@ class AppState: ObservableObject {
         // 自动清除错误信息
         errorTimer?.invalidate()
         errorTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
-            self?.clearError()
+            Task { @MainActor in
+                self?.clearError()
+            }
         }
     }
     
@@ -220,7 +231,9 @@ class AppState: ObservableObject {
         // 自动清除通知信息
         notificationTimer?.invalidate()
         notificationTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
-            self?.clearNotification()
+            Task { @MainActor in
+                self?.clearNotification()
+            }
         }
     }
     

@@ -37,7 +37,7 @@ class RecognitionState: ObservableObject {
     
     // MARK: - Enums
     
-    enum RecognitionStatus {
+    enum RecognitionStatus: Equatable {
         case idle
         case processing
         case completed

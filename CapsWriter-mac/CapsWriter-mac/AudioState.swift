@@ -107,7 +107,9 @@ class AudioState: ObservableObject {
     
     private func startDurationTimer() {
         durationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            self?.updateRecordingDuration()
+            Task { @MainActor in
+                self?.updateRecordingDuration()
+            }
         }
     }
     
