@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import Foundation
 
 struct ContentView: View {
     @StateObject private var recordingState = RecordingState.shared
@@ -497,11 +498,14 @@ struct MainDashboardView: View {
 struct ASRServicePlaceholderView: View {
     @StateObject private var recordingState = RecordingState.shared
     @State private var isAutoScroll = true
+    @State private var rotationAngle: Double = 0
     
-    // 使用统一的ASR服务实例
+    // 使用统一的ASR服务实例 - 通过AppDelegate获取
     private var asrService: SherpaASRService? {
         if let appDelegate = CapsWriterApp.sharedAppDelegate ?? (NSApplication.shared.delegate as? AppDelegate) {
-            return appDelegate.asrService
+            // 由于AppDelegate现在使用VoiceInputController，我们需要通过其他方式获取
+            // 暂时返回nil，使用RecordingState作为主要状态来源
+            return nil
         }
         return nil
     }
@@ -520,6 +524,12 @@ struct ASRServicePlaceholderView: View {
                         Image(systemName: "gear")
                             .foregroundColor(.orange)
                             .font(.title2)
+                            .rotationEffect(.degrees(rotationAngle))
+                            .onAppear {
+                                withAnimation(.linear(duration: 2.0).repeatForever(autoreverses: false)) {
+                                    rotationAngle = 360
+                                }
+                            }
                     } else {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundColor(.red)
@@ -530,16 +540,19 @@ struct ASRServicePlaceholderView: View {
                         Text("语音识别服务")
                             .font(.headline)
                         if recordingState.isASRServiceInitialized {
-                            Text("已就绪")
+                            Text("就绪")
                                 .font(.caption)
+                                .fontWeight(.medium)
                                 .foregroundColor(.green)
                         } else if recordingState.isASRServiceRunning {
                             Text(recordingState.initializationProgress)
                                 .font(.caption)
+                                .fontWeight(.medium)
                                 .foregroundColor(.orange)
                         } else {
                             Text("已停止")
                                 .font(.caption)
+                                .fontWeight(.medium)
                                 .foregroundColor(.red)
                         }
                     }
@@ -550,18 +563,22 @@ struct ASRServicePlaceholderView: View {
                 // 控制按钮
                 HStack(spacing: 12) {
                     Button(recordingState.isASRServiceRunning ? "停止服务" : "启动服务") {
-                        if let service = asrService {
-                            if recordingState.isASRServiceRunning {
-                                service.stopService()
-                            } else {
-                                service.startService()
-                            }
+                        // 通过VoiceInputController来控制服务
+                        let controller = VoiceInputController.shared
+                        if recordingState.isASRServiceRunning {
+                            controller.stopListening()
+                        } else {
+                            controller.startListening()
                         }
+                        
+                        // 立即更新状态显示
+                        controller.updateServiceStatusesImmediately()
                     }
                     .buttonStyle(.borderedProminent)
                     
                     Button("清空日志") {
-                        asrService?.logs.removeAll()
+                        // 暂时禁用清空日志功能，因为无法直接访问ASR服务
+                        print("清空日志功能暂时不可用")
                     }
                     .buttonStyle(.bordered)
                     .foregroundColor(.red)
@@ -585,7 +602,8 @@ struct ASRServicePlaceholderView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 2) {
-                            ForEach(Array((asrService?.logs ?? []).enumerated()), id: \.offset) { index, log in
+                            // 暂时显示占位符信息，因为无法直接访问ASR服务日志
+                            ForEach(Array(["服务状态已通过RecordingState统一管理", "请查看主页面的状态信息"].enumerated()), id: \.offset) { index, log in
                                 HStack(alignment: .top) {
                                     Text("\(index + 1)")
                                         .font(.caption2)
@@ -611,13 +629,6 @@ struct ASRServicePlaceholderView: View {
                     .frame(maxHeight: .infinity)
                     .background(Color(.textBackgroundColor))
                     .cornerRadius(8)
-                    .onChange(of: asrService?.logs.count ?? 0) {
-                        if isAutoScroll && !(asrService?.logs.isEmpty ?? true) {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                proxy.scrollTo((asrService?.logs.count ?? 1) - 1, anchor: .bottom)
-                            }
-                        }
-                    }
                 }
             }
             .padding()
