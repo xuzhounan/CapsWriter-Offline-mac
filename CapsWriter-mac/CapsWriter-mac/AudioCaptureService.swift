@@ -239,8 +239,10 @@ class AudioCaptureService: ObservableObject {
         inputNode.removeTap(onBus: 0)
         
         addLog("🔌 安装音频 tap...")
-        inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: desiredFormat) { [weak self] buffer, time in
-            self?.processAudioBuffer(buffer)
+        // 使用硬件的原始格式安装tap，避免格式不匹配错误
+        inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: inputFormat) { [weak self] buffer, time in
+            // 在这里进行格式转换并处理
+            self?.processAudioBuffer(buffer, targetFormat: desiredFormat)
         }
         
         addLog("⚙️ 预备音频引擎...")
@@ -271,7 +273,7 @@ class AudioCaptureService: ObservableObject {
     
     // MARK: - Audio Processing
     
-    private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
+    private func processAudioBuffer(_ buffer: AVAudioPCMBuffer, targetFormat: AVAudioFormat) {
         guard isCapturing else { return }
         
         // 添加音频数据日志（每100帧输出一次避免刷屏）
@@ -280,9 +282,90 @@ class AudioCaptureService: ObservableObject {
             addLog("🎵 已处理 \(AudioCaptureService.bufferCount) 个音频缓冲区，当前缓冲区大小: \(buffer.frameLength)")
         }
         
-        // 直接在当前线程调用delegate，避免额外的队列切换
-        // audioQueue已经是音频处理的专用队列，无需再次分发
-        delegate?.audioCaptureDidReceiveBuffer(buffer)
+        // 如果输入格式与目标格式相同，直接使用
+        if buffer.format.sampleRate == targetFormat.sampleRate && 
+           buffer.format.channelCount == targetFormat.channelCount {
+            delegate?.audioCaptureDidReceiveBuffer(buffer)
+            return
+        }
+        
+        // 需要进行格式转换
+        guard let convertedBuffer = convertAudioBuffer(buffer, to: targetFormat) else {
+            // 转换失败时记录日志但不中断处理
+            if AudioCaptureService.bufferCount % 1000 == 0 {
+                addLog("⚠️ 音频格式转换失败，跳过此缓冲区")
+            }
+            return
+        }
+        
+        // 使用转换后的缓冲区
+        delegate?.audioCaptureDidReceiveBuffer(convertedBuffer)
+    }
+    
+    /// 音频格式转换方法
+    /// 将输入音频缓冲区从源格式转换为目标格式
+    /// - Parameters:
+    ///   - sourceBuffer: 源音频缓冲区
+    ///   - targetFormat: 目标音频格式
+    /// - Returns: 转换后的音频缓冲区，失败时返回nil
+    private func convertAudioBuffer(_ sourceBuffer: AVAudioPCMBuffer, to targetFormat: AVAudioFormat) -> AVAudioPCMBuffer? {
+        let sourceFormat = sourceBuffer.format
+        
+        // 创建音频转换器
+        guard let converter = AVAudioConverter(from: sourceFormat, to: targetFormat) else {
+            addLog("❌ 无法创建音频转换器")
+            return nil
+        }
+        
+        // 计算目标缓冲区的帧数
+        let capacity = AVAudioFrameCount(Double(sourceBuffer.frameLength) * targetFormat.sampleRate / sourceFormat.sampleRate)
+        
+        // 创建目标缓冲区
+        guard let targetBuffer = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: capacity) else {
+            addLog("❌ 无法创建目标音频缓冲区")
+            return nil
+        }
+        
+        // 配置转换器属性（如果需要）
+        if sourceFormat.channelCount != targetFormat.channelCount {
+            // 单声道/立体声转换
+            converter.channelMap = sourceFormat.channelCount > targetFormat.channelCount ? [0] : [0, 0]
+        }
+        
+        // 执行音频转换
+        var error: NSError?
+        let inputBlock: AVAudioConverterInputBlock = { inNumPackets, outStatus in
+            outStatus.pointee = .haveData
+            return sourceBuffer
+        }
+        
+        let status = converter.convert(to: targetBuffer, error: &error, withInputFrom: inputBlock)
+        
+        // 检查转换结果
+        switch status {
+        case .haveData:
+            // 转换成功，记录详细信息（降低日志频率）
+            if AudioCaptureService.bufferCount % 2000 == 0 {
+                addLog("✅ 音频格式转换成功: \(sourceFormat.sampleRate)Hz→\(targetFormat.sampleRate)Hz, \(sourceFormat.channelCount)→\(targetFormat.channelCount)声道")
+            }
+            return targetBuffer
+            
+        case .error:
+            if let error = error {
+                addLog("❌ 音频转换失败: \(error.localizedDescription)")
+            } else {
+                addLog("❌ 音频转换失败: 未知错误")
+            }
+            return nil
+            
+        case .inputRanDry:
+            addLog("⚠️ 音频转换输入数据不足")
+            return nil
+            
+        @unknown default:
+            addLog("⚠️ 音频转换返回未知状态")
+            return nil
+        }
     }
     
     // MARK: - Logging
