@@ -236,6 +236,11 @@ class DIContainer: DependencyInjectionProtocol {
             return ConfigurationManager.shared
         }
         
+        // 注册配置管理器协议映射（单例）
+        registerSingleton(ConfigurationManagerProtocol.self) {
+            return ConfigurationManager.shared
+        }
+        
         // 注册文本输入服务（单例）
         registerSingleton(TextInputServiceProtocol.self) {
             return TextInputService.shared
@@ -263,17 +268,17 @@ class DIContainer: DependencyInjectionProtocol {
         
         // 注册热词服务（单例） - 任务2.3
         registerSingleton(HotWordServiceProtocol.self) {
-            return HotWordService()
+            return HotWordService(configManager: ConfigurationManager.shared)
         }
         
         // 注册标点符号处理服务（单例） - 任务3.1
         registerSingleton(PunctuationServiceProtocol.self) {
-            return PunctuationService()
+            return PunctuationService(configManager: ConfigurationManager.shared)
         }
         
         // 注册文本处理服务（单例） - 任务2.3
         registerSingleton(TextProcessingServiceProtocol.self) {
-            return TextProcessingService()
+            return TextProcessingService(configManager: ConfigurationManager.shared)
         }
         
         print("✅ 默认服务注册完成")
