@@ -19,6 +19,7 @@ CapsWriter-Offline 是一个离线语音输入工具，支持 Windows/Linux/macO
 
 ### macOS 原生端 (Swift)
 - **CapsWriter-mac/**: SwiftUI 应用，为 macOS 提供原生体验
+- **ConfigurationManager.swift**: 统一配置管理系统，支持持久化和响应式更新
 - **SherpaOnnx.swift**: Sherpa-ONNX 语音识别引擎的 Swift 封装
 - **KeyboardMonitor.swift**: macOS 系统级键盘事件监听
 - **AudioCaptureService.swift**: 音频录制服务
@@ -304,9 +305,13 @@ models/
 ## 🔍 关键里程碑
 
 ### 🎯 里程碑 1 (Week 2): 架构基础完成
-- ✅ 配置管理系统可用
-- ✅ 状态管理分层清晰  
-- ✅ 错误处理统一
+- ✅ 配置管理系统可用 **[已完成 - 2024年]**
+  - 创建 ConfigurationManager.swift 统一配置管理
+  - 6个配置分类覆盖所有硬编码项 
+  - 集成 UserDefaults 持久化和响应式更新
+  - 所有服务已重构使用配置管理器
+- ⏳ 状态管理分层清晰 **[下一个任务]**
+- ⏳ 错误处理统一 **[计划中]**
 
 ### 🎯 里程碑 2 (Week 4): 核心功能恢复
 - ✅ 热词替换功能完整
