@@ -87,9 +87,9 @@ class TextProcessingService: ObservableObject, TextProcessingServiceProtocol {
     
     // MARK: - Dependencies
     
-    private let configManager: ConfigurationManagerProtocol
-    private let hotWordService: HotWordServiceProtocol
-    private let punctuationService: PunctuationServiceProtocol
+    private let configManager: any ConfigurationManagerProtocol
+    private let hotWordService: any HotWordServiceProtocol
+    private let punctuationService: any PunctuationServiceProtocol
     private let logger = Logger(subsystem: "com.capswriter.textprocessing", category: "TextProcessingService")
     
     // MARK: - Published Properties
@@ -111,9 +111,9 @@ class TextProcessingService: ObservableObject, TextProcessingServiceProtocol {
     // MARK: - Initialization
     
     init(
-        configManager: ConfigurationManagerProtocol = DIContainer.shared.resolve(ConfigurationManagerProtocol.self),
-        hotWordService: HotWordServiceProtocol? = nil,
-        punctuationService: PunctuationServiceProtocol? = nil
+        configManager: any ConfigurationManagerProtocol = DIContainer.shared.resolve(ConfigurationManagerProtocol.self),
+        hotWordService: (any HotWordServiceProtocol)? = nil,
+        punctuationService: (any PunctuationServiceProtocol)? = nil
     ) {
         self.configManager = configManager
         
@@ -391,12 +391,14 @@ class TextProcessingService: ObservableObject, TextProcessingServiceProtocol {
     
     private func setupConfigurationObserver() {
         // 监听配置变化
-        configManager.objectWillChange
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] in
-                self?.handleConfigurationChange()
-            }
-            .store(in: &cancellables)
+        if let observableConfig = configManager as? ConfigurationManager {
+            observableConfig.objectWillChange
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] in
+                    self?.handleConfigurationChange()
+                }
+                .store(in: &cancellables)
+        }
     }
     
     private func handleConfigurationChange() {

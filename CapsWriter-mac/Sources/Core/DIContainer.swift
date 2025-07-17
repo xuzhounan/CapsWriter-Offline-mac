@@ -232,7 +232,7 @@ class DIContainer: DependencyInjectionProtocol {
         print("📋 设置默认服务注册...")
         
         // 注册配置管理器（单例）
-        registerSingleton(ConfigurationManagerProtocol.self) {
+        registerSingleton(ConfigurationManager.self) {
             return ConfigurationManager.shared
         }
         
@@ -356,8 +356,8 @@ extension DIContainer {
             return DIContainer.shared.resolve(KeyboardMonitorProtocol.self)
         }
         
-        static func createConfigurationManager() -> ConfigurationManagerProtocol {
-            return DIContainer.shared.resolve(ConfigurationManagerProtocol.self)
+        static func createConfigurationManager() -> any ConfigurationManagerProtocol {
+            return DIContainer.shared.resolve(ConfigurationManager.self)
         }
         
         static func createErrorHandler() -> ErrorHandlerProtocol {

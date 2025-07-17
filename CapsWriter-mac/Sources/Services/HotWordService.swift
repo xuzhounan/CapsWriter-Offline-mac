@@ -97,7 +97,7 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
     
     // MARK: - Dependencies
     
-    private let configManager: ConfigurationManagerProtocol
+    private let configManager: any ConfigurationManagerProtocol
     private let logger = Logger(subsystem: "com.capswriter.hotword", category: "HotWordService")
     
     // MARK: - Published Properties
@@ -163,7 +163,7 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
     
     // MARK: - Initialization
     
-    init(configManager: ConfigurationManagerProtocol = DIContainer.shared.resolve(ConfigurationManagerProtocol.self)) {
+    init(configManager: any ConfigurationManagerProtocol = DIContainer.shared.resolve(ConfigurationManager.self)) {
         self.configManager = configManager
         
         // 初始化字典
@@ -335,7 +335,7 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
         // 更新统计信息
         updateStatistics()
         
-        logger.info("📊 热词加载完成: \(statistics.summary)")
+        logger.info("📊 热词加载完成: \(self.statistics.summary)")
     }
     
     private func loadHotWordsFromFile(path: String, type: HotWordType) throws {
@@ -417,7 +417,7 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
         }
         
         flatDictionary = newFlatDictionary
-        logger.debug("🔨 扁平字典重建完成，共 \(flatDictionary.count) 条")
+        logger.debug("🔨 扁平字典重建完成，共 \(self.flatDictionary.count) 条")
     }
     
     private func performTextReplacement(_ text: String) -> String {
@@ -519,19 +519,21 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
             }
         }
         
-        logger.info("👁️ 文件监听器设置完成，共监听 \(fileWatchers.count) 个文件")
+        logger.info("👁️ 文件监听器设置完成，共监听 \(self.fileWatchers.count) 个文件")
     }
     
     private func setupConfigurationObserver() {
         // 监听配置变化
-        configManager.objectWillChange
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] in
-                if self?.configManager.textProcessing.enableHotwordReplacement == false {
-                    self?.logger.info("🔕 热词替换已在配置中禁用")
+        if let observableConfig = configManager as? ConfigurationManager {
+            observableConfig.objectWillChange
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] in
+                    if self?.configManager.textProcessing.enableHotwordReplacement == false {
+                        self?.logger.info("🔕 热词替换已在配置中禁用")
+                    }
                 }
-            }
-            .store(in: &cancellables)
+                .store(in: &cancellables)
+        }
     }
 }
 
@@ -586,7 +588,8 @@ private class FileWatcher {
     }
     
     func start() {
-        guard let descriptor = open(path, O_EVTONLY) else {
+        let descriptor = open(path, O_EVTONLY)
+        guard descriptor != -1 else {
             return
         }
         
