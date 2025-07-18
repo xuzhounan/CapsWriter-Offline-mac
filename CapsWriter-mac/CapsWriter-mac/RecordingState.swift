@@ -252,9 +252,14 @@ class RecordingState: ObservableObject {
         updateAccessibilityPermission(accessibilityPermission)
         print("🔐 RecordingState: 辅助功能权限 = \(accessibilityPermission)")
         
-        // 检查麦克风权限
-        let microphonePermission = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
+        // 检查麦克风权限 - 修复逻辑：包含 notDetermined 和 authorized 状态
+        let microphoneAuthStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+        let microphonePermission = (microphoneAuthStatus == .authorized || microphoneAuthStatus == .notDetermined)
         updateMicrophonePermission(microphonePermission)
+        
+        // 打印详细状态信息
+        print("🎤 RecordingState: 麦克风权限状态原始值 = \(microphoneAuthStatus.rawValue)")
+        print("🎤 RecordingState: 麦克风权限状态描述 = \(getMicrophoneStatusDescription(microphoneAuthStatus))")
         print("🎤 RecordingState: 麦克风权限 = \(microphonePermission)")
         
         // 检查文本输入权限（与辅助功能权限相同）
@@ -278,6 +283,22 @@ class RecordingState: ObservableObject {
             } else if (keyboardMonitorStatus == "已启动" || keyboardMonitorStatus == "正在监听") && isManuallyStoppedByUser {
                 updateKeyboardMonitorStatus("已停止")
             }
+        }
+    }
+    
+    /// 获取麦克风权限状态描述
+    private func getMicrophoneStatusDescription(_ status: AVAuthorizationStatus) -> String {
+        switch status {
+        case .notDetermined:
+            return "未确定（可以使用）"
+        case .restricted:
+            return "受限制"
+        case .denied:
+            return "已拒绝"
+        case .authorized:
+            return "已授权"
+        @unknown default:
+            return "未知状态"
         }
     }
 }
