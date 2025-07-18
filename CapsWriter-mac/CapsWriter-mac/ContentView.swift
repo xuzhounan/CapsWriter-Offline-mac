@@ -42,6 +42,14 @@ struct ContentView: View {
                     Text("系统日志")
                 }
                 .tag(3)
+            
+            // 设置页面 - 任务4.2
+            SettingsView()
+                .tabItem {
+                    Image(systemName: "gearshape")
+                    Text("设置")
+                }
+                .tag(4)
         }
         .onAppear {
             animationScale = 1.2

@@ -53,6 +53,14 @@ class StatusBarController: ObservableObject {
             // 分隔线
             menu.addItem(NSMenuItem.separator())
             
+            // 设置菜单项
+            let settingsItem = NSMenuItem(title: "设置...", action: #selector(openSettings), keyEquivalent: ",")
+            settingsItem.target = self
+            menu.addItem(settingsItem)
+            
+            // 分隔线
+            menu.addItem(NSMenuItem.separator())
+            
             // 退出应用菜单项
             let quitItem = NSMenuItem(title: "退出 CapsWriter", action: #selector(quitApp), keyEquivalent: "q")
             quitItem.target = self
@@ -85,6 +93,31 @@ class StatusBarController: ObservableObject {
         // 获取AppDelegate实例并停止键盘监听
         if let appDelegate = NSApp.delegate as? AppDelegate {
             appDelegate.stopKeyboardMonitoring()
+        }
+    }
+    
+    @objc private func openSettings() {
+        // 激活应用并打开设置窗口
+        NSApp.activate(ignoringOtherApps: true)
+        
+        // 查找现有的设置窗口
+        if let existingWindow = NSApp.windows.first(where: { $0.title == "设置" }) {
+            // 如果设置窗口存在，就激活它
+            existingWindow.makeKeyAndOrderFront(nil)
+            existingWindow.orderFrontRegardless()
+        } else {
+            // 创建新的设置窗口
+            let settingsWindow = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 900, height: 700),
+                styleMask: [.titled, .closable, .resizable],
+                backing: .buffered,
+                defer: false
+            )
+            settingsWindow.title = "设置"
+            settingsWindow.contentView = NSHostingView(rootView: SettingsView())
+            settingsWindow.center()
+            settingsWindow.makeKeyAndOrderFront(nil)
+            settingsWindow.orderFrontRegardless()
         }
     }
     
