@@ -211,20 +211,16 @@ class LoggingService: LoggingServiceProtocol, ObservableObject {
     
     /// 设置日志输出目标
     private func setupLogDestinations() {
-        // 根据配置管理器的设置来确定启用的输出目标
-        if let configManager = DIContainer.shared.resolve(ConfigurationManagerProtocol.self) {
-            // 从配置中读取日志设置
-            let debugMode = configManager.debug.enableVerboseLogging
-            
-            if debugMode {
-                enabledDestinations.insert(.console)
-                enabledDestinations.insert(.file)
-                minLogLevel = .debug
-            } else {
-                enabledDestinations.remove(.console)
-                minLogLevel = .info
-            }
-        }
+        // 避免循环依赖，使用默认配置
+        // 后续可通过 updateConfiguration 方法更新配置
+        #if DEBUG
+        enabledDestinations.insert(.console)
+        enabledDestinations.insert(.file)
+        minLogLevel = .debug
+        #else
+        enabledDestinations.remove(.console)
+        minLogLevel = .info
+        #endif
     }
     
     /// 设置文件日志
@@ -361,6 +357,28 @@ class LoggingService: LoggingServiceProtocol, ObservableObject {
     
     func disableDestination(_ destination: LogDestination) {
         enabledDestinations.remove(destination)
+    }
+    
+    /// 更新配置（避免初始化时的循环依赖）
+    func updateConfiguration() {
+        // 在系统完全初始化后调用，更新日志配置
+        if let configManager = DIContainer.shared.resolve(ConfigurationManagerProtocol.self) {
+            let debugMode = configManager.debug.enableVerboseLogging
+            
+            if debugMode {
+                enabledDestinations.insert(.console)
+                enabledDestinations.insert(.file)
+                minLogLevel = .debug
+            } else {
+                enabledDestinations.remove(.console)
+                minLogLevel = .info
+            }
+            
+            // 如果需要文件日志，重新设置
+            if enabledDestinations.contains(.file) {
+                setupFileLogging()
+            }
+        }
     }
     
     // MARK: - Private Methods

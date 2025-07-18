@@ -228,9 +228,10 @@ class ConfigurationManager: ObservableObject, ConfigurationManagerProtocol {
         // 设置自动保存监听器
         setupAutoSave()
         
-        LogInfo("ConfigurationManager 初始化完成", category: .config)
-        LogInfo("配置状态: 音频(\(audio.sampleRate)Hz, \(audio.channels)声道), 识别(\(recognition.modelType), \(recognition.numThreads)线程), 键盘(键码\(keyboard.primaryKeyCode), \(keyboard.requiredClicks)次)", category: .config)
-        LogInfo("文本处理: 热词替换(\(textProcessing.enableHotwordReplacement)), UI设置: 状态栏(\(ui.showStatusBarIcon)), 日志级别(\(ui.logLevel))", category: .config)
+        // 使用 print 而不是 LogInfo，因为 LoggingService 可能还没有初始化
+        print("🔧 ConfigurationManager 初始化完成")
+        print("📊 配置状态: 音频(\(audio.sampleRate)Hz, \(audio.channels)声道), 识别(\(recognition.modelType), \(recognition.numThreads)线程), 键盘(键码\(keyboard.primaryKeyCode), \(keyboard.requiredClicks)次)")
+        print("📝 文本处理: 热词替换(\(textProcessing.enableHotwordReplacement)), UI设置: 状态栏(\(ui.showStatusBarIcon)), 日志级别(\(ui.logLevel))")
     }
     
     // MARK: - Auto Save Setup
