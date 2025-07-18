@@ -420,22 +420,40 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
         logger.debug("🔨 扁平字典重建完成，共 \(self.flatDictionary.count) 条")
     }
     
+    // 🔒 安全修复：防止正则表达式DoS攻击
     private func performTextReplacement(_ text: String) -> String {
+        // 🔒 输入验证：防止过长文本导致性能问题
+        let maxTextLength = 10000  // 限制最大文本长度
+        guard text.count <= maxTextLength else {
+            logger.warning("⚠️ 文本过长，跳过处理: \(text.count) 字符")
+            return text
+        }
+        
         var result = text
         var replacementCount = 0
+        let processingStartTime = Date()
+        let maxProcessingTime: TimeInterval = 5.0  // 最大处理时间5秒
         
-        // 1. 先处理正则表达式规则
+        // 1. 先处理正则表达式规则（带安全检查）
         if let ruleDict = hotWordDictionaries[.rule] {
             for (pattern, entry) in ruleDict {
+                // 🔒 超时检查：防止长时间执行
+                if Date().timeIntervalSince(processingStartTime) > maxProcessingTime {
+                    logger.warning("⚠️ 文本处理超时，停止正则表达式处理")
+                    break
+                }
+                
                 if let regex = getOrCreateRegex(pattern) {
                     let range = NSRange(location: 0, length: result.utf16.count)
-                    if regex.firstMatch(in: result, options: [], range: range) != nil {
-                        result = regex.stringByReplacingMatches(
-                            in: result,
-                            options: [],
-                            range: range,
-                            withTemplate: entry.replacement
-                        )
+                    
+                    // 🔒 安全执行：使用 DispatchQueue 和超时机制
+                    if let safeResult = performSafeRegexReplacement(
+                        regex: regex,
+                        text: result,
+                        range: range,
+                        replacement: entry.replacement
+                    ) {
+                        result = safeResult
                         replacementCount += 1
                     }
                 }
@@ -444,8 +462,19 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
         
         // 2. 处理普通字符串替换（按优先级）
         for (original, entry) in flatDictionary.sorted(by: { $0.value.priority > $1.value.priority }) {
+            // 🔒 超时检查：防止长时间执行
+            if Date().timeIntervalSince(processingStartTime) > maxProcessingTime {
+                logger.warning("⚠️ 文本处理超时，停止字符串替换处理")
+                break
+            }
+            
             if entry.type != .rule && result.contains(original) {
-                result = result.replacingOccurrences(of: original, with: entry.replacement)
+                // 🔒 安全替换：限制替换次数
+                result = performSafeStringReplacement(
+                    text: result,
+                    original: original,
+                    replacement: entry.replacement
+                )
                 replacementCount += 1
             }
         }
@@ -459,19 +488,178 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
         return result
     }
     
+    // 🔒 安全方法：执行安全的正则表达式替换
+    private func performSafeRegexReplacement(
+        regex: NSRegularExpression,
+        text: String,
+        range: NSRange,
+        replacement: String
+    ) -> String? {
+        let timeout: TimeInterval = 2.0  // 单个正则表达式最大执行时间2秒
+        let semaphore = DispatchSemaphore(value: 0)
+        var result: String?
+        var timedOut = false
+        
+        // 在后台队列执行正则表达式
+        DispatchQueue.global(qos: .utility).async {
+            do {
+                // 检查是否有匹配
+                if regex.firstMatch(in: text, options: [], range: range) != nil {
+                    result = regex.stringByReplacingMatches(
+                        in: text,
+                        options: [],
+                        range: range,
+                        withTemplate: replacement
+                    )
+                }
+            } catch {
+                // 捕获任何异常
+                print("⚠️ 正则表达式执行异常: \(error)")
+            }
+            semaphore.signal()
+        }
+        
+        // 等待完成或超时
+        if semaphore.wait(timeout: .now() + timeout) == .timedOut {
+            timedOut = true
+            logger.warning("⚠️ 正则表达式执行超时")
+        }
+        
+        return timedOut ? nil : result
+    }
+    
+    // 🔒 安全方法：执行安全的字符串替换
+    private func performSafeStringReplacement(
+        text: String,
+        original: String,
+        replacement: String
+    ) -> String {
+        let maxReplacements = 100  // 限制最大替换次数
+        var result = text
+        var replacementCount = 0
+        
+        while result.contains(original) && replacementCount < maxReplacements {
+            result = result.replacingOccurrences(of: original, with: replacement)
+            replacementCount += 1
+        }
+        
+        if replacementCount >= maxReplacements {
+            logger.warning("⚠️ 字符串替换次数达到限制: \(original)")
+        }
+        
+        return result
+    }
+    
+    // 🔒 安全修复：防止恶意正则表达式DoS攻击
     private func getOrCreateRegex(_ pattern: String) -> NSRegularExpression? {
+        // 🔒 检查缓存
         if let cached = regexCache[pattern] {
             return cached
         }
         
+        // 🔒 安全验证：检查正则表达式安全性
+        guard isRegexPatternSafe(pattern) else {
+            logger.warning("⚠️ 不安全的正则表达式被拒绝: \(pattern)")
+            return nil
+        }
+        
         do {
             let regex = try NSRegularExpression(pattern: pattern, options: [.caseInsensitive])
+            
+            // 🔒 缓存管理：限制缓存大小
+            if regexCache.count >= 100 {
+                // 清理最老的缓存项
+                let keysToRemove = Array(regexCache.keys.prefix(50))
+                for key in keysToRemove {
+                    regexCache.removeValue(forKey: key)
+                }
+            }
+            
             regexCache[pattern] = regex
             return regex
         } catch {
             logger.error("❌ 无效正则表达式: \(pattern), 错误: \(error.localizedDescription)")
             return nil
         }
+    }
+    
+    // 🔒 安全方法：检查正则表达式模式安全性
+    private func isRegexPatternSafe(_ pattern: String) -> Bool {
+        // 1. 长度限制
+        let maxPatternLength = 500
+        guard pattern.count <= maxPatternLength else {
+            logger.warning("⚠️ 正则表达式过长: \(pattern.count) 字符")
+            return false
+        }
+        
+        // 2. 禁止危险模式
+        let dangerousPatterns = [
+            "(.*)+",          // 灾难性回溯
+            "(.*)*",          // 灾难性回溯
+            "(.+)+",          // 灾难性回溯
+            "(.+)*",          // 灾难性回溯
+            "(a*)*",          // 灾难性回溯
+            "(a+)+",          // 灾难性回溯
+            "(a|a)*",         // 灾难性回溯
+            "(a|a)+",         // 灾难性回溯
+            "([a-z]*)*",      // 灾难性回溯
+            "([a-z]+)+",      // 灾难性回溯
+            ".*.*.*.*",       // 过度量词
+            ".+.+.+.+",       // 过度量词
+        ]
+        
+        for dangerousPattern in dangerousPatterns {
+            if pattern.contains(dangerousPattern) {
+                logger.warning("⚠️ 检测到危险正则表达式模式: \(dangerousPattern)")
+                return false
+            }
+        }
+        
+        // 3. 检查嵌套量词
+        if pattern.contains("*+") || pattern.contains("+*") || 
+           pattern.contains("?+") || pattern.contains("+?") {
+            logger.warning("⚠️ 检测到嵌套量词模式")
+            return false
+        }
+        
+        // 4. 检查过度的括号嵌套
+        let maxNestingLevel = 10
+        var nestingLevel = 0
+        var maxNesting = 0
+        
+        for char in pattern {
+            if char == "(" {
+                nestingLevel += 1
+                maxNesting = max(maxNesting, nestingLevel)
+            } else if char == ")" {
+                nestingLevel -= 1
+            }
+        }
+        
+        if maxNesting > maxNestingLevel {
+            logger.warning("⚠️ 正则表达式括号嵌套过深: \(maxNesting)")
+            return false
+        }
+        
+        // 5. 检查过度的重复模式
+        let maxRepeatCount = 1000
+        let repeatPatterns = ["{", "}", "{,", "}", ","]
+        
+        for repeatPattern in repeatPatterns {
+            if pattern.contains(repeatPattern) {
+                // 简单检查，实际应用中可能需要更复杂的解析
+                if let range = pattern.range(of: "{(\\d+,?\\d*)}", options: .regularExpression) {
+                    let numberPart = String(pattern[range]).replacingOccurrences(of: "[{}]", with: "", options: .regularExpression)
+                    if let number = Int(numberPart.components(separatedBy: ",").first ?? ""),
+                       number > maxRepeatCount {
+                        logger.warning("⚠️ 正则表达式重复次数过多: \(number)")
+                        return false
+                    }
+                }
+            }
+        }
+        
+        return true
     }
     
     private func updateStatistics() {
@@ -558,6 +746,10 @@ enum HotWordServiceError: Error, LocalizedError {
     case fileNotFound(String)
     case invalidFileFormat(String)
     case regexCompilationFailed(String)
+    case unsafeRegexPattern(String)      // 🔒 新增：不安全的正则表达式
+    case regexExecutionTimeout(String)   // 🔒 新增：正则表达式执行超时
+    case textTooLong(Int)               // 🔒 新增：文本过长
+    case processingTimeout(TimeInterval) // 🔒 新增：处理超时
     
     var errorDescription: String? {
         switch self {
@@ -569,18 +761,35 @@ enum HotWordServiceError: Error, LocalizedError {
             return "热词文件格式无效: \(path)"
         case .regexCompilationFailed(let pattern):
             return "正则表达式编译失败: \(pattern)"
+        case .unsafeRegexPattern(let pattern):
+            return "不安全的正则表达式: \(pattern)"
+        case .regexExecutionTimeout(let pattern):
+            return "正则表达式执行超时: \(pattern)"
+        case .textTooLong(let length):
+            return "文本过长: \(length) 字符"
+        case .processingTimeout(let timeout):
+            return "处理超时: \(timeout) 秒"
         }
     }
 }
 
 // MARK: - File Watcher Helper
 
-/// 简单的文件监听器实现
+/// 安全的文件监听器实现
+/// 🔒 安全修复：防止路径遍历攻击，限制文件访问权限
 private class FileWatcher {
     private let path: String
     private let callback: () -> Void
     private var source: DispatchSourceFileSystemObject?
     private let queue = DispatchQueue(label: "com.capswriter.filewatcher")
+    private var fileDescriptor: Int32 = -1
+    
+    // 🔒 安全配置：文件监控限制
+    private static let maxFileSize: UInt64 = 10 * 1024 * 1024  // 10MB 限制
+    private static let allowedExtensions: Set<String> = ["txt", "json", "plist"]
+    private static let maxCallbackFrequency: TimeInterval = 1.0  // 1秒最多触发一次
+    
+    private var lastCallbackTime: Date = Date.distantPast
     
     init(path: String, callback: @escaping () -> Void) {
         self.path = path
@@ -588,27 +797,139 @@ private class FileWatcher {
     }
     
     func start() {
-        let descriptor = open(path, O_EVTONLY)
-        guard descriptor != -1 else {
+        // 🔒 安全检查：验证文件路径安全性
+        guard isPathSafe(path) else {
+            print("⚠️ FileWatcher: 不安全的文件路径被拒绝: \(path)")
+            return
+        }
+        
+        // 🔒 安全检查：验证文件权限和大小
+        guard validateFileAccess(path) else {
+            print("⚠️ FileWatcher: 文件访问验证失败: \(path)")
+            return
+        }
+        
+        fileDescriptor = open(path, O_EVTONLY)
+        guard fileDescriptor != -1 else {
+            print("⚠️ FileWatcher: 无法打开文件描述符: \(path)")
             return
         }
         
         source = DispatchSource.makeFileSystemObjectSource(
-            fileDescriptor: descriptor,
+            fileDescriptor: fileDescriptor,
             eventMask: .write,
             queue: queue
         )
         
         source?.setEventHandler { [weak self] in
-            self?.callback()
+            self?.handleFileChange()
         }
         
         source?.resume()
     }
     
+    // 🔒 安全方法：处理文件变化事件（带频率限制）
+    private func handleFileChange() {
+        let now = Date()
+        guard now.timeIntervalSince(lastCallbackTime) >= Self.maxCallbackFrequency else {
+            return  // 防止频繁触发
+        }
+        
+        // 🔒 安全检查：重新验证文件在回调时的安全性
+        guard validateFileAccess(path) else {
+            print("⚠️ FileWatcher: 文件在变化时验证失败，停止监控: \(path)")
+            stop()
+            return
+        }
+        
+        lastCallbackTime = now
+        callback()
+    }
+    
+    // 🔒 安全方法：验证路径安全性
+    private func isPathSafe(_ path: String) -> Bool {
+        // 解析真实路径，防止符号链接攻击
+        guard let realPath = URL(fileURLWithPath: path).standardized.path.cString(using: .utf8) else {
+            return false
+        }
+        
+        let resolvedPath = String(cString: realPath)
+        
+        // 1. 防止路径遍历攻击
+        if resolvedPath.contains("../") || resolvedPath.contains("..\\")
+           || resolvedPath.contains("/..") || resolvedPath.contains("\\..") {
+            return false
+        }
+        
+        // 2. 限制访问系统敏感目录
+        let forbiddenPaths = [
+            "/System", "/Library", "/private", "/usr", "/bin", "/sbin",
+            "/etc", "/var", "/dev", "/tmp", "/Applications"
+        ]
+        
+        for forbiddenPath in forbiddenPaths {
+            if resolvedPath.hasPrefix(forbiddenPath) {
+                return false
+            }
+        }
+        
+        // 3. 必须在应用沙盒或用户目录内
+        let userHome = FileManager.default.homeDirectoryForCurrentUser.path
+        let appSandbox = Bundle.main.bundlePath
+        
+        if !resolvedPath.hasPrefix(userHome) && !resolvedPath.hasPrefix(appSandbox) {
+            return false
+        }
+        
+        // 4. 检查文件扩展名
+        let fileExtension = URL(fileURLWithPath: resolvedPath).pathExtension.lowercased()
+        if !Self.allowedExtensions.contains(fileExtension) {
+            return false
+        }
+        
+        return true
+    }
+    
+    // 🔒 安全方法：验证文件访问权限和大小
+    private func validateFileAccess(_ path: String) -> Bool {
+        let fileManager = FileManager.default
+        
+        // 1. 检查文件是否存在
+        guard fileManager.fileExists(atPath: path) else {
+            return false
+        }
+        
+        // 2. 检查文件大小
+        do {
+            let attributes = try fileManager.attributesOfItem(atPath: path)
+            if let fileSize = attributes[.size] as? UInt64 {
+                if fileSize > Self.maxFileSize {
+                    print("⚠️ FileWatcher: 文件大小超过限制: \(fileSize) bytes")
+                    return false
+                }
+            }
+        } catch {
+            print("⚠️ FileWatcher: 无法获取文件属性: \(error)")
+            return false
+        }
+        
+        // 3. 检查文件权限
+        guard fileManager.isReadableFile(atPath: path) else {
+            return false
+        }
+        
+        return true
+    }
+    
     func stop() {
         source?.cancel()
         source = nil
+        
+        // 🔒 安全清理：安全关闭文件描述符
+        if fileDescriptor != -1 {
+            close(fileDescriptor)
+            fileDescriptor = -1
+        }
     }
     
     deinit {

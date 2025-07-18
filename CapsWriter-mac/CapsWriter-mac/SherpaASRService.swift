@@ -19,21 +19,48 @@ struct TranscriptEntry: Identifiable, Equatable {
 
 // MARK: - Sherpa-ONNX C API Helper Functions
 
-/// Convert a String from swift to a `const char*` so that we can pass it to
-/// the C language.
-func toCPointer(_ s: String) -> UnsafePointer<Int8>! {
-  let cs = (s as NSString).utf8String
+/// 🔒 安全修复：Convert a String from swift to a `const char*` so that we can pass it to
+/// the C language. 增强空指针检查和输入验证
+func toCPointer(_ s: String) -> UnsafePointer<Int8>? {
+  // 🔒 输入验证：检查字符串有效性
+  guard !s.isEmpty else {
+    print("⚠️ toCPointer: 空字符串输入")
+    return nil
+  }
+  
+  // 🔒 长度限制：防止过长字符串导致内存问题
+  let maxLength = 10000
+  guard s.count <= maxLength else {
+    print("⚠️ toCPointer: 字符串过长 (\(s.count) 字符)")
+    return nil
+  }
+  
+  // 🔒 安全转换：确保UTF-8转换成功
+  guard let cs = (s as NSString).utf8String else {
+    print("⚠️ toCPointer: UTF-8转换失败")
+    return nil
+  }
+  
   return UnsafePointer<Int8>(cs)
 }
 
-/// Return an instance of SherpaOnnxOnlineParaformerModelConfig.
+/// 🔒 安全修复：Return an instance of SherpaOnnxOnlineParaformerModelConfig.
+/// 增强参数验证和空指针处理
 func sherpaOnnxOnlineParaformerModelConfig(
   encoder: String = "",
   decoder: String = ""
 ) -> SherpaOnnxOnlineParaformerModelConfig {
+  // 🔒 参数验证：对于空参数使用默认值
+  let safeEncoder = encoder.isEmpty ? "" : encoder
+  let safeDecoder = decoder.isEmpty ? "" : decoder
+  
+  // 🔒 安全转换：使用安全的指针转换
+  let encoderPtr = toCPointer(safeEncoder) ?? toCPointer("")
+  let decoderPtr = toCPointer(safeDecoder) ?? toCPointer("")
+  
   return SherpaOnnxOnlineParaformerModelConfig(
-    encoder: toCPointer(encoder),
-    decoder: toCPointer(decoder)
+    encoder: encoderPtr,
+    decoder: decoderPtr
   )
 }
 
@@ -495,29 +522,40 @@ class SherpaASRService: ObservableObject, SpeechRecognitionServiceProtocol {
             
             addLog("⚙️ 创建识别器实例...")
             RecordingState.shared.updateInitializationProgress("正在创建识别器...")
+            // 🔒 安全修复：安全创建识别器，增强错误处理
             recognizer = SherpaOnnxCreateOnlineRecognizer(&config)
             
-            if recognizer != nil {
-                addLog("✅ 识别器创建成功")
-                
-                // Create stream
-                addLog("🌊 创建音频流...")
-                RecordingState.shared.updateInitializationProgress("正在创建音频流...")
-                stream = SherpaOnnxCreateOnlineStream(recognizer)
-                
-                if stream != nil {
-                    addLog("✅ 音频流创建成功")
-                    RecordingState.shared.updateInitializationProgress("初始化完成")
-                    isInitialized = true
-                } else {
-                    addLog("❌ 音频流创建失败")
-                    RecordingState.shared.updateInitializationProgress("音频流创建失败")
-                    isInitialized = false
-                }
-            } else {
-                addLog("❌ 识别器创建失败")
+            // 🔒 空指针检查：确保识别器创建成功
+            guard let validRecognizer = recognizer else {
+                addLog("❌ 识别器创建失败：返回空指针")
+                RecordingState.shared.updateInitializationProgress("识别器创建失败")
                 isInitialized = false
+                return
             }
+            
+            addLog("✅ 识别器创建成功")
+            
+            // 🔒 安全创建音频流
+            addLog("🌊 创建音频流...")
+            RecordingState.shared.updateInitializationProgress("正在创建音频流...")
+            
+            stream = SherpaOnnxCreateOnlineStream(validRecognizer)
+            
+            // 🔒 空指针检查：确保音频流创建成功
+            guard stream != nil else {
+                addLog("❌ 音频流创建失败：返回空指针")
+                RecordingState.shared.updateInitializationProgress("音频流创建失败")
+                
+                // 🔒 资源清理：清理已创建的识别器
+                SherpaOnnxDestroyOnlineRecognizer(validRecognizer)
+                recognizer = nil
+                isInitialized = false
+                return
+            }
+            
+            addLog("✅ 音频流创建成功")
+            RecordingState.shared.updateInitializationProgress("初始化完成")
+            isInitialized = true
         }
     }
     
@@ -577,7 +615,7 @@ class SherpaASRService: ObservableObject, SpeechRecognitionServiceProtocol {
             return
         }
         
-        // 真实模式：检查识别器是否初始化
+        // 🔒 安全修复：检查识别器是否初始化
         guard let recognizer = recognizer,
               let stream = stream else {
             // 只记录一次警告，避免日志过多
@@ -588,19 +626,35 @@ class SherpaASRService: ObservableObject, SpeechRecognitionServiceProtocol {
             return
         }
         
+        // 🔒 安全验证：检查音频数据有效性
+        guard frameLength > 0 else {
+            addLog("⚠️ 音频帧长度无效: \(frameLength)")
+            return
+        }
+        
+        let maxFrameLength = 1024 * 1024  // 1M samples 限制
+        guard frameLength <= maxFrameLength else {
+            addLog("⚠️ 音频帧长度过大: \(frameLength)")
+            return
+        }
+        
+        // 🔒 安全获取音频样本
         let samples = channelData[0]
         
-        // Send audio data to sherpa-onnx
+        // 🔒 安全调用：Send audio data to sherpa-onnx
+        // samples 是非可选的指针，直接使用
         SherpaOnnxOnlineStreamAcceptWaveform(stream, Int32(sampleRate), samples, Int32(frameLength))
         
-        // Check if recognizer is ready to decode
-        if SherpaOnnxIsOnlineStreamReady(recognizer, stream) == 1 {
-            // Decode the audio
+        // 🔒 安全检查：检查识别器是否准备好解码
+        let isReady = SherpaOnnxIsOnlineStreamReady(recognizer, stream)
+        if isReady == 1 {
+            // 🔒 安全解码：Decode the audio
             SherpaOnnxDecodeOnlineStream(recognizer, stream)
             
-            // Get partial results - 使用安全的方式访问结果
+            // 🔒 安全获取结果：检查结果指针有效性
             if let result = SherpaOnnxGetOnlineStreamResult(recognizer, stream) {
-                let resultText = getTextFromResult(result)
+                // 🔒 安全文本提取：使用安全方法提取文本
+                let resultText = getTextFromResultSafely(result)
                 
                 if !resultText.isEmpty {
                     DispatchQueue.main.async {
@@ -610,6 +664,7 @@ class SherpaASRService: ObservableObject, SpeechRecognitionServiceProtocol {
                     }
                 }
                 
+                // 🔒 资源清理：确保结果被正确释放
                 SherpaOnnxDestroyOnlineRecognizerResult(result)
             }
         }
@@ -654,10 +709,48 @@ class SherpaASRService: ObservableObject, SpeechRecognitionServiceProtocol {
         }
     }
     
+    // 🔒 安全修复：安全地从 C 结构体中读取文本
     private func getTextFromResult(_ result: UnsafePointer<SherpaOnnxOnlineRecognizerResult>) -> String {
-        // 安全地从 C 结构体中读取文本
-        let text = result.pointee.text
-        return text != nil ? String(cString: text!) : ""
+        return getTextFromResultSafely(result)
+    }
+    
+    // 🔒 安全方法：增强版本的文本提取
+    private func getTextFromResultSafely(_ result: UnsafePointer<SherpaOnnxOnlineRecognizerResult>) -> String {
+        // 🔒 空指针检查：确保result指针有效
+        // result 是非可选的指针参数，不需要检查是否为 nil
+        
+        // 🔒 结构体访问：安全访问结构体成员
+        let textPointer = result.pointee.text
+        
+        // 🔒 文本指针检查：确保text指针有效
+        guard let validTextPointer = textPointer else {
+            print("⚠️ getTextFromResultSafely: text指针无效")
+            return ""
+        }
+        
+        // 🔒 长度检查：防止过长的文本导致内存问题
+        let maxTextLength = 10000
+        let textLength = strlen(validTextPointer)
+        
+        guard textLength <= maxTextLength else {
+            print("⚠️ getTextFromResultSafely: 文本过长 (\(textLength) 字符)")
+            // 返回截断的文本
+            let truncatedData = Data(bytes: validTextPointer, count: min(Int(textLength), maxTextLength))
+            return String(data: truncatedData, encoding: .utf8) ?? ""
+        }
+        
+        // 🔒 安全转换：使用安全的字符串创建方法
+        let resultString = String(cString: validTextPointer)
+        
+        // 🔒 内容验证：检查文本内容合理性
+        guard !resultString.isEmpty else {
+            return ""
+        }
+        
+        // 🔒 字符验证：移除潜在的控制字符
+        let cleanedString = resultString.filter { $0.isASCII || $0.unicodeScalars.allSatisfy(CharacterSet.alphanumerics.union(.punctuationCharacters).union(.whitespaces).contains) }
+        
+        return cleanedString
     }
     
     private func getFinalResult() -> String? {

@@ -287,42 +287,91 @@ class ResourceManager: ObservableObject {
     }
     
     /// 释放资源
+    // 🔒 安全修复：防止递归栈溢出，使用迭代方式释放资源
     func disposeResource(_ resourceId: String) async throws {
-        guard let wrapper = resourceQueue.sync(execute: { resources[resourceId] }) else {
-            throw ResourceManagerError.resourceNotFound(resourceId)
+        try await disposeResourceSafely(resourceId)
+    }
+    
+    // 🔒 安全方法：使用迭代方式释放资源，防止递归栈溢出
+    private func disposeResourceSafely(_ resourceId: String) async throws {
+        // 🔒 安全检查：防止无限循环和栈溢出
+        var processedResources: Set<String> = []
+        var resourcesToDispose: [String] = [resourceId]
+        let maxDisposeDepth = 100  // 限制最大处理深度
+        var currentDepth = 0
+        
+        while !resourcesToDispose.isEmpty && currentDepth < maxDisposeDepth {
+            currentDepth += 1
+            
+            // 取出下一个要处理的资源
+            let currentResourceId = resourcesToDispose.removeFirst()
+            
+            // 🔒 循环检查：防止重复处理
+            if processedResources.contains(currentResourceId) {
+                logger.warning("⚠️ 检测到资源依赖循环，跳过: \(currentResourceId)")
+                continue
+            }
+            
+            // 检查资源是否存在
+            guard let wrapper = resourceQueue.sync(execute: { resources[currentResourceId] }) else {
+                logger.warning("⚠️ 资源不存在，跳过: \(currentResourceId)")
+                continue
+            }
+            
+            let resource = wrapper.resource
+            
+            do {
+                resource.resourceState = .disposing
+                
+                // 检查是否有其他资源依赖此资源
+                let dependentResources = findDependentResources(currentResourceId)
+                if !dependentResources.isEmpty {
+                    logger.warning("⚠️ 释放依赖资源: \(currentResourceId) - 依赖者: \(dependentResources)")
+                    
+                    // 🔒 安全添加：将依赖资源添加到要处理的队列中（非递归）
+                    for dependentId in dependentResources {
+                        if !processedResources.contains(dependentId) && !resourcesToDispose.contains(dependentId) {
+                            resourcesToDispose.append(dependentId)
+                        }
+                    }
+                    
+                    // 跳过当前资源，先处理依赖资源
+                    resourcesToDispose.append(currentResourceId)
+                    continue
+                }
+                
+                // 没有依赖资源，可以安全释放
+                await resource.dispose()
+                resource.resourceState = .disposed
+                
+                // 从管理器中移除
+                resourceQueue.async(flags: .barrier) { [weak self] in
+                    self?.resources.removeValue(forKey: currentResourceId)
+                    self?.dependencyGraph.removeValue(forKey: currentResourceId)
+                    self?.updateResourceStatistics()
+                }
+                
+                // 标记为已处理
+                processedResources.insert(currentResourceId)
+                logger.info("🗑️ 资源已释放: \(currentResourceId)")
+                
+            } catch {
+                resource.resourceState = .error
+                logger.error("❌ 资源释放失败: \(currentResourceId) - \(error)")
+                throw ResourceManagerError.resourceDisposalFailed(currentResourceId, error)
+            }
         }
         
-        let resource = wrapper.resource
+        // 🔒 安全检查：检查是否超过最大处理深度
+        if currentDepth >= maxDisposeDepth {
+            logger.error("❌ 资源释放超过最大深度限制: \(maxDisposeDepth)")
+            throw ResourceManagerError.resourceDisposalFailed(resourceId, 
+                NSError(domain: "ResourceManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "资源释放超过最大深度限制"]))
+        }
         
-        do {
-            resource.resourceState = .disposing
-            
-            // 检查是否有其他资源依赖此资源
-            let dependentResources = findDependentResources(resourceId)
-            if !dependentResources.isEmpty {
-                logger.warning("⚠️ 释放依赖资源: \(resourceId) - 依赖者: \(dependentResources)")
-                
-                // 首先释放依赖的资源
-                for dependentId in dependentResources {
-                    try await disposeResource(dependentId)
-                }
-            }
-            
-            // 释放资源
-            await resource.dispose()
-            resource.resourceState = .disposed
-            
-            // 从管理器中移除
-            resourceQueue.async(flags: .barrier) { [weak self] in
-                self?.resources.removeValue(forKey: resourceId)
-                self?.dependencyGraph.removeValue(forKey: resourceId)
-                self?.updateResourceStatistics()
-            }
-            
-            logger.info("🗑️ 资源已释放: \(resourceId)")
-        } catch {
-            resource.resourceState = .error
-            throw ResourceManagerError.resourceDisposalFailed(resourceId, error)
+        // 🔒 安全检查：确保所有资源都被处理
+        if !resourcesToDispose.isEmpty {
+            logger.warning("⚠️ 仍有资源未被处理: \(resourcesToDispose)")
         }
     }
     
@@ -373,12 +422,20 @@ class ResourceManager: ObservableObject {
     
     // MARK: - Memory Management
     
+    // 🔒 安全修复：防止内存清理过程中的递归调用
     /// 触发内存清理
     func performMemoryCleanup() {
+        // 🔒 安全检查：防止重入和过度频繁的清理
+        let currentTime = Date()
+        if let lastCleanup = lastCleanupTime,
+           currentTime.timeIntervalSince(lastCleanup) < 5.0 {  // 5秒最小间隔
+            logger.info("🔒 内存清理跳过：距离上次清理间隔过短")
+            return
+        }
+        
         resourceQueue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             
-            let currentTime = Date()
             var cleanedResources: [String] = []
             
             // 找出长时间未访问的资源
@@ -390,6 +447,13 @@ class ResourceManager: ObservableObject {
                    wrapper.resource.resourceState != .active {
                     cleanedResources.append(resourceId)
                 }
+            }
+            
+            // 🔒 安全限制：限制单次清理的资源数量
+            let maxCleanupCount = 50
+            if cleanedResources.count > maxCleanupCount {
+                cleanedResources = Array(cleanedResources.prefix(maxCleanupCount))
+                self.logger.warning("⚠️ 内存清理数量限制：单次最多清理 \(maxCleanupCount) 个资源")
             }
             
             // 异步清理资源
@@ -411,6 +475,7 @@ class ResourceManager: ObservableObject {
         }
     }
     
+    // 🔒 安全修复：防止内存检查和清理的递归调用
     /// 检查内存使用情况
     func checkMemoryUsage() -> Bool {
         let currentUsage = resourceQueue.sync {
@@ -425,7 +490,12 @@ class ResourceManager: ObservableObject {
         
         if currentUsage > maxMemoryUsage {
             logger.warning("⚠️ 内存使用超限: \(currentUsage) / \(maxMemoryUsage) 字节")
-            performMemoryCleanup()
+            
+            // 🔒 安全修复：使用异步调用避免递归，并限制清理频率
+            DispatchQueue.global(qos: .utility).async { [weak self] in
+                self?.performMemoryCleanup()
+            }
+            
             return false
         }
         

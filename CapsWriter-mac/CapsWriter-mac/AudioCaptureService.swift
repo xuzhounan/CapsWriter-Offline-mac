@@ -307,13 +307,26 @@ class AudioCaptureService: ObservableObject, AudioCaptureServiceProtocol {
     
     // MARK: - Audio Processing
     
+    // 🔒 安全修复：防止音频缓冲区溢出和异常处理
     private func processAudioBuffer(_ buffer: AVAudioPCMBuffer, targetFormat: AVAudioFormat) {
         guard isCapturing else { return }
+        
+        // 🔒 安全验证：检查缓冲区有效性
+        guard validateAudioBufferSafety(buffer) else {
+            addLog("⚠️ 音频缓冲区安全验证失败")
+            return
+        }
         
         // 添加音频数据日志（每100帧输出一次避免刷屏）
         AudioCaptureService.bufferCount += 1
         if AudioCaptureService.bufferCount % 100 == 0 {
             addLog("🎵 已处理 \(AudioCaptureService.bufferCount) 个音频缓冲区，当前缓冲区大小: \(buffer.frameLength)")
+        }
+        
+        // 🔒 安全验证：检查目标格式有效性
+        guard validateAudioFormatSafety(targetFormat) else {
+            addLog("⚠️ 目标音频格式验证失败")
+            return
         }
         
         // 如果输入格式与目标格式相同，直接使用
@@ -323,8 +336,8 @@ class AudioCaptureService: ObservableObject, AudioCaptureServiceProtocol {
             return
         }
         
-        // 需要进行格式转换
-        guard let convertedBuffer = convertAudioBuffer(buffer, to: targetFormat) else {
+        // 🔒 安全转换：需要进行格式转换
+        guard let convertedBuffer = convertAudioBufferSafely(buffer, to: targetFormat) else {
             // 转换失败时记录日志但不中断处理
             if AudioCaptureService.bufferCount % 1000 == 0 {
                 addLog("⚠️ 音频格式转换失败，跳过此缓冲区")
@@ -332,18 +345,107 @@ class AudioCaptureService: ObservableObject, AudioCaptureServiceProtocol {
             return
         }
         
+        // 🔒 安全验证：验证转换后的缓冲区
+        guard validateAudioBufferSafety(convertedBuffer) else {
+            addLog("⚠️ 转换后的音频缓冲区验证失败")
+            return
+        }
+        
         // 使用转换后的缓冲区
         delegate?.audioCaptureDidReceiveBuffer(convertedBuffer)
     }
     
-    /// 音频格式转换方法
-    /// 将输入音频缓冲区从源格式转换为目标格式
+    // 🔒 安全方法：验证音频缓冲区安全性
+    private func validateAudioBufferSafety(_ buffer: AVAudioPCMBuffer) -> Bool {
+        // 1. 检查缓冲区基本有效性
+        guard buffer.frameLength > 0 else {
+            addLog("⚠️ 音频缓冲区帧长度无效: \(buffer.frameLength)")
+            return false
+        }
+        
+        // 2. 检查帧长度限制，防止过大的缓冲区
+        let maxFrameLength: AVAudioFrameCount = 1024 * 1024  // 1M frames 限制
+        guard buffer.frameLength <= maxFrameLength else {
+            addLog("⚠️ 音频缓冲区帧长度过大: \(buffer.frameLength)")
+            return false
+        }
+        
+        // 3. 检查声道数有效性
+        guard buffer.format.channelCount > 0 && buffer.format.channelCount <= 32 else {
+            addLog("⚠️ 音频缓冲区声道数异常: \(buffer.format.channelCount)")
+            return false
+        }
+        
+        // 4. 检查采样率有效性
+        let sampleRate = buffer.format.sampleRate
+        guard sampleRate >= 8000 && sampleRate <= 192000 else {
+            addLog("⚠️ 音频缓冲区采样率异常: \(sampleRate)Hz")
+            return false
+        }
+        
+        // 5. 检查音频数据指针有效性
+        guard buffer.floatChannelData != nil else {
+            addLog("⚠️ 音频缓冲区数据指针无效")
+            return false
+        }
+        
+        return true
+    }
+    
+    // 🔒 安全方法：验证音频格式安全性
+    private func validateAudioFormatSafety(_ format: AVAudioFormat) -> Bool {
+        // 1. 检查采样率有效性
+        guard format.sampleRate >= 8000 && format.sampleRate <= 192000 else {
+            addLog("⚠️ 音频格式采样率异常: \(format.sampleRate)Hz")
+            return false
+        }
+        
+        // 2. 检查声道数有效性
+        guard format.channelCount > 0 && format.channelCount <= 32 else {
+            addLog("⚠️ 音频格式声道数异常: \(format.channelCount)")
+            return false
+        }
+        
+        // 3. 检查是否为 PCM 格式
+        guard format.commonFormat == .pcmFormatFloat32 || format.commonFormat == .pcmFormatInt16 else {
+            addLog("⚠️ 不支持的音频格式: \(format.commonFormat)")
+            return false
+        }
+        
+        return true
+    }
+    
+    /// 🔒 安全修复：音频格式转换方法
+    /// 将输入音频缓冲区从源格式转换为目标格式，增强安全检查
     /// - Parameters:
     ///   - sourceBuffer: 源音频缓冲区
     ///   - targetFormat: 目标音频格式
     /// - Returns: 转换后的音频缓冲区，失败时返回nil
     private func convertAudioBuffer(_ sourceBuffer: AVAudioPCMBuffer, to targetFormat: AVAudioFormat) -> AVAudioPCMBuffer? {
+        return convertAudioBufferSafely(sourceBuffer, to: targetFormat)
+    }
+    
+    // 🔒 安全方法：安全的音频格式转换
+    private func convertAudioBufferSafely(_ sourceBuffer: AVAudioPCMBuffer, to targetFormat: AVAudioFormat) -> AVAudioPCMBuffer? {
         let sourceFormat = sourceBuffer.format
+        
+        // 🔒 安全验证：检查输入参数
+        guard validateAudioBufferSafety(sourceBuffer) else {
+            addLog("⚠️ 源音频缓冲区验证失败")
+            return nil
+        }
+        
+        guard validateAudioFormatSafety(targetFormat) else {
+            addLog("⚠️ 目标音频格式验证失败")
+            return nil
+        }
+        
+        // 🔒 安全检查：防止极端的采样率转换
+        let sampleRateRatio = targetFormat.sampleRate / sourceFormat.sampleRate
+        guard sampleRateRatio >= 0.1 && sampleRateRatio <= 10.0 else {
+            addLog("⚠️ 采样率转换比例异常: \(sampleRateRatio)")
+            return nil
+        }
         
         // 创建音频转换器
         guard let converter = AVAudioConverter(from: sourceFormat, to: targetFormat) else {
@@ -351,22 +453,46 @@ class AudioCaptureService: ObservableObject, AudioCaptureServiceProtocol {
             return nil
         }
         
-        // 计算目标缓冲区的帧数
-        let capacity = AVAudioFrameCount(Double(sourceBuffer.frameLength) * targetFormat.sampleRate / sourceFormat.sampleRate)
+        // 🔒 安全计算：计算目标缓冲区的帧数，防止整数溢出
+        let sourceFrames = Double(sourceBuffer.frameLength)
+        let targetFramesDouble = sourceFrames * targetFormat.sampleRate / sourceFormat.sampleRate
         
-        // 创建目标缓冲区
-        guard let targetBuffer = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: capacity) else {
-            addLog("❌ 无法创建目标音频缓冲区")
+        // 🔒 边界检查：防止帧数过大
+        let maxFrames = Double(1024 * 1024)  // 1M frames 限制
+        guard targetFramesDouble <= maxFrames else {
+            addLog("⚠️ 计算的目标帧数过大: \(targetFramesDouble)")
             return nil
         }
         
-        // 配置转换器属性（如果需要）
-        if sourceFormat.channelCount != targetFormat.channelCount {
-            // 单声道/立体声转换
-            converter.channelMap = sourceFormat.channelCount > targetFormat.channelCount ? [0] : [0, 0]
+        let capacity = AVAudioFrameCount(targetFramesDouble)
+        
+        // 🔒 安全检查：确保计算结果有效
+        guard capacity > 0 else {
+            addLog("⚠️ 计算的缓冲区容量无效: \(capacity)")
+            return nil
         }
         
-        // 执行音频转换
+        // 创建目标缓冲区
+        guard let targetBuffer = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: capacity) else {
+            addLog("❌ 无法创建目标音频缓冲区，容量: \(capacity)")
+            return nil
+        }
+        
+        // 🔒 安全配置转换器属性
+        if sourceFormat.channelCount != targetFormat.channelCount {
+            // 单声道/立体声转换
+            let channelMap: [NSNumber]
+            if sourceFormat.channelCount > targetFormat.channelCount {
+                // 多声道转少声道，使用第一个声道
+                channelMap = [NSNumber(value: 0)]
+            } else {
+                // 少声道转多声道，复制第一个声道
+                channelMap = Array(repeating: NSNumber(value: 0), count: Int(targetFormat.channelCount))
+            }
+            converter.channelMap = channelMap
+        }
+        
+        // 🔒 安全执行音频转换
         var error: NSError?
         let inputBlock: AVAudioConverterInputBlock = { inNumPackets, outStatus in
             outStatus.pointee = .haveData
@@ -378,6 +504,12 @@ class AudioCaptureService: ObservableObject, AudioCaptureServiceProtocol {
         // 检查转换结果
         switch status {
         case .haveData:
+            // 🔒 安全验证：验证转换后的缓冲区
+            guard validateAudioBufferSafety(targetBuffer) else {
+                addLog("⚠️ 转换后的缓冲区验证失败")
+                return nil
+            }
+            
             // 转换成功，记录详细信息（降低日志频率）
             if AudioCaptureService.bufferCount % 2000 == 0 {
                 addLog("✅ 音频格式转换成功: \(sourceFormat.sampleRate)Hz→\(targetFormat.sampleRate)Hz, \(sourceFormat.channelCount)→\(targetFormat.channelCount)声道")
