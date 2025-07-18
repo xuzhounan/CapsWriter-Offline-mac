@@ -440,6 +440,8 @@ class VoiceInputController: ObservableObject {
     // MARK: - Private Methods - Event Handlers
     
     private func handleRecordingStartRequested() {
+        print("🎤 处理录音启动请求，当前状态: \(currentPhase)")
+        
         // 详细诊断检查
         if !isInitialized {
             let error = VoiceInputError.permissionDenied("服务未初始化")
@@ -447,9 +449,21 @@ class VoiceInputController: ObservableObject {
             return
         }
         
+        // 如果已经在录音，使用切换逻辑
+        if currentPhase == .recording {
+            print("🔄 当前已在录音状态，切换为停止录音")
+            handleRecordingStopRequested()
+            return
+        }
+        
+        // 如果不是ready状态，但也不是recording状态，则尝试恢复到ready状态
         if currentPhase != .ready {
-            let error = VoiceInputError.permissionDenied("服务状态不正确 (当前: \(currentPhase), 需要: ready)")
-            handleError(error)
+            print("⚠️ 当前状态不是ready (\(currentPhase))，尝试恢复到ready状态")
+            updatePhase(.ready)
+            // 延迟一点再尝试启动录音
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                self?.handleRecordingStartRequested()
+            }
             return
         }
         
@@ -465,6 +479,7 @@ class VoiceInputController: ObservableObject {
             return
         }
         
+        print("✅ 所有检查通过，开始录音流程")
         startRecordingFlow()
     }
     

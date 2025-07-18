@@ -76,16 +76,36 @@ class AudioCaptureService: ObservableObject, AudioCaptureServiceProtocol {
         return status == .granted
     }
     
-    func requestPermissionAndStartCapture() {
-        addLog("🔍 请求麦克风权限并开始采集...")
+    /// 仅请求权限，不启动采集
+    func requestPermissionOnly(completion: @escaping (Bool) -> Void) {
+        addLog("🔍 仅请求麦克风权限（不启动采集）...")
         
         // 确保在主线程中执行
         DispatchQueue.main.async { [weak self] in
-            self?.checkAndRequestPermission()
+            self?.checkAndRequestPermission(completion: completion)
         }
     }
     
-    private func checkAndRequestPermission() {
+    func requestPermissionAndStartCapture() {
+        addLog("🔍 请求麦克风权限...")
+        
+        // 确保在主线程中执行
+        DispatchQueue.main.async { [weak self] in
+            self?.checkAndRequestPermission { [weak self] success in
+                if success {
+                    self?.addLog("✅ 权限获取成功，现在开始采集")
+                    // 延迟一点确保音频设备完全准备好
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self?.startCapture()
+                    }
+                } else {
+                    self?.addLog("❌ 权限获取失败，无法开始采集")
+                }
+            }
+        }
+    }
+    
+    private func checkAndRequestPermission(completion: @escaping (Bool) -> Void) {
         addLog("🔍 检查当前麦克风权限状态...")
         
         let currentStatus = AVCaptureDevice.authorizationStatus(for: .audio)
@@ -93,12 +113,9 @@ class AudioCaptureService: ObservableObject, AudioCaptureServiceProtocol {
         
         switch currentStatus {
         case .authorized:
-            addLog("✅ 权限已授权，延迟开始采集")
+            addLog("✅ 权限已授权")
             self.hasPermission = true
-            // 延迟一点确保音频设备完全准备好
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.startCapture()
-            }
+            completion(true)
             
         case .notDetermined:
             addLog("🔍 权限未确定，请求权限...")
@@ -107,14 +124,11 @@ class AudioCaptureService: ObservableObject, AudioCaptureServiceProtocol {
                     self?.addLog("🎤 权限请求完成: \(granted ? "已授权" : "被拒绝")")
                     if granted {
                         self?.hasPermission = true
-                        // 延迟一点确保音频设备完全准备好
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            self?.startCapture()
-                        }
+                        completion(true)
                     } else {
                         self?.hasPermission = false
                         self?.addLog("❌ 用户拒绝了麦克风权限")
-                        self?.delegate?.audioCaptureDidFailWithError(AudioCaptureError.permissionDenied)
+                        completion(false)
                     }
                 }
             }
@@ -122,12 +136,12 @@ class AudioCaptureService: ObservableObject, AudioCaptureServiceProtocol {
         case .denied, .restricted:
             addLog("❌ 麦克风权限被拒绝或受限")
             self.hasPermission = false
-            self.delegate?.audioCaptureDidFailWithError(AudioCaptureError.permissionDenied)
+            completion(false)
             
         @unknown default:
             addLog("❓ 未知麦克风权限状态")
             self.hasPermission = false
-            self.delegate?.audioCaptureDidFailWithError(AudioCaptureError.permissionDenied)
+            completion(false)
         }
     }
     
