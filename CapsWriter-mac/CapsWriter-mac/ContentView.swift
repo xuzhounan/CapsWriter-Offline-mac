@@ -34,6 +34,14 @@ struct ContentView: View {
                     Text("实时转录")
                 }
                 .tag(2)
+            
+            // 日志页面 - 任务3.3
+            LogView()
+                .tabItem {
+                    Image(systemName: "doc.text.magnifyingglass")
+                    Text("系统日志")
+                }
+                .tag(3)
         }
         .onAppear {
             animationScale = 1.2

@@ -2,6 +2,8 @@ import Foundation
 import Combine
 import AVFoundation
 
+// 注释：Swift中不需要单独import自定义文件，只要在同一个target中即可访问
+
 // MARK: - Imports and Dependencies
 
 // 确保引用正确的依赖注入容器和协议
@@ -50,11 +52,9 @@ class VoiceInputController: ObservableObject {
         #endif
     }()
     
-    /// 条件日志输出 - 只在调试模式或需要时输出
+    /// 条件日志输出 - 使用结构化日志系统
     private func debugLog(_ message: String) {
-        if Self.enableDetailedLogging {
-            print("🔍 [VoiceInputController] \(message)")
-        }
+        LogDebug(message, category: .service)
     }
     
     // MARK: - Types
@@ -116,7 +116,7 @@ class VoiceInputController: ObservableObject {
         setupEventSubscriptions()
         // TODO: 恢复权限监控设置
         // setupPermissionMonitoring()
-        print("🎙️ VoiceInputController 已初始化（使用依赖注入）")
+        LogInfo("VoiceInputController 已初始化（使用依赖注入）", category: .service)
     }
     
     // MARK: - Event Subscriptions
@@ -124,7 +124,7 @@ class VoiceInputController: ObservableObject {
     private func setupEventSubscriptions() {
         // 暂时注释事件订阅，先修复基本功能
         // TODO: 等AppEvents完善后恢复事件订阅功能
-        print("🔔 VoiceInputController 事件订阅设置完成 (暂时简化)")
+        LogInfo("VoiceInputController 事件订阅设置完成", category: .service)
     }
     
     // MARK: - Permission Monitoring Setup (TODO: 恢复)

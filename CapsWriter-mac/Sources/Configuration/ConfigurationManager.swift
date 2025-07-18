@@ -2,6 +2,8 @@ import Foundation
 import Combine
 import AVFoundation
 
+// 注释：Swift中不需要单独import自定义文件，只要在同一个target中即可访问
+
 // MARK: - Configuration Data Models
 
 /// 音频配置
@@ -226,13 +228,9 @@ class ConfigurationManager: ObservableObject, ConfigurationManagerProtocol {
         // 设置自动保存监听器
         setupAutoSave()
         
-        print("🔧 ConfigurationManager 初始化完成")
-        print("📊 配置状态:")
-        print("  - 音频: 采样率 \(audio.sampleRate)Hz, 声道数 \(audio.channels)")
-        print("  - 识别: 模型 \(recognition.modelType), 线程 \(recognition.numThreads)")
-        print("  - 键盘: 键码 \(keyboard.primaryKeyCode), 连击 \(keyboard.requiredClicks)次")
-        print("  - 文本: 热词替换 \(textProcessing.enableHotwordReplacement)")
-        print("  - UI: 状态栏 \(ui.showStatusBarIcon), 日志级别 \(ui.logLevel)")
+        LogInfo("ConfigurationManager 初始化完成", category: .config)
+        LogInfo("配置状态: 音频(\(audio.sampleRate)Hz, \(audio.channels)声道), 识别(\(recognition.modelType), \(recognition.numThreads)线程), 键盘(键码\(keyboard.primaryKeyCode), \(keyboard.requiredClicks)次)", category: .config)
+        LogInfo("文本处理: 热词替换(\(textProcessing.enableHotwordReplacement)), UI设置: 状态栏(\(ui.showStatusBarIcon)), 日志级别(\(ui.logLevel))", category: .config)
     }
     
     // MARK: - Auto Save Setup

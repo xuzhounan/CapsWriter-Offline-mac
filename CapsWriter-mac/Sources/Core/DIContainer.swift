@@ -281,6 +281,16 @@ class DIContainer: DependencyInjectionProtocol {
             return TextProcessingService(configManager: ConfigurationManager.shared)
         }
         
+        // 注册日志服务（单例） - 任务3.3
+        registerSingleton(LoggingServiceProtocol.self) {
+            return LoggingService.shared
+        }
+        
+        // 注册日志导出服务（单例） - 任务3.3
+        registerSingleton(LogExportServiceProtocol.self) {
+            return LogExportService.shared
+        }
+        
         // TODO: 注册权限监控服务（单例） - 响应式权限管理
         // registerSingleton(PermissionMonitorServiceProtocol.self) {
         //     return PermissionMonitorService()
