@@ -75,6 +75,12 @@ protocol ServiceFactoryProtocol {
 // HotWordServiceProtocol 和 TextProcessingServiceProtocol 在各自的服务文件中定义
 // 这里仅做协议引用声明，避免循环依赖
 
+// MARK: - Permission Monitor Service Protocol
+
+/// 权限监控服务协议 - 引用于 PermissionMonitorService.swift
+/// 提供响应式权限状态管理，替代轮询机制
+// PermissionMonitorServiceProtocol 在 PermissionMonitorService.swift 中定义
+
 // MARK: - Event Bus Protocol
 
 /// 事件总线协议 (为后续扩展预留)

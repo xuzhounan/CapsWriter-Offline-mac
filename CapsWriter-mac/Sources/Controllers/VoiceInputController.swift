@@ -16,6 +16,7 @@ class VoiceInputController: ObservableObject {
     
     private let configManager: any ConfigurationManagerProtocol
     private let textProcessingService: TextProcessingServiceProtocol
+    private let permissionMonitorService: PermissionMonitorServiceProtocol
     
     // 使用现有的状态管理（向后兼容）
     private let recordingState = RecordingState.shared
@@ -38,7 +39,6 @@ class VoiceInputController: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private let controllerQueue = DispatchQueue(label: "com.capswriter.voice-input-controller", qos: .userInitiated)
     private var audioForwardCount: Int = 0
-    private var statusUpdateTimer: Timer?
     
     // 日志控制开关
     private static let enableDetailedLogging: Bool = {
@@ -109,9 +109,11 @@ class VoiceInputController: ObservableObject {
         // 通过 DI 容器获取依赖服务
         self.configManager = DIContainer.shared.resolve(ConfigurationManagerProtocol.self)
         self.textProcessingService = DIContainer.shared.resolve(TextProcessingServiceProtocol.self)
+        self.permissionMonitorService = DIContainer.shared.resolve(PermissionMonitorServiceProtocol.self)
         
         setupEventSubscriptions()
-        print("🎙️ VoiceInputController 已初始化（使用依赖注入）")
+        setupPermissionMonitoring()
+        print("🎙️ VoiceInputController 已初始化（使用依赖注入和响应式权限管理）")
     }
     
     // MARK: - Event Subscriptions
@@ -120,6 +122,65 @@ class VoiceInputController: ObservableObject {
         // 暂时注释事件订阅，先修复基本功能
         // TODO: 等AppEvents完善后恢复事件订阅功能
         print("🔔 VoiceInputController 事件订阅设置完成 (暂时简化)")
+    }
+    
+    // MARK: - Permission Monitoring Setup
+    
+    private func setupPermissionMonitoring() {
+        print("🔐 设置响应式权限监控")
+        
+        do {
+            // 初始化权限监控服务
+            try permissionMonitorService.initialize()
+            
+            // 设置权限变化回调
+            permissionMonitorService.permissionChangeHandler = { [weak self] type, status in
+                Task { @MainActor in
+                    self?.handlePermissionChange(type, status: status)
+                }
+            }
+            
+            // 启动权限监控
+            permissionMonitorService.start()
+            
+            print("✅ 响应式权限监控设置完成")
+            
+        } catch {
+            print("❌ 权限监控设置失败: \(error)")
+            handleError(.initializationFailed("权限监控初始化失败: \(error.localizedDescription)"))
+        }
+    }
+    
+    private func handlePermissionChange(_ type: PermissionType, status: PermissionStatus) {
+        print("🔄 处理权限变化: \(type.displayName) → \(status.description)")
+        
+        // 同步更新到 RecordingState（保持向后兼容）
+        switch type {
+        case .microphone:
+            recordingState.updateMicrophonePermission(status.isGranted)
+            
+            // 如果权限被撤销且正在录音，立即停止
+            if !status.isGranted && currentPhase == .recording {
+                print("⚠️ 麦克风权限被撤销，停止录音")
+                stopRecordingFlow()
+            }
+            
+        case .accessibility:
+            recordingState.updateAccessibilityPermission(status.isGranted)
+            
+            // 如果权限被撤销，停止键盘监听
+            if !status.isGranted {
+                print("⚠️ 辅助功能权限被撤销，停止键盘监听")
+                keyboardMonitor?.stopMonitoring()
+            }
+            
+        case .textInput:
+            // 文本输入权限变化处理
+            print("📝 文本输入权限状态: \(status.description)")
+        }
+        
+        // 立即更新服务状态（无需定时器）
+        updateServiceStatusesImmediately()
     }
     
     // MARK: - Public Interface
@@ -167,8 +228,7 @@ class VoiceInputController: ObservableObject {
     func canStartRecording() -> Bool {
         return isInitialized && 
                currentPhase == .ready && 
-               recordingState.hasMicrophonePermission && 
-               recordingState.hasAccessibilityPermission
+               permissionMonitorService.canStartRecording()
     }
     
     /// 获取当前状态信息
@@ -176,8 +236,8 @@ class VoiceInputController: ObservableObject {
         return VoiceInputStatusInfo(
             isInitialized: isInitialized,
             currentPhase: currentPhase,
-            hasAudioPermission: recordingState.hasMicrophonePermission,
-            hasAccessibilityPermission: recordingState.hasAccessibilityPermission,
+            hasAudioPermission: permissionMonitorService.hasMicrophonePermission,
+            hasAccessibilityPermission: permissionMonitorService.hasAccessibilityPermission,
             isRecording: currentPhase == .recording,
             lastError: lastError
         )
@@ -216,11 +276,11 @@ class VoiceInputController: ObservableObject {
                 print("✅ VoiceInputController 控制器已初始化完成")
                 print("✅ VoiceInputController 初始化完成")
                 
-                // 更新服务状态到RecordingState
+                // 更新服务状态到RecordingState（一次性）
                 self?.updateServiceStatuses()
                 
-                // 启动定期状态更新（每5秒检查一次状态）
-                self?.startStatusUpdateTimer()
+                // 响应式权限管理已启动，无需定时器轮询
+                print("🔐 使用响应式权限管理，已取消定时器轮询")
             }
             
         } catch {
@@ -327,9 +387,6 @@ class VoiceInputController: ObservableObject {
     private func performInitializationRollback() {
         print("🔄 执行初始化回滚操作...")
         
-        // 停止状态更新定时器
-        stopStatusUpdateTimer()
-        
         // 清理ASR服务
         if let asr = asrService {
             print("🧹 清理ASR服务...")
@@ -387,13 +444,13 @@ class VoiceInputController: ObservableObject {
             return
         }
         
-        if !recordingState.hasMicrophonePermission {
+        if !permissionMonitorService.hasMicrophonePermission {
             let error = VoiceInputError.permissionDenied("缺少麦克风权限")
             handleError(error)
             return
         }
         
-        if !recordingState.hasAccessibilityPermission {
+        if !permissionMonitorService.hasAccessibilityPermission {
             let error = VoiceInputError.permissionDenied("缺少辅助功能权限")
             handleError(error)
             return
@@ -639,8 +696,8 @@ class VoiceInputController: ObservableObject {
     private func handlePermissionError(_ message: String) {
         print("🔐 处理权限错误: \(message)")
         
-        // 刷新权限状态
-        recordingState.refreshPermissionStatus()
+        // 响应式权限管理会自动处理权限状态更新
+        print("🔐 权限状态由响应式系统自动管理")
     }
     
     /// 处理录音错误
@@ -662,31 +719,14 @@ class VoiceInputController: ObservableObject {
     
     // MARK: - Status Update Methods
     
-    /// 启动状态更新定时器
-    func startStatusUpdateTimer() {
-        stopStatusUpdateTimer()
-        
-        // 降低定时器频率到2秒，提高响应性
-        statusUpdateTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-            self?.updateServiceStatuses()
-        }
-        print("⏰ 状态更新定时器已启动（2秒间隔）")
-    }
-    
-    /// 立即更新服务状态（用于重要状态变化时）
+    /// 立即更新服务状态（由响应式权限系统触发）
     func updateServiceStatusesImmediately() {
         updateServiceStatuses()
     }
     
-    /// 停止状态更新定时器
-    private func stopStatusUpdateTimer() {
-        statusUpdateTimer?.invalidate()
-        statusUpdateTimer = nil
-    }
-    
     /// 更新服务状态到RecordingState
     private func updateServiceStatuses() {
-        print("📊 VoiceInputController: 更新服务状态... (定时器运行中)")
+        print("📊 VoiceInputController: 更新服务状态... (响应式触发)")
         
         // 更新ASR服务状态 - 修复状态同步逻辑
         let asrRunning = asrService?.isServiceRunning ?? false
@@ -712,8 +752,8 @@ class VoiceInputController: ObservableObject {
         let audioReady = audioCaptureService != nil
         recordingState.updateAudioCaptureServiceStatus(audioReady)
         
-        // 刷新权限状态
-        recordingState.refreshPermissionStatus()
+        // 权限状态由响应式系统自动管理，无需手动刷新
+        print("🔐 权限状态由 PermissionStateManager 响应式管理")
         
         print("📊 VoiceInputController: 服务状态更新完成")
         print("   - ASR服务运行: \(asrRunning)")
@@ -724,19 +764,17 @@ class VoiceInputController: ObservableObject {
     // MARK: - Cleanup
     
     deinit {
-        // 停止状态更新定时器
-        stopStatusUpdateTimer()
-        
         keyboardMonitor?.stopMonitoring()
         audioCaptureService?.stopCapture()
         asrService?.stopService()
         textProcessingService.cleanup()
+        permissionMonitorService.cleanup()
         
         // 清理delegate引用
         asrService?.delegate = nil
         audioCaptureService?.delegate = nil
         
-        print("🧹 VoiceInputController 已清理")
+        print("🧹 VoiceInputController 已清理（包含响应式权限管理）")
     }
 }
 

@@ -281,6 +281,11 @@ class DIContainer: DependencyInjectionProtocol {
             return TextProcessingService(configManager: ConfigurationManager.shared)
         }
         
+        // 注册权限监控服务（单例） - 响应式权限管理
+        registerSingleton(PermissionMonitorServiceProtocol.self) {
+            return PermissionMonitorService()
+        }
+        
         print("✅ 默认服务注册完成")
     }
     
@@ -379,6 +384,10 @@ extension DIContainer {
         
         static func createPunctuationService() -> PunctuationServiceProtocol {
             return DIContainer.shared.resolve(PunctuationServiceProtocol.self)
+        }
+        
+        static func createPermissionMonitorService() -> PermissionMonitorServiceProtocol {
+            return DIContainer.shared.resolve(PermissionMonitorServiceProtocol.self)
         }
     }
 }
