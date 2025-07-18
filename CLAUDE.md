@@ -221,18 +221,6 @@ models/
 // Git: 80329fb feat(textprocessing): 实现标点符号处理系统
 ```
 
-### ⏳ 任务 3.2: 文件转录功能 **[待实现]**
-**文件**: 
-- `CapsWriter-mac/Sources/Services/FileTranscriptionService.swift`
-- `CapsWriter-mac/Sources/Views/FileTranscriptionView.swift`
-```swift
-// ⏳ 实现音视频文件转录
-// ⏳ 支持进度显示和批量处理
-// ⏳ 结果导出和格式化
-// 状态: 只有AppState中的枚举定义，实际功能待开发
-// 注意: bd137cc/851c8b8 提交涉及的是实时转录，非文件转录
-```
-
 ### ⏳ 任务 3.3: 日志系统 **[需要完善]**
 **文件**: 
 - `CapsWriter-mac/Sources/Services/LoggingService.swift`
