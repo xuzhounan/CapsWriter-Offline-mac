@@ -16,7 +16,8 @@ class VoiceInputController: ObservableObject {
     
     private let configManager: any ConfigurationManagerProtocol
     private let textProcessingService: TextProcessingServiceProtocol
-    private let permissionMonitorService: PermissionMonitorServiceProtocol
+    // TODO: 恢复权限监控服务集成
+    // private let permissionMonitorService: PermissionMonitorServiceProtocol
     
     // 使用现有的状态管理（向后兼容）
     private let recordingState = RecordingState.shared
@@ -109,11 +110,13 @@ class VoiceInputController: ObservableObject {
         // 通过 DI 容器获取依赖服务
         self.configManager = DIContainer.shared.resolve(ConfigurationManagerProtocol.self)
         self.textProcessingService = DIContainer.shared.resolve(TextProcessingServiceProtocol.self)
-        self.permissionMonitorService = DIContainer.shared.resolve(PermissionMonitorServiceProtocol.self)
+        // TODO: 恢复权限监控服务初始化
+        // self.permissionMonitorService = DIContainer.shared.resolve(PermissionMonitorServiceProtocol.self)
         
         setupEventSubscriptions()
-        setupPermissionMonitoring()
-        print("🎙️ VoiceInputController 已初始化（使用依赖注入和响应式权限管理）")
+        // TODO: 恢复权限监控设置
+        // setupPermissionMonitoring()
+        print("🎙️ VoiceInputController 已初始化（使用依赖注入）")
     }
     
     // MARK: - Event Subscriptions
@@ -124,8 +127,10 @@ class VoiceInputController: ObservableObject {
         print("🔔 VoiceInputController 事件订阅设置完成 (暂时简化)")
     }
     
-    // MARK: - Permission Monitoring Setup
+    // MARK: - Permission Monitoring Setup (TODO: 恢复)
     
+    // TODO: 恢复权限监控设置
+    /*
     private func setupPermissionMonitoring() {
         print("🔐 设置响应式权限监控")
         
@@ -182,6 +187,7 @@ class VoiceInputController: ObservableObject {
         // 立即更新服务状态（无需定时器）
         updateServiceStatusesImmediately()
     }
+    */
     
     // MARK: - Public Interface
     
@@ -228,7 +234,10 @@ class VoiceInputController: ObservableObject {
     func canStartRecording() -> Bool {
         return isInitialized && 
                currentPhase == .ready && 
-               permissionMonitorService.canStartRecording()
+               recordingState.hasMicrophonePermission && 
+               recordingState.hasAccessibilityPermission
+               // TODO: 恢复权限监控服务
+               // permissionMonitorService.canStartRecording()
     }
     
     /// 获取当前状态信息
@@ -236,8 +245,8 @@ class VoiceInputController: ObservableObject {
         return VoiceInputStatusInfo(
             isInitialized: isInitialized,
             currentPhase: currentPhase,
-            hasAudioPermission: permissionMonitorService.hasMicrophonePermission,
-            hasAccessibilityPermission: permissionMonitorService.hasAccessibilityPermission,
+            hasAudioPermission: recordingState.hasMicrophonePermission,
+            hasAccessibilityPermission: recordingState.hasAccessibilityPermission,
             isRecording: currentPhase == .recording,
             lastError: lastError
         )
@@ -444,13 +453,13 @@ class VoiceInputController: ObservableObject {
             return
         }
         
-        if !permissionMonitorService.hasMicrophonePermission {
+        if !recordingState.hasMicrophonePermission {
             let error = VoiceInputError.permissionDenied("缺少麦克风权限")
             handleError(error)
             return
         }
         
-        if !permissionMonitorService.hasAccessibilityPermission {
+        if !recordingState.hasAccessibilityPermission {
             let error = VoiceInputError.permissionDenied("缺少辅助功能权限")
             handleError(error)
             return
@@ -768,13 +777,14 @@ class VoiceInputController: ObservableObject {
         audioCaptureService?.stopCapture()
         asrService?.stopService()
         textProcessingService.cleanup()
-        permissionMonitorService.cleanup()
+        // TODO: 恢复权限监控服务清理
+        // permissionMonitorService.cleanup()
         
         // 清理delegate引用
         asrService?.delegate = nil
         audioCaptureService?.delegate = nil
         
-        print("🧹 VoiceInputController 已清理（包含响应式权限管理）")
+        print("🧹 VoiceInputController 已清理")
     }
 }
 

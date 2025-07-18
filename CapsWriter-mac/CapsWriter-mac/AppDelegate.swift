@@ -41,8 +41,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 print("✅ VoiceInputController 已成功初始化")
             }
             
-            // 无论如何都启动状态更新，确保UI与服务状态同步
-            self.voiceInputController.startStatusUpdateTimer()
+            // 响应式权限管理已启用，无需手动启动状态更新定时器
+            print("🔐 权限状态由响应式权限管理系统自动监控")
         }
     }
     
