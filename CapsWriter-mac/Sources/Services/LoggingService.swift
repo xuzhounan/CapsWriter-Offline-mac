@@ -12,7 +12,7 @@ import os.log
 // MARK: - 日志级别定义
 
 /// 日志级别枚举
-enum LogLevel: String, CaseIterable, Comparable {
+enum LogLevel: String, CaseIterable, Comparable, Codable {
     case debug = "DEBUG"
     case info = "INFO"
     case warning = "WARNING"
@@ -53,7 +53,7 @@ enum LogLevel: String, CaseIterable, Comparable {
 // MARK: - 日志分类定义
 
 /// 日志分类枚举
-enum LogCategory: String, CaseIterable {
+enum LogCategory: String, CaseIterable, Codable {
     case audio = "AUDIO"          // 音频处理
     case recognition = "ASR"      // 语音识别
     case hotword = "HOTWORD"      // 热词替换
@@ -214,7 +214,7 @@ class LoggingService: LoggingServiceProtocol, ObservableObject {
         // 根据配置管理器的设置来确定启用的输出目标
         if let configManager = DIContainer.shared.resolve(ConfigurationManagerProtocol.self) {
             // 从配置中读取日志设置
-            let debugMode = configManager.debugSettings.enableDebugMode
+            let debugMode = configManager.debug.enableVerboseLogging
             
             if debugMode {
                 enabledDestinations.insert(.console)

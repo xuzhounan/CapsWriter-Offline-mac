@@ -147,7 +147,7 @@ protocol ConfigurationManagerProtocol: AnyObject, ObservableObject {
     var appBehavior: AppBehaviorConfiguration { get }
     var textProcessing: TextProcessingConfiguration { get }
     var ui: UIConfiguration { get }
-    // var debug: DebugConfiguration { get }  // 暂时注释，避免编译错误
+    var debug: DebugConfiguration { get }
     
     // MARK: - Methods
     func save()

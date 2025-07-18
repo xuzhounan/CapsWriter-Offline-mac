@@ -56,17 +56,17 @@ enum LogExportFormat: String, CaseIterable, Identifiable {
 
 /// 日志导出配置
 struct LogExportConfiguration {
-    let format: LogExportFormat
-    let includeTimestamp: Bool
-    let includeLevel: Bool
-    let includeCategory: Bool
-    let includeLocation: Bool
-    let includeThread: Bool
-    let dateRange: DateInterval?
-    let levels: Set<LogLevel>
-    let categories: Set<LogCategory>
-    let maxEntries: Int?
-    let sortOrder: SortOrder
+    var format: LogExportFormat
+    var includeTimestamp: Bool
+    var includeLevel: Bool
+    var includeCategory: Bool
+    var includeLocation: Bool
+    var includeThread: Bool
+    var dateRange: DateInterval?
+    var levels: Set<LogLevel>
+    var categories: Set<LogCategory>
+    var maxEntries: Int?
+    var sortOrder: SortOrder
     
     enum SortOrder {
         case chronological  // 按时间顺序
@@ -461,7 +461,7 @@ class LogExportService: LogExportServiceProtocol {
     // MARK: - 辅助方法
     
     private func saveToFile(content: String, fileName: String) throws -> URL {
-        let documentsPath = FileManager.default.urls(for: .documentsDirectory, in: .userDomainMask).first!
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let exportsPath = documentsPath.appendingPathComponent("CapsWriter-Exports")
         
         // 创建导出目录
@@ -534,7 +534,7 @@ struct LogExportView: View {
             .padding()
             .frame(width: 500, height: 600)
             .navigationTitle("导出日志")
-            .navigationBarTitleDisplayMode(.inline)
+            // .navigationBarTitleDisplayMode(.inline) // macOS不支持
         }
         .sheet(isPresented: $showingFilePicker) {
             if let result = exportResult, result.success, let fileURL = result.fileURL {

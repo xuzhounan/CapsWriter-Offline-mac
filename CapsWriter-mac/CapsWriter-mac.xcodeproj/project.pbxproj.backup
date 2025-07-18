@@ -26,7 +26,16 @@
 		38967C1F3C9E4DEAA6E9VIC1 /* VoiceInputController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7845C2A98AB741B0B2FEVIC2 /* VoiceInputController.swift */; };
 		A12345678901234567890060 /* libsherpa-onnx-c-api.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */; };
 		A12345678901234567890070 /* models in Resources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890071 /* models */; };
-/* End PBXBuildFile section */
+		149370E2BB564291900407A1 /* DIContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2146729669AF4727A24F3226 /* DIContainer.swift */; };
+		D46CF322752A42C4A18CA8F0 /* ErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2765C79BC5314CD99DF2D45E /* ErrorHandler.swift */; };
+		34B8E7F512B543C8A1DECF93 /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F812A3F7B142D8B3C9A871 /* ServiceProtocols.swift */; };
+		C0711444E47048E2934B5F38 /* PunctuationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7105282447924AA48102DDCF /* PunctuationService.swift */; };
+		9DB2D0740940412BBE1F9EDE /* HotWordService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD6292715284430A827DA1C /* HotWordService.swift */; };
+		278C1CA8D79A423E8C16D6AD /* TextProcessingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 249D9293FD8541D986570261 /* TextProcessingService.swift */; };
+		E3650C89A39849E386EB3AFB /* hot-zh.txt in Resources */ = {isa = PBXBuildFile; fileRef = 1EAA0F6CBEB144F8A22253CD /* hot-zh.txt */; };
+		0092F3398EA64AA6A8D9F47F /* hot-en.txt in Resources */ = {isa = PBXBuildFile; fileRef = D3DCC9EC6131407E8BE9BC0E /* hot-en.txt */; };
+		7D9736A584CB4845A46A0ADD /* hot-rule.txt in Resources */ = {isa = PBXBuildFile; fileRef = 88E3AF5B0AD740F79D2EA438 /* hot-rule.txt */; };
+	/* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		8A0E46386F774048994E5E89 /* Embed Libraries */ = {
@@ -58,14 +67,23 @@
 		A12345678901234567890052 /* SherpaONNX-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SherpaONNX-Bridging-Header.h"; sourceTree = "<group>"; };
 		A12345678901234567890056 /* AudioCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCaptureService.swift; sourceTree = "<group>"; };
 		FC7FD4270A1C4A01849E7770 /* TextInputService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextInputService.swift; sourceTree = "<group>"; };
-		ST8E3D1B2B7F4E9C8A1D5624 /* AudioState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/States/AudioState.swift"; sourceTree = "<group>"; };
-		ST8E3D1B2B7F4E9C8A1D5626 /* RecognitionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/States/RecognitionState.swift"; sourceTree = "<group>"; };
-		ST8E3D1B2B7F4E9C8A1D5628 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/States/AppState.swift"; sourceTree = "<group>"; };
-		CF8E3D1B2B7F4E9C8A1D5622 /* ConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Configuration/ConfigurationManager.swift"; sourceTree = "<group>"; };
-		7845C2A98AB741B0B2FEVIC2 /* VoiceInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Controllers/VoiceInputController.swift"; sourceTree = "<group>"; };
+		ST8E3D1B2B7F4E9C8A1D5624 /* AudioState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioState.swift; path = Sources/States/AudioState.swift; sourceTree = SOURCE_ROOT; };
+		ST8E3D1B2B7F4E9C8A1D5626 /* RecognitionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RecognitionState.swift; path = Sources/States/RecognitionState.swift; sourceTree = SOURCE_ROOT; };
+		ST8E3D1B2B7F4E9C8A1D5628 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppState.swift; path = Sources/States/AppState.swift; sourceTree = SOURCE_ROOT; };
+		CF8E3D1B2B7F4E9C8A1D5622 /* ConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ConfigurationManager.swift; path = Sources/Configuration/ConfigurationManager.swift; sourceTree = SOURCE_ROOT; };
+		7845C2A98AB741B0B2FEVIC2 /* VoiceInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VoiceInputController.swift; path = Sources/Controllers/VoiceInputController.swift; sourceTree = SOURCE_ROOT; };
 		A12345678901234567890061 /* libsherpa-onnx-c-api.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libsherpa-onnx-c-api.dylib"; path = "CapsWriter-mac/Frameworks/libsherpa-onnx-c-api.dylib"; sourceTree = "<group>"; };
 		A12345678901234567890071 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = models; sourceTree = "<group>"; };
-/* End PBXFileReference section */
+		2146729669AF4727A24F3226 /* DIContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DIContainer.swift; path = Sources/Core/DIContainer.swift; sourceTree = SOURCE_ROOT; };
+		2765C79BC5314CD99DF2D45E /* ErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ErrorHandler.swift; path = Sources/Core/ErrorHandler.swift; sourceTree = SOURCE_ROOT; };
+		E4F812A3F7B142D8B3C9A871 /* ServiceProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ServiceProtocols.swift; path = Sources/Protocols/ServiceProtocols.swift; sourceTree = SOURCE_ROOT; };
+		7105282447924AA48102DDCF /* PunctuationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PunctuationService.swift; path = Sources/Services/PunctuationService.swift; sourceTree = SOURCE_ROOT; };
+		0AD6292715284430A827DA1C /* HotWordService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HotWordService.swift; path = Sources/Services/HotWordService.swift; sourceTree = SOURCE_ROOT; };
+		249D9293FD8541D986570261 /* TextProcessingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TextProcessingService.swift; path = Sources/Services/TextProcessingService.swift; sourceTree = SOURCE_ROOT; };
+		1EAA0F6CBEB144F8A22253CD /* hot-zh.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "hot-zh.txt"; sourceTree = "<group>"; };
+		D3DCC9EC6131407E8BE9BC0E /* hot-en.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "hot-en.txt"; sourceTree = "<group>"; };
+		88E3AF5B0AD740F79D2EA438 /* hot-rule.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "hot-rule.txt"; sourceTree = "<group>"; };
+	/* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A12345678901234567890016 /* Frameworks */ = {
@@ -127,6 +145,14 @@
 				ST8E3D1B2B7F4E9C8A1D5626 /* RecognitionState.swift */,
 				ST8E3D1B2B7F4E9C8A1D5628 /* AppState.swift */,
 				7845C2A98AB741B0B2FEVIC2 /* VoiceInputController.swift */,
+				2765C79BC5314CD99DF2D45E /* ErrorHandler.swift */,
+				E4F812A3F7B142D8B3C9A871 /* ServiceProtocols.swift */,
+				7105282447924AA48102DDCF /* PunctuationService.swift */,
+				0AD6292715284430A827DA1C /* HotWordService.swift */,
+				249D9293FD8541D986570261 /* TextProcessingService.swift */,
+				1EAA0F6CBEB144F8A22253CD /* hot-zh.txt */,
+				D3DCC9EC6131407E8BE9BC0E /* hot-en.txt */,
+				88E3AF5B0AD740F79D2EA438 /* hot-rule.txt */,
 			);
 			path = "CapsWriter-mac";
 			sourceTree = "<group>";
@@ -201,6 +227,9 @@
 				A12345678901234567890008 /* Preview Assets.xcassets in Resources */,
 				A12345678901234567890005 /* Assets.xcassets in Resources */,
 				A12345678901234567890070 /* models in Resources */,
+				E3650C89A39849E386EB3AFB /* hot-zh.txt in Resources */,
+				0092F3398EA64AA6A8D9F47F /* hot-en.txt in Resources */,
+				7D9736A584CB4845A46A0ADD /* hot-rule.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -222,6 +251,12 @@
 				7B3049B1B62443569992B561 /* TextInputService.swift in Sources */,
 				CF8E3D1A2B7F4E9C8A1D5621 /* ConfigurationManager.swift in Sources */,
 				38967C1F3C9E4DEAA6E9VIC1 /* VoiceInputController.swift in Sources */,
+							149370E2BB564291900407A1 /* DIContainer.swift in Sources */,
+				D46CF322752A42C4A18CA8F0 /* ErrorHandler.swift in Sources */,
+				34B8E7F512B543C8A1DECF93 /* ServiceProtocols.swift in Sources */,
+				C0711444E47048E2934B5F38 /* PunctuationService.swift in Sources */,
+				9DB2D0740940412BBE1F9EDE /* HotWordService.swift in Sources */,
+				278C1CA8D79A423E8C16D6AD /* TextProcessingService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

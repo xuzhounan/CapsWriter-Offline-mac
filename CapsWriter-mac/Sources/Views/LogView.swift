@@ -461,7 +461,7 @@ struct LogDetailView: View {
             .padding()
             .frame(width: 500, height: 600)
             .navigationTitle("日志详情")
-            .navigationBarTitleDisplayMode(.inline)
+            // .navigationBarTitleDisplayMode(.inline) // macOS不支持
         }
     }
     

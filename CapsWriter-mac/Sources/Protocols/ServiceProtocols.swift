@@ -16,23 +16,7 @@ protocol ErrorHandlerProtocol: AnyObject {
 }
 
 // MARK: - Logging Protocol
-
-/// 日志服务协议
-protocol LoggingServiceProtocol: AnyObject {
-    func log(_ message: String, level: LogLevel, category: String)
-    func debug(_ message: String, category: String)
-    func info(_ message: String, category: String)
-    func warning(_ message: String, category: String)
-    func error(_ message: String, category: String)
-}
-
-/// 日志级别
-enum LogLevel: String, CaseIterable {
-    case debug = "DEBUG"
-    case info = "INFO"
-    case warning = "WARNING"
-    case error = "ERROR"
-}
+// LoggingServiceProtocol 和 LogLevel 枚举已移到 LoggingService.swift 中定义
 
 // MARK: - Service Status Protocol
 
