@@ -114,7 +114,38 @@ class StatusBarController: ObservableObject {
                 defer: false
             )
             settingsWindow.title = "设置"
-            settingsWindow.contentView = NSHostingView(rootView: SettingsView())
+            
+            // 创建临时设置视图
+            let tempSettingsView = VStack(spacing: 20) {
+                Text("设置")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                
+                Text("完整的设置界面正在开发中")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("基本设置")
+                        .font(.headline)
+                    
+                    Toggle("启用自动启动", isOn: .constant(false))
+                    Toggle("显示状态栏图标", isOn: .constant(true))
+                    Toggle("启用声音提示", isOn: .constant(true))
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.controlBackgroundColor))
+                )
+                
+                Spacer()
+            }
+            .padding(40)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(.windowBackgroundColor))
+            
+            settingsWindow.contentView = NSHostingView(rootView: tempSettingsView)
             settingsWindow.center()
             settingsWindow.makeKeyAndOrderFront(nil)
             settingsWindow.orderFrontRegardless()

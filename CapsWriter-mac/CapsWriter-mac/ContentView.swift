@@ -43,13 +43,44 @@ struct ContentView: View {
                 }
                 .tag(3)
             
-            // 设置页面 - 任务4.2
-            SettingsView()
-                .tabItem {
-                    Image(systemName: "gearshape")
-                    Text("设置")
+            // 设置页面 - 任务4.2 (临时实现)
+            VStack(spacing: 20) {
+                Text("设置")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                
+                Text("完整的设置界面正在开发中")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("基本设置")
+                        .font(.headline)
+                    
+                    Toggle("启用自动启动", isOn: .constant(false))
+                    Toggle("显示状态栏图标", isOn: .constant(true))
+                    Toggle("启用声音提示", isOn: .constant(true))
                 }
-                .tag(4)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.controlBackgroundColor))
+                )
+                
+                Text("完整设置界面包含7个分类：通用、音频、识别、热词、快捷键、高级、关于")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+            }
+            .padding(40)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(.windowBackgroundColor))
+            .tabItem {
+                Image(systemName: "gearshape")
+                Text("设置")
+            }
+            .tag(4)
         }
         .onAppear {
             animationScale = 1.2
