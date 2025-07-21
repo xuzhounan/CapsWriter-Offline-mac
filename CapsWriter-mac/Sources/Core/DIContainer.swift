@@ -297,7 +297,7 @@ class DIContainer: DependencyInjectionProtocol {
         //     return StateManager.shared
         // }
         
-        // TODO: 注册权限监控服务（单例） - 响应式权限管理
+        // TODO: 注册权限监控服务（单例） - 暂时禁用等待文件包含到项目
         // registerSingleton(PermissionMonitorServiceProtocol.self) {
         //     return PermissionMonitorService()
         // }
