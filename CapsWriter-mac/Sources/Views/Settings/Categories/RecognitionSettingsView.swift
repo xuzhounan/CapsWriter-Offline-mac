@@ -36,10 +36,7 @@ struct ModelConfigurationSection: View {
     @State private var modelValidationStatus: ModelValidationStatus = .unknown
     
     var body: some View {
-        SettingsSection(
-            title: "模型配置",
-            description: "配置语音识别使用的 AI 模型和相关参数"
-        ) {
+        SettingsSection(title: "模型配置") {
             VStack(spacing: 16) {
                 // 模型路径
                 VStack(alignment: .leading, spacing: 8) {
@@ -49,7 +46,7 @@ struct ModelConfigurationSection: View {
                     HStack {
                         TextField("模型目录路径", text: $configManager.recognition.modelPath)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .font(.system(size: 11, family: .monospaced))
+                            .font(.system(size: 11, design: .monospaced))
                         
                         Button("选择") {
                             selectModelPath()
@@ -156,10 +153,7 @@ struct RecognitionEngineSection: View {
     @ObservedObject var configManager: ConfigurationManager
     
     var body: some View {
-        SettingsSection(
-            title: "识别引擎设置",
-            description: "配置语音识别引擎的性能和行为参数"
-        ) {
+        SettingsSection(title: "识别引擎设置") {
             VStack(spacing: 16) {
                 // 线程数设置
                 VStack(alignment: .leading, spacing: 8) {
@@ -279,10 +273,7 @@ struct EndpointDetectionSection: View {
     @ObservedObject var configManager: ConfigurationManager
     
     var body: some View {
-        SettingsSection(
-            title: "端点检测",
-            description: "配置语音开始和结束的自动检测参数"
-        ) {
+        SettingsSection(title: "端点检测") {
             VStack(spacing: 16) {
                 SettingsToggle(
                     title: "启用端点检测",
@@ -370,10 +361,7 @@ struct LanguageAndTextSection: View {
     @ObservedObject var configManager: ConfigurationManager
     
     var body: some View {
-        SettingsSection(
-            title: "语言和文本处理",
-            description: "配置识别语言和文本后处理选项"
-        ) {
+        SettingsSection(title: "语言和文本处理") {
             VStack(spacing: 16) {
                 // 识别语言设置
                 VStack(alignment: .leading, spacing: 12) {
@@ -518,7 +506,7 @@ struct LanguageAndTextSection: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(configManager.recognition.modelName)
-                                .font(.system(size: 13, family: .monospaced))
+                                .font(.system(size: 13, design: .monospaced))
                                 .foregroundColor(.primary)
                             
                             Text("模型类型: \(configManager.recognition.modelType)")
@@ -630,10 +618,7 @@ struct PerformanceSection: View {
     @ObservedObject var configManager: ConfigurationManager
     
     var body: some View {
-        SettingsSection(
-            title: "性能设置",
-            description: "调整识别性能和资源使用相关参数"
-        ) {
+        SettingsSection(title: "性能设置") {
             VStack(spacing: 16) {
                 // 热词得分
                 VStack(alignment: .leading, spacing: 8) {

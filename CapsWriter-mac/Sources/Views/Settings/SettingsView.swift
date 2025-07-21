@@ -187,15 +187,7 @@ struct SettingsDetailView: View {
             case .audio:
                 SimplifiedAudioSettingsView(configManager: configManager)
             case .recognition:
-                VStack {
-                    Text("识别设置")
-                        .font(.title2)
-                    Text("语音识别配置")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                }
-                .padding()
+                RecognitionSettingsView(configManager: configManager)
             case .hotwords:
                 VStack {
                     Text("热词设置")

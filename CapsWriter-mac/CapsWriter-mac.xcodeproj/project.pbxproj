@@ -48,6 +48,7 @@
 		ADVSET001158163000001 /* AdvancedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADVSET001158163000002 /* AdvancedSettingsView.swift */; };
 		ABTSET001158163000001 /* AboutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABTSET001158163000002 /* AboutSettingsView.swift */; };
 		SHRSET001158163000001 /* ShortcutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SHRSET001158163000002 /* ShortcutSettingsView.swift */; };
+		RECSET001158163000001 /* RecognitionSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = RECSET001158163000002 /* RecognitionSettingsView.swift */; };
 	/* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -109,6 +110,7 @@
 		ADVSET001158163000002 /* AdvancedSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AdvancedSettingsView.swift; path = Sources/Views/Settings/Categories/AdvancedSettingsView.swift; sourceTree = SOURCE_ROOT; };
 		ABTSET001158163000002 /* AboutSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AboutSettingsView.swift; path = Sources/Views/Settings/Categories/AboutSettingsView.swift; sourceTree = SOURCE_ROOT; };
 		SHRSET001158163000002 /* ShortcutSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ShortcutSettingsView.swift; path = Sources/Views/Settings/Categories/ShortcutSettingsView.swift; sourceTree = SOURCE_ROOT; };
+		RECSET001158163000002 /* RecognitionSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RecognitionSettingsView.swift; path = Sources/Views/Settings/Categories/RecognitionSettingsView.swift; sourceTree = SOURCE_ROOT; };
 	/* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -193,6 +195,7 @@
 				ADVSET001158163000002 /* AdvancedSettingsView.swift */,
 				ABTSET001158163000002 /* AboutSettingsView.swift */,
 				SHRSET001158163000002 /* ShortcutSettingsView.swift */,
+				RECSET001158163000002 /* RecognitionSettingsView.swift */,
 			);
 			path = "CapsWriter-mac";
 			sourceTree = "<group>";
@@ -305,6 +308,7 @@
 				SETTYPE001158163000001 /* SettingsTypes.swift in Sources */,
 				SETCOMP001158163000001 /* SettingsComponents.swift in Sources */,
 				SIMGEN001158163000001 /* SimpleGeneralSettingsView.swift in Sources */,
+				RECSET001158163000001 /* RecognitionSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

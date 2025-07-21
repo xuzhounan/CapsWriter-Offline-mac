@@ -665,3 +665,4 @@ struct BatchConfigurationValidator: View {
     .padding()
     .frame(width: 500)
 }
+

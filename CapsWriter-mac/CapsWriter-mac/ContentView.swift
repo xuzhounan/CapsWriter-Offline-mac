@@ -851,7 +851,7 @@ struct SettingsPlaceholderView: View {
                 .tag(1)
             
             // 识别设置
-            RecognitionSettingsView()
+            RecognitionSettingsView(configManager: configManager)
                 .tabItem {
                     Image(systemName: "brain")
                     Text("识别")
@@ -1001,77 +1001,6 @@ struct AudioSettingsView: View {
     }
 }
 
-struct RecognitionSettingsView: View {
-    @StateObject private var configManager = ConfigurationManager.shared
-    
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                Text("识别设置")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                
-                SettingsSection(title: "语音识别") {
-                    VStack(alignment: .leading) {
-                        Text("识别模型")
-                        Picker("识别模型", selection: $configManager.recognition.modelName) {
-                            Text("Paraformer 中文").tag("paraformer-zh")
-                            Text("Paraformer 流式").tag("paraformer-zh-streaming")
-                            Text("Whisper 多语言").tag("whisper-multilingual")
-                        }
-                        .pickerStyle(.menu)
-                    }
-                    
-                    VStack(alignment: .leading) {
-                        Text("识别语言")
-                        Picker("识别语言", selection: $configManager.recognition.language) {
-                            Text("中文").tag("zh")
-                            Text("英文").tag("en")
-                            Text("自动检测").tag("auto")
-                        }
-                        .pickerStyle(.menu)
-                    }
-                    
-                    VStack(alignment: .leading) {
-                        Text("线程数: \(configManager.recognition.numThreads)")
-                        Slider(value: Binding(
-                            get: { Double(configManager.recognition.numThreads) },
-                            set: { configManager.recognition.numThreads = Int($0) }
-                        ), in: 1...8, step: 1) {
-                            Text("线程数")
-                        }
-                    }
-                    
-                    SettingsToggleRow(title: "启用标点符号", isOn: $configManager.recognition.enablePunctuation)
-                    SettingsToggleRow(title: "启用数字转换", isOn: $configManager.recognition.enableNumberConversion)
-                    SettingsToggleRow(title: "调试模式", isOn: $configManager.recognition.debug)
-                }
-                
-                SettingsSection(title: "高级设置") {
-                    VStack(alignment: .leading) {
-                        Text("最大激活路径: \(configManager.recognition.maxActivePaths)")
-                        Slider(value: Binding(
-                            get: { Double(configManager.recognition.maxActivePaths) },
-                            set: { configManager.recognition.maxActivePaths = Int($0) }
-                        ), in: 1...10, step: 1) {
-                            Text("最大激活路径")
-                        }
-                    }
-                    
-                    VStack(alignment: .leading) {
-                        Text("热词分数: \(String(format: "%.1f", configManager.recognition.hotwordsScore))")
-                        Slider(value: $configManager.recognition.hotwordsScore, in: 0.0...5.0, step: 0.1) {
-                            Text("热词分数")
-                        }
-                    }
-                }
-                
-                Spacer()
-            }
-            .padding()
-        }
-    }
-}
 
 struct KeyboardSettingsView: View {
     @StateObject private var configManager = ConfigurationManager.shared
