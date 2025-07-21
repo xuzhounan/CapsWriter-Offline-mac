@@ -564,13 +564,17 @@ class PunctuationService: ObservableObject, PunctuationServiceProtocol {
 
 extension PunctuationService: ServiceStatusProtocol {
     var statusDescription: String {
-        let stats = getStatistics()
+        // 为了保持同步接口兼容性，使用同步获取的统计信息
+        let syncStats = processingQueue.sync {
+            return statistics
+        }
+        
         return """
         标点符号处理服务状态:
         - 已初始化: \(isInitialized)
         - 运行中: \(isRunning)
         - 处理强度: \(currentIntensity.displayName)
-        - \(stats.summary)
+        - \(syncStats.summary)
         """
     }
 }

@@ -528,6 +528,10 @@ class AudioCaptureService: ObservableObject, AudioCaptureServiceProtocol {
             addLog("⚠️ 音频转换输入数据不足")
             return nil
             
+        case .endOfStream:
+            addLog("⚠️ 音频转换遇到流结束")
+            return nil
+            
         @unknown default:
             addLog("⚠️ 音频转换遇到未知状态: \(status)")
             return nil

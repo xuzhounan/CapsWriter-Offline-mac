@@ -120,7 +120,7 @@ protocol LogExportServiceProtocol {
 
 // MARK: - 日志导出服务实现
 
-class LogExportService: LogExportServiceProtocol {
+final class LogExportService: LogExportServiceProtocol, @unchecked Sendable {
     
     // MARK: - Singleton
     
@@ -134,8 +134,12 @@ class LogExportService: LogExportServiceProtocol {
     
     func exportLogs(_ logs: [LogEntry], configuration: LogExportConfiguration) async -> LogExportResult {
         return await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async {
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 do {
+                    guard let self = self else {
+                        continuation.resume(returning: .failure(error: NSError(domain: "LogExportService", code: -1, userInfo: [NSLocalizedDescriptionKey: "服务已释放"])))
+                        return
+                    }
                     let result = try self.performExport(logs, configuration: configuration)
                     continuation.resume(returning: result)
                 } catch {

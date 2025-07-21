@@ -782,12 +782,16 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
 
 extension HotWordService: ServiceStatusProtocol {
     var statusDescription: String {
-        let stats = getStatistics()
+        // 为了保持同步接口兼容性，使用同步获取的统计信息
+        let syncStats = hotWordQueue.sync {
+            return statistics
+        }
+        
         return """
         热词服务状态:
         - 已初始化: \(isInitialized)
         - 运行中: \(isRunning)
-        - \(stats.summary)
+        - \(syncStats.summary)
         """
     }
 }

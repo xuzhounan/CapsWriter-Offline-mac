@@ -237,11 +237,6 @@ class DIContainer: DependencyInjectionProtocol {
             return ConfigurationManager.shared
         }
         
-        // 注册配置管理器协议映射（单例）
-        registerSingleton(ConfigurationManagerProtocol.self) {
-            return ConfigurationManager.shared
-        }
-        
         // 注册文本输入服务（单例）
         registerSingleton(TextInputServiceProtocol.self) {
             return TextInputService.shared
