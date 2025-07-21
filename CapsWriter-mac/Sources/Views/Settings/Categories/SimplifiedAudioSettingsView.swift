@@ -199,14 +199,14 @@ struct AudioEnhancementSection: View {
         SettingsSection(title: "音频增强") {
             VStack(spacing: 16) {
                 // 噪声抑制
-                SettingsToggle(
+                AudioToggleOption(
                     title: "噪声抑制",
                     description: "自动减少背景噪音，提高语音清晰度",
                     isOn: $configManager.audio.enableNoiseReduction
                 )
                 
                 // 音频增强
-                SettingsToggle(
+                AudioToggleOption(
                     title: "音频增强",
                     description: "智能优化音频质量，提升识别准确率",
                     isOn: $configManager.audio.enableAudioEnhancement
@@ -286,7 +286,7 @@ struct QualityOptionButton: View {
 
 // MARK: - Settings Components
 
-struct SettingsToggle: View {
+struct AudioToggleOption: View {
     let title: String
     let description: String
     @Binding var isOn: Bool
