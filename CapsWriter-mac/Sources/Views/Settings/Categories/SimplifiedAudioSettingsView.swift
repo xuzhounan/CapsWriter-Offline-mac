@@ -29,10 +29,7 @@ struct AudioQualitySection: View {
     @ObservedObject var configManager: ConfigurationManager
     
     var body: some View {
-        SettingsSection(
-            title: "音频质量",
-            description: "选择适合您需求的音频处理方式"
-        ) {
+        SettingsSection(title: "音频质量") {
             VStack(spacing: 16) {
                 // 音频质量预设
                 VStack(alignment: .leading, spacing: 12) {
@@ -132,10 +129,7 @@ struct AudioGainSection: View {
     @ObservedObject var configManager: ConfigurationManager
     
     var body: some View {
-        SettingsSection(
-            title: "音量调节",
-            description: "调整麦克风录音音量"
-        ) {
+        SettingsSection(title: "音量调节") {
             VStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
@@ -202,10 +196,7 @@ struct AudioEnhancementSection: View {
     @ObservedObject var configManager: ConfigurationManager
     
     var body: some View {
-        SettingsSection(
-            title: "音频增强",
-            description: "提高录音质量的附加功能"
-        ) {
+        SettingsSection(title: "音频增强") {
             VStack(spacing: 16) {
                 // 噪声抑制
                 SettingsToggle(
@@ -294,29 +285,6 @@ struct QualityOptionButton: View {
 }
 
 // MARK: - Settings Components
-
-struct SettingsSection<Content: View>: View {
-    let title: String
-    let description: String
-    @ViewBuilder let content: Content
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(size: 16, weight: .semibold))
-                Text(description)
-                    .font(.system(size: 12))
-                    .foregroundColor(.secondary)
-            }
-            
-            content
-        }
-        .padding()
-        .background(Color(NSColor.controlBackgroundColor))
-        .cornerRadius(12)
-    }
-}
 
 struct SettingsToggle: View {
     let title: String

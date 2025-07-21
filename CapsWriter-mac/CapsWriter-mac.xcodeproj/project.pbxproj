@@ -38,6 +38,7 @@
 		LOG001122334455667788AABB /* LoggingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = LOG001122334455667788AABC /* LoggingService.swift */; };
 		LOG001122334455667788AABD /* LogExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = LOG001122334455667788AABE /* LogExportService.swift */; };
 		LOG001122334455667788AABF /* LogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LOG001122334455667788AAC0 /* LogView.swift */; };
+		AUDISET531158163000001 /* SimplifiedAudioSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AUDISET531158163000002 /* SimplifiedAudioSettingsView.swift */; };
 	/* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -89,6 +90,7 @@
 		LOG001122334455667788AABC /* LoggingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LoggingService.swift; path = Sources/Services/LoggingService.swift; sourceTree = SOURCE_ROOT; };
 		LOG001122334455667788AABE /* LogExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LogExportService.swift; path = Sources/Services/LogExportService.swift; sourceTree = SOURCE_ROOT; };
 		LOG001122334455667788AAC0 /* LogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LogView.swift; path = Sources/Views/LogView.swift; sourceTree = SOURCE_ROOT; };
+		AUDISET531158163000002 /* SimplifiedAudioSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SimplifiedAudioSettingsView.swift; path = Sources/Views/Settings/Categories/SimplifiedAudioSettingsView.swift; sourceTree = SOURCE_ROOT; };
 	/* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -159,6 +161,11 @@
 				1EAA0F6CBEB144F8A22253CD /* hot-zh.txt */,
 				D3DCC9EC6131407E8BE9BC0E /* hot-en.txt */,
 				88E3AF5B0AD740F79D2EA438 /* hot-rule.txt */,
+				LOG001122334455667788AABC /* LoggingService.swift */,
+				LOG001122334455667788AABE /* LogExportService.swift */,
+				LOG001122334455667788AAC0 /* LogView.swift */,
+				2146729669AF4727A24F3226 /* DIContainer.swift */,
+				AUDISET531158163000002 /* SimplifiedAudioSettingsView.swift */,
 			);
 			path = "CapsWriter-mac";
 			sourceTree = "<group>";
@@ -266,6 +273,7 @@
 				LOG001122334455667788AABB /* LoggingService.swift in Sources */,
 				LOG001122334455667788AABD /* LogExportService.swift in Sources */,
 				LOG001122334455667788AABF /* LogView.swift in Sources */,
+				AUDISET531158163000001 /* SimplifiedAudioSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
