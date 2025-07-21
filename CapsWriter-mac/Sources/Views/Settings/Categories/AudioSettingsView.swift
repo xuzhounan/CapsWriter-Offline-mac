@@ -157,59 +157,218 @@ struct AudioFormatSection: View {
                 
                 // 声道数设置
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("声道数")
-                        .font(.system(size: 14, weight: .medium))
-                    
-                    Picker("声道数", selection: $configManager.audio.channels) {
-                        Text("单声道 (推荐)").tag(1)
-                        Text("立体声").tag(2)
+                    HStack {
+                        Text("声道数")
+                            .font(.system(size: 14, weight: .medium))
+                        Spacer()
+                        Text("\(configManager.audio.channels) 声道")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
                     }
-                    .pickerStyle(SegmentedPickerStyle())
                     
-                    Text("语音识别建议使用单声道，可减少处理复杂度")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                    HStack(spacing: 12) {
+                        // 单声道按钮
+                        Button(action: {
+                            configManager.audio.channels = 1
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "waveform.path.ecg")
+                                    .font(.system(size: 16))
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("单声道")
+                                        .font(.system(size: 13, weight: .medium))
+                                    Text("推荐")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                if configManager.audio.channels == 1 {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(.green)
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(configManager.audio.channels == 1 ? 
+                                          Color.accentColor.opacity(0.1) : 
+                                          Color(NSColor.controlBackgroundColor))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(configManager.audio.channels == 1 ? 
+                                           Color.accentColor : 
+                                           Color(NSColor.separatorColor), 
+                                           lineWidth: 1.5)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        
+                        // 立体声按钮
+                        Button(action: {
+                            configManager.audio.channels = 2
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "waveform.path.ecg.rectangle")
+                                    .font(.system(size: 16))
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("立体声")
+                                        .font(.system(size: 13, weight: .medium))
+                                    Text("双声道")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                if configManager.audio.channels == 2 {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(.green)
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(configManager.audio.channels == 2 ? 
+                                          Color.accentColor.opacity(0.1) : 
+                                          Color(NSColor.controlBackgroundColor))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(configManager.audio.channels == 2 ? 
+                                           Color.accentColor : 
+                                           Color(NSColor.separatorColor), 
+                                           lineWidth: 1.5)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    
+                    // 根据选择显示不同的说明
+                    HStack {
+                        Image(systemName: configManager.audio.channels == 1 ? "lightbulb" : "info.circle")
+                            .font(.system(size: 12))
+                            .foregroundColor(configManager.audio.channels == 1 ? .green : .blue)
+                        
+                        Text(configManager.audio.channels == 1 ? 
+                             "单声道是语音识别的推荐设置，减少处理复杂度并提高识别准确率" : 
+                             "立体声会增加计算负担，但可以保留更多音频信息")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
                 Divider()
                 
                 // 缓冲区大小
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text("缓冲区大小")
                             .font(.system(size: 14, weight: .medium))
                         Spacer()
-                        Text("\(configManager.audio.bufferSize) frames")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("\(configManager.audio.bufferSize) frames")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                            Text("延迟: \(bufferLatency) ms")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary)
+                        }
                     }
                     
-                    Slider(
-                        value: Binding(
-                            get: { Double(configManager.audio.bufferSize) },
-                            set: { configManager.audio.bufferSize = UInt32($0) }
-                        ),
-                        in: 256...4096,
-                        step: 256
-                    )
+                    // 预设值按钮组
+                    VStack(spacing: 8) {
+                        Text("快速设置")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                        
+                        HStack(spacing: 8) {
+                            ForEach([UInt32(256), UInt32(512), UInt32(1024), UInt32(2048)], id: \.self) { size in
+                                Button(action: {
+                                    configManager.audio.bufferSize = size
+                                }) {
+                                    VStack(spacing: 4) {
+                                        Text("\(size)")
+                                            .font(.system(size: 12, weight: .medium))
+                                        
+                                        Text(bufferSizeDescription(size))
+                                            .font(.system(size: 9))
+                                            .foregroundColor(.secondary)
+                                        
+                                        Text("\(latencyForBuffer(size)) ms")
+                                            .font(.system(size: 8))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .frame(width: 65, height: 48)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .fill(configManager.audio.bufferSize == size ? 
+                                                  Color.accentColor.opacity(0.2) : 
+                                                  Color(NSColor.controlBackgroundColor))
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(configManager.audio.bufferSize == size ? 
+                                                   Color.accentColor : 
+                                                   Color(NSColor.separatorColor), 
+                                                   lineWidth: 1)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
                     
+                    // 详细滑块调节
+                    VStack(spacing: 8) {
+                        Text("精确调节")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                        
+                        Slider(
+                            value: Binding(
+                                get: { Double(configManager.audio.bufferSize) },
+                                set: { configManager.audio.bufferSize = UInt32($0) }
+                            ),
+                            in: 256...4096,
+                            step: 256
+                        )
+                        
+                        HStack {
+                            Text("256")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text("1024 (推荐)")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text("4096")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    // 动态说明
                     HStack {
-                        Text("256")
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Text("延迟: \(bufferLatency) ms")
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Text("4096")
-                            .font(.system(size: 10))
+                        Image(systemName: bufferSizeIcon(configManager.audio.bufferSize))
+                            .font(.system(size: 12))
+                            .foregroundColor(bufferSizeColor(configManager.audio.bufferSize))
+                        
+                        Text(bufferSizeAdvice(configManager.audio.bufferSize))
+                            .font(.system(size: 11))
                             .foregroundColor(.secondary)
                     }
-                    
-                    Text("较小的缓冲区减少延迟但可能导致音频丢失，较大的缓冲区更稳定但延迟更高")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
                 }
             }
         }
@@ -218,6 +377,53 @@ struct AudioFormatSection: View {
     private var bufferLatency: String {
         let latency = Double(configManager.audio.bufferSize) / configManager.audio.sampleRate * 1000
         return String(format: "%.1f", latency)
+    }
+    
+    // 缓冲区大小辅助函数
+    private func bufferSizeDescription(_ size: UInt32) -> String {
+        switch size {
+        case 256: return "低延迟"
+        case 512: return "快速"
+        case 1024: return "推荐"
+        case 2048: return "稳定"
+        default: return "自定义"
+        }
+    }
+    
+    private func latencyForBuffer(_ size: UInt32) -> String {
+        let latency = Double(size) / configManager.audio.sampleRate * 1000
+        return String(format: "%.1f", latency)
+    }
+    
+    private func bufferSizeIcon(_ size: UInt32) -> String {
+        switch size {
+        case 0...512: return "bolt.circle"
+        case 513...1024: return "checkmark.circle"
+        case 1025...2048: return "shield.lefthalf.filled"
+        default: return "slowmo"
+        }
+    }
+    
+    private func bufferSizeColor(_ size: UInt32) -> Color {
+        switch size {
+        case 0...512: return .yellow
+        case 513...1024: return .green
+        case 1025...2048: return .blue
+        default: return .orange
+        }
+    }
+    
+    private func bufferSizeAdvice(_ size: UInt32) -> String {
+        switch size {
+        case 0...512:
+            return "低延迟设置，适合实时录制，但可能出现音频丢失"
+        case 513...1024:
+            return "推荐设置，在延迟和稳定性间取得良好平衡"
+        case 1025...2048:
+            return "高稳定性设置，延迟较高但不易丢失音频"
+        default:
+            return "超高缓冲，延迟很高但最稳定，适合后台录制"
+        }
     }
 }
 

@@ -376,21 +376,77 @@ struct LanguageAndTextSection: View {
         ) {
             VStack(spacing: 16) {
                 // 识别语言设置
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("识别语言")
-                        .font(.system(size: 14, weight: .medium))
-                    
-                    Picker("识别语言", selection: $configManager.recognition.language) {
-                        Text("中文 (简体)").tag("zh")
-                        Text("中文 (繁体)").tag("zh-tw")
-                        Text("英文").tag("en")
-                        Text("中英混合").tag("zh-en")
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("识别语言")
+                            .font(.system(size: 14, weight: .medium))
+                        Spacer()
+                        Text(languageDisplayName(configManager.recognition.language))
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
                     }
-                    .pickerStyle(MenuPickerStyle())
                     
-                    Text("选择主要的语音识别语言，影响模型的识别准确度")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                    // 语言选项卡片
+                    VStack(spacing: 8) {
+                        HStack(spacing: 12) {
+                            // 中文简体
+                            LanguageCard(
+                                language: "zh",
+                                title: "中文简体",
+                                subtitle: "普通话识别",
+                                icon: "🇨🇳",
+                                isSelected: configManager.recognition.language == "zh"
+                            ) {
+                                configManager.recognition.language = "zh"
+                            }
+                            
+                            // 中文繁体
+                            LanguageCard(
+                                language: "zh-tw",
+                                title: "中文繁體",
+                                subtitle: "繁體中文識別",
+                                icon: "🇭🇰",
+                                isSelected: configManager.recognition.language == "zh-tw"
+                            ) {
+                                configManager.recognition.language = "zh-tw"
+                            }
+                        }
+                        
+                        HStack(spacing: 12) {
+                            // 英文
+                            LanguageCard(
+                                language: "en",
+                                title: "English",
+                                subtitle: "English recognition",
+                                icon: "🇺🇸",
+                                isSelected: configManager.recognition.language == "en"
+                            ) {
+                                configManager.recognition.language = "en"
+                            }
+                            
+                            // 中英混合
+                            LanguageCard(
+                                language: "zh-en",
+                                title: "中英混合",
+                                subtitle: "Mixed language",
+                                icon: "🌐",
+                                isSelected: configManager.recognition.language == "zh-en"
+                            ) {
+                                configManager.recognition.language = "zh-en"
+                            }
+                        }
+                    }
+                    
+                    // 动态说明
+                    HStack {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 12))
+                            .foregroundColor(.blue)
+                        
+                        Text(languageDescription(configManager.recognition.language))
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
                 Divider()
@@ -490,6 +546,81 @@ struct LanguageAndTextSection: View {
     private func changeModel() {
         // 实现模型切换功能
         print("🔄 切换模型")
+    }
+    
+    // 语言辅助函数
+    private func languageDisplayName(_ language: String) -> String {
+        switch language {
+        case "zh": return "中文简体"
+        case "zh-tw": return "中文繁体"
+        case "en": return "English"
+        case "zh-en": return "中英混合"
+        default: return "未知语言"
+        }
+    }
+    
+    private func languageDescription(_ language: String) -> String {
+        switch language {
+        case "zh": return "适用于普通话识别，准确率最高"
+        case "zh-tw": return "适用于繁体中文和台湾话识别"
+        case "en": return "适用于英文语音识别"
+        case "zh-en": return "适用于中英文混合语音，自动切换识别"
+        default: return "请选择合适的识别语言"
+        }
+    }
+}
+
+// MARK: - Language Card Component
+
+struct LanguageCard: View {
+    let language: String
+    let title: String
+    let subtitle: String
+    let icon: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Text(icon)
+                    .font(.system(size: 24))
+                
+                VStack(spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 12, weight: .medium))
+                    Text(subtitle)
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                }
+                
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.green)
+                } else {
+                    Circle()
+                        .frame(width: 12, height: 12)
+                        .foregroundColor(.clear)
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 80)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? 
+                          Color.accentColor.opacity(0.15) : 
+                          Color(NSColor.controlBackgroundColor))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? 
+                           Color.accentColor : 
+                           Color(NSColor.separatorColor), 
+                           lineWidth: isSelected ? 2 : 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 
