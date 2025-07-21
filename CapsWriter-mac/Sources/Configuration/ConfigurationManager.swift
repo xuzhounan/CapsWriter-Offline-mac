@@ -339,7 +339,11 @@ class ConfigurationManager: ObservableObject, ConfigurationManagerProtocol {
             group.notify(queue: DispatchQueue.main) {
                 // 记录保存时间
                 self.userDefaults.set(Date(), forKey: Keys.lastSaveTime)
-                self.userDefaults.synchronize()
+                // 移除同步调用，改为异步操作
+                DispatchQueue.global(qos: .background).async {
+                    // UserDefaults 的内部机制会自动处理持久化
+                    // 无需强制 synchronize，避免主线程阻塞
+                }
                 print("✅ 所有配置保存完成")
                 
                 // 发送配置更新通知
@@ -395,7 +399,7 @@ class ConfigurationManager: ObservableObject, ConfigurationManagerProtocol {
              Keys.textProcessing, Keys.ui, Keys.appBehavior, Keys.lastSaveTime].forEach { key in
                 self.userDefaults.removeObject(forKey: key)
             }
-            self.userDefaults.synchronize()
+            // 移除同步调用，UserDefaults 会自动处理持久化
             
             DispatchQueue.main.async {
                 print("✅ 配置重置完成")
