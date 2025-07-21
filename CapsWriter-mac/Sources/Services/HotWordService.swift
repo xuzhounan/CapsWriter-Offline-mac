@@ -170,7 +170,7 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
     
     init(
         configManager: any ConfigurationManagerProtocol = DIContainer.shared.resolve(ConfigurationManager.self),
-        errorHandler: any ErrorHandlerProtocol = DIContainer.shared.resolve(ErrorHandler.self)
+        errorHandler: any ErrorHandlerProtocol = DIContainer.shared.resolve(ErrorHandlerProtocol.self)
     ) {
         self.configManager = configManager
         self.errorHandler = errorHandler
