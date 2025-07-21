@@ -237,6 +237,28 @@ class PunctuationService: ObservableObject, PunctuationServiceProtocol {
     
     // MARK: - PunctuationServiceProtocol Implementation
     
+    func processText(_ text: String, completion: @escaping (String) -> Void) {
+        guard isRunning && !text.isEmpty else {
+            completion(text)
+            return
+        }
+        
+        let startTime = CFAbsoluteTimeGetCurrent()
+        
+        processingQueue.async { [weak self] in
+            let result = self?.performPunctuationProcessing(text) ?? text
+            let processingTime = (CFAbsoluteTimeGetCurrent() - startTime) * 1000
+            
+            self?.updateStatistics(originalText: text, processedText: result, processingTime: processingTime)
+            
+            DispatchQueue.main.async {
+                completion(result)
+            }
+        }
+    }
+    
+    // 同步版本保留用于向后兼容，但添加警告
+    @available(*, deprecated, message: "使用异步版本 processText(_:completion:) 以避免阻塞线程")
     func processText(_ text: String) -> String {
         guard isRunning && !text.isEmpty else {
             return text
@@ -254,6 +276,17 @@ class PunctuationService: ObservableObject, PunctuationServiceProtocol {
         return result
     }
     
+    func getStatistics(completion: @escaping (PunctuationStatistics) -> Void) {
+        processingQueue.async { [weak self] in
+            let result = self?.statistics ?? PunctuationStatistics()
+            DispatchQueue.main.async {
+                completion(result)
+            }
+        }
+    }
+    
+    // 同步版本保留用于向后兼容，但添加警告
+    @available(*, deprecated, message: "使用异步版本 getStatistics(completion:) 以避免阻塞线程")
     func getStatistics() -> PunctuationStatistics {
         return processingQueue.sync { [weak self] in
             return self?.statistics ?? PunctuationStatistics()

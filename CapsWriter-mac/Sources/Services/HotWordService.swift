@@ -98,6 +98,7 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
     // MARK: - Dependencies
     
     private let configManager: any ConfigurationManagerProtocol
+    private let errorHandler: ErrorHandlerProtocol
     private let logger = Logger(subsystem: "com.capswriter.hotword", category: "HotWordService")
     
     // MARK: - Published Properties
@@ -163,8 +164,12 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
     
     // MARK: - Initialization
     
-    init(configManager: any ConfigurationManagerProtocol = DIContainer.shared.resolve(ConfigurationManager.self)) {
+    init(
+        configManager: any ConfigurationManagerProtocol = DIContainer.shared.resolve(ConfigurationManager.self),
+        errorHandler: ErrorHandlerProtocol = DIContainer.shared.resolve(ErrorHandlerProtocol.self)
+    ) {
         self.configManager = configManager
+        self.errorHandler = errorHandler
         
         // 初始化字典
         for type in HotWordType.allCases {
@@ -195,6 +200,13 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
         } catch {
             logger.error("❌ 热词服务初始化失败: \(error.localizedDescription)")
             lastError = error
+            errorHandler.reportError(
+                error,
+                userInfo: [
+                    "component": "HotWordService",
+                    "operation": "初始化"
+                ]
+            )
             throw error
         }
     }
@@ -236,6 +248,22 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
     
     // MARK: - HotWordServiceProtocol Implementation
     
+    func processText(_ text: String, completion: @escaping (String) -> Void) {
+        guard isRunning && !text.isEmpty else {
+            completion(text)
+            return
+        }
+        
+        hotWordQueue.async { [weak self] in
+            let result = self?.performTextReplacement(text) ?? text
+            DispatchQueue.main.async {
+                completion(result)
+            }
+        }
+    }
+    
+    // 同步版本保留用于向后兼容，但添加警告
+    @available(*, deprecated, message: "使用异步版本 processText(_:completion:) 以避免阻塞线程")
     func processText(_ text: String) -> String {
         guard isRunning && !text.isEmpty else {
             return text
@@ -256,10 +284,36 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
             } catch {
                 self?.logger.error("❌ 热词重新加载失败: \(error.localizedDescription)")
                 self?.lastError = error
+                self?.errorHandler.reportError(
+                    error,
+                    userInfo: [
+                        "component": "HotWordService",
+                        "operation": "重新加载热词"
+                    ]
+                )
             }
         }
     }
     
+    func getStatistics(completion: @escaping (HotWordStatistics) -> Void) {
+        hotWordQueue.async { [weak self] in
+            let result = self?.statistics ?? HotWordStatistics(
+                totalEntries: 0,
+                chineseEntries: 0,
+                englishEntries: 0,
+                ruleEntries: 0,
+                runtimeEntries: 0,
+                totalReplacements: 0,
+                lastReloadTime: nil
+            )
+            DispatchQueue.main.async {
+                completion(result)
+            }
+        }
+    }
+    
+    // 同步版本保留用于向后兼容，但添加警告
+    @available(*, deprecated, message: "使用异步版本 getStatistics(completion:) 以避免阻塞线程")
     func getStatistics() -> HotWordStatistics {
         return hotWordQueue.sync { [weak self] in
             return self?.statistics ?? HotWordStatistics(
