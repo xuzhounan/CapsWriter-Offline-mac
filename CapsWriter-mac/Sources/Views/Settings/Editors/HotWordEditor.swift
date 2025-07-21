@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 
 /// 热词编辑器主界面
 struct HotWordEditor: View {
-    @StateObject private var hotWordService = DIContainer.shared.resolve(HotWordService.self)!
+    @StateObject private var hotWordService = DIContainer.shared.resolve(HotWordServiceProtocol.self)!
     @State private var selectedCategory: HotWordCategory = .chinese
     @State private var selectedEntry: HotWordEntry?
     @State private var searchText = ""
@@ -265,7 +265,7 @@ struct HotWordList: View {
     @Binding var entryToDelete: HotWordEntry?
     @Binding var showingDeleteAlert: Bool
     
-    @StateObject private var hotWordService = DIContainer.shared.resolve(HotWordService.self)!
+    @StateObject private var hotWordService = DIContainer.shared.resolve(HotWordServiceProtocol.self)!
     @State private var entries: [HotWordEntry] = []
     
     var body: some View {
@@ -458,7 +458,7 @@ struct HotWordEditPane: View {
     @State private var isWholeWordMatch = true
     @State private var hasUnsavedChanges = false
     
-    @StateObject private var hotWordService = DIContainer.shared.resolve(HotWordService.self)!
+    @StateObject private var hotWordService = DIContainer.shared.resolve(HotWordServiceProtocol.self)!
     
     var body: some View {
         VStack(spacing: 0) {

@@ -113,8 +113,8 @@ class VoiceInputController: ObservableObject {
     private init() {
         // 通过 DI 容器获取依赖服务
         self.configManager = DIContainer.shared.resolve(ConfigurationManager.self)
-        self.textProcessingService = DIContainer.shared.resolve(TextProcessingService.self)
-        self.errorHandler = DIContainer.shared.resolve(ErrorHandler.self)
+        self.textProcessingService = DIContainer.shared.resolve(TextProcessingServiceProtocol.self)
+        self.errorHandler = DIContainer.shared.resolve(ErrorHandlerProtocol.self)
         // TODO: 恢复权限监控服务初始化
         // self.permissionMonitorService = DIContainer.shared.resolve(PermissionMonitorServiceProtocol.self)
         
@@ -316,7 +316,7 @@ class VoiceInputController: ObservableObject {
         
         // 1. 通过DI容器初始化键盘监听器
         print("🔧 初始化键盘监听器...")
-        keyboardMonitor = DIContainer.shared.resolve(KeyboardMonitor.self)
+        keyboardMonitor = DIContainer.shared.resolve(KeyboardMonitorProtocol.self)
         keyboardMonitor?.setCallbacks(
             startRecording: { [weak self] in
                 self?.handleRecordingStartRequested()
@@ -329,13 +329,13 @@ class VoiceInputController: ObservableObject {
         
         // 2. 通过DI容器初始化文本输入服务
         print("🔧 初始化文本输入服务...")
-        textInputService = DIContainer.shared.resolve(TextInputService.self)
+        textInputService = DIContainer.shared.resolve(TextInputServiceProtocol.self)
         print("✅ 文本输入服务初始化完成")
         
         // 3. 通过DI容器初始化ASR服务
         do {
             print("🔧 初始化ASR服务...")
-            asrService = DIContainer.shared.resolve(SherpaASRService.self)
+            asrService = DIContainer.shared.resolve(SpeechRecognitionServiceProtocol.self)
             
             // 验证ASR服务是否成功创建
             guard let asr = asrService else {
@@ -361,7 +361,7 @@ class VoiceInputController: ObservableObject {
         // 4. 通过DI容器初始化音频采集服务
         do {
             print("🔧 初始化音频采集服务...")
-            audioCaptureService = DIContainer.shared.resolve(AudioCaptureService.self)
+            audioCaptureService = DIContainer.shared.resolve(AudioCaptureServiceProtocol.self)
             
             // 验证音频采集服务是否成功创建
             guard let audioService = audioCaptureService else {

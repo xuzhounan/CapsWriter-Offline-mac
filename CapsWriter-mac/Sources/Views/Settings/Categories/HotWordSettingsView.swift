@@ -82,7 +82,7 @@ struct HotWordToggleSection: View {
 
 struct HotWordManagementSection: View {
     @Binding var showingEditor: Bool
-    @StateObject private var hotWordService = DIContainer.shared.resolve(HotWordService.self)!
+    @StateObject private var hotWordService = DIContainer.shared.resolve(HotWordServiceProtocol.self)!
     @State private var hotWordStats = HotWordStats()
     
     var body: some View {
