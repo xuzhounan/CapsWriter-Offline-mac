@@ -28,7 +28,9 @@ struct HotWordSettingsView: View {
             .padding()
         }
         .sheet(isPresented: $showingHotWordEditor) {
-            HotWordEditor()
+            Text("热词编辑器")
+                .font(.title)
+                .padding()
                 .frame(minWidth: 1000, minHeight: 700)
         }
     }
@@ -40,10 +42,7 @@ struct HotWordToggleSection: View {
     @ObservedObject var configManager: ConfigurationManager
     
     var body: some View {
-        SettingsSection(
-            title: "热词替换功能",
-            description: "启用或禁用热词替换，并配置基本行为"
-        ) {
+        SettingsSection(title: "热词替换功能") {
             VStack(spacing: 16) {
                 SettingsToggle(
                     title: "启用热词替换",
@@ -85,14 +84,11 @@ struct HotWordToggleSection: View {
 
 struct HotWordManagementSection: View {
     @Binding var showingEditor: Bool
-    @StateObject private var hotWordService = DIContainer.shared.resolve(HotWordServiceProtocol.self)!
+    @StateObject private var hotWordService = DIContainer.shared.resolve(HotWordService.self)!
     @State private var hotWordStats = HotWordStats()
     
     var body: some View {
-        SettingsSection(
-            title: "热词管理",
-            description: "管理和编辑各类热词替换规则"
-        ) {
+        SettingsSection(title: "热词管理") {
             VStack(spacing: 16) {
                 // 热词统计
                 VStack(spacing: 12) {
@@ -240,10 +236,7 @@ struct HotWordProcessingSection: View {
     @ObservedObject var configManager: ConfigurationManager
     
     var body: some View {
-        SettingsSection(
-            title: "热词处理设置",
-            description: "配置热词替换的处理方式和性能参数"
-        ) {
+        SettingsSection(title: "热词处理设置") {
             VStack(spacing: 16) {
                 // 文件路径配置
                 VStack(alignment: .leading, spacing: 12) {
@@ -311,10 +304,7 @@ struct PunctuationProcessingSection: View {
     @ObservedObject var configManager: ConfigurationManager
     
     var body: some View {
-        SettingsSection(
-            title: "标点符号处理",
-            description: "配置自动标点符号添加和处理参数"
-        ) {
+        SettingsSection(title: "标点符号处理") {
             VStack(spacing: 16) {
                 // 启用标点符号处理
                 SettingsToggle(
@@ -454,7 +444,7 @@ struct HotWordFilePathRow: View {
                 
                 TextField(placeholder, text: $path)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .font(.system(size: 11, family: .monospaced))
+                    .font(.system(size: 11, design: .monospaced))
             }
             
             Button("选择") {
@@ -486,10 +476,7 @@ struct HotWordFileWatchingSection: View {
     @ObservedObject var configManager: ConfigurationManager
     
     var body: some View {
-        SettingsSection(
-            title: "文件监控",
-            description: "自动监控热词文件变化并实时重新加载"
-        ) {
+        SettingsSection(title: "文件监控") {
             VStack(spacing: 16) {
                 SettingsToggle(
                     title: "启用文件监控",

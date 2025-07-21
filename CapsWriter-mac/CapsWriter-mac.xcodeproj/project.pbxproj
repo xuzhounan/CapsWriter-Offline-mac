@@ -309,6 +309,7 @@
 				SETCOMP001158163000001 /* SettingsComponents.swift in Sources */,
 				SIMGEN001158163000001 /* SimpleGeneralSettingsView.swift in Sources */,
 				RECSET001158163000001 /* RecognitionSettingsView.swift in Sources */,
+				HOTSET001158163000001 /* HotWordSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

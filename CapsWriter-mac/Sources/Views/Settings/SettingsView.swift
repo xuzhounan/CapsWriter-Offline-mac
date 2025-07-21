@@ -189,15 +189,7 @@ struct SettingsDetailView: View {
             case .recognition:
                 RecognitionSettingsView(configManager: configManager)
             case .hotwords:
-                VStack {
-                    Text("热词设置")
-                        .font(.title2)
-                    Text("热词替换管理")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                }
-                .padding()
+                HotWordSettingsView(configManager: configManager)
             case .shortcuts:
                 VStack {
                     Text("快捷键设置")
