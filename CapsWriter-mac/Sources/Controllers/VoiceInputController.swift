@@ -18,6 +18,7 @@ class VoiceInputController: ObservableObject {
     
     private let configManager: any ConfigurationManagerProtocol
     private let textProcessingService: TextProcessingServiceProtocol
+    private let errorHandler: ErrorHandlerProtocol
     // TODO: 恢复权限监控服务集成
     // private let permissionMonitorService: PermissionMonitorServiceProtocol
     
@@ -113,6 +114,7 @@ class VoiceInputController: ObservableObject {
         // 通过 DI 容器获取依赖服务
         self.configManager = DIContainer.shared.resolve(ConfigurationManagerProtocol.self)
         self.textProcessingService = DIContainer.shared.resolve(TextProcessingServiceProtocol.self)
+        self.errorHandler = DIContainer.shared.resolve(ErrorHandlerProtocol.self)
         // TODO: 恢复权限监控服务初始化
         // self.permissionMonitorService = DIContainer.shared.resolve(PermissionMonitorServiceProtocol.self)
         
@@ -669,6 +671,9 @@ class VoiceInputController: ObservableObject {
     
     private func handleError(_ error: VoiceInputError) {
         print("❌ VoiceInputController 错误: \(error.localizedDescription)")
+        
+        // 使用统一错误处理器记录和处理错误
+        errorHandler.handleVoiceInputError(error)
         
         // 根据错误类型采取不同的处理策略
         switch error {
