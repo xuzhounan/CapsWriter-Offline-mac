@@ -18,6 +18,9 @@ struct RecognitionSettingsView: View {
                 // 端点检测设置
                 EndpointDetectionSection(configManager: configManager)
                 
+                // 语言和文本处理设置
+                LanguageAndTextSection(configManager: configManager)
+                
                 // 性能设置
                 PerformanceSection(configManager: configManager)
             }
@@ -358,6 +361,135 @@ struct EndpointDetectionSection: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Language and Text Section
+
+struct LanguageAndTextSection: View {
+    @ObservedObject var configManager: ConfigurationManager
+    
+    var body: some View {
+        SettingsSection(
+            title: "语言和文本处理",
+            description: "配置识别语言和文本后处理选项"
+        ) {
+            VStack(spacing: 16) {
+                // 识别语言设置
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("识别语言")
+                        .font(.system(size: 14, weight: .medium))
+                    
+                    Picker("识别语言", selection: $configManager.recognition.language) {
+                        Text("中文 (简体)").tag("zh")
+                        Text("中文 (繁体)").tag("zh-tw")
+                        Text("英文").tag("en")
+                        Text("中英混合").tag("zh-en")
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    
+                    Text("选择主要的语音识别语言，影响模型的识别准确度")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                }
+                
+                Divider()
+                
+                // 标点符号处理
+                VStack(alignment: .leading, spacing: 12) {
+                    SettingsToggle(
+                        title: "启用标点符号",
+                        description: "自动为识别结果添加标点符号",
+                        isOn: $configManager.recognition.enablePunctuation
+                    )
+                    
+                    if configManager.recognition.enablePunctuation {
+                        HStack {
+                            Image(systemName: "info.circle")
+                                .font(.system(size: 12))
+                                .foregroundColor(.blue)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("标点符号处理将使用 CT-Transformer 模型")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.secondary)
+                                Text("可在「热词」设置中进一步配置标点符号选项")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                        }
+                        .padding(.leading, 16)
+                        .padding(.trailing, 8)
+                    }
+                }
+                
+                Divider()
+                
+                // 数字转换
+                VStack(alignment: .leading, spacing: 12) {
+                    SettingsToggle(
+                        title: "启用数字转换",
+                        description: "将语音中的数字转换为阿拉伯数字形式",
+                        isOn: $configManager.recognition.enableNumberConversion
+                    )
+                    
+                    if configManager.recognition.enableNumberConversion {
+                        HStack {
+                            Image(systemName: "textformat.123")
+                                .font(.system(size: 12))
+                                .foregroundColor(.green)
+                            
+                            Text("例如：「三十二」→「32」，「二千零二十四」→「2024」")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                            
+                            Spacer()
+                        }
+                        .padding(.leading, 16)
+                        .padding(.trailing, 8)
+                    }
+                }
+                
+                Divider()
+                
+                // 模型名称显示
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("当前模型")
+                        .font(.system(size: 14, weight: .medium))
+                    
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(configManager.recognition.modelName)
+                                .font(.system(size: 13, family: .monospaced))
+                                .foregroundColor(.primary)
+                            
+                            Text("模型类型: \(configManager.recognition.modelType)")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Button("更换模型") {
+                            changeModel()
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                    
+                    Text("当前使用的语音识别模型，不同模型适合不同语言")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+    }
+    
+    private func changeModel() {
+        // 实现模型切换功能
+        print("🔄 切换模型")
     }
 }
 

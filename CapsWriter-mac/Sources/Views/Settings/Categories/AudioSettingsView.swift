@@ -238,13 +238,15 @@ struct AudioEnhancementSection: View {
                         Text("输入增益")
                             .font(.system(size: 14, weight: .medium))
                         Spacer()
-                        Text("\(inputGain, specifier: "%.1f") dB")
+                        Text("0.0 dB")  // 临时显示，后续可扩展配置
                             .font(.system(size: 12))
                             .foregroundColor(.secondary)
                             .monospacedDigit()
                     }
                     
-                    Slider(value: $inputGain, in: -20...20, step: 0.5)
+                    // 临时禁用滑块，后续可绑定到配置
+                    Slider(value: .constant(0.0), in: -20...20, step: 0.5)
+                        .disabled(true)
                     
                     HStack {
                         Text("-20 dB")
@@ -260,7 +262,7 @@ struct AudioEnhancementSection: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    Text("调整麦克风输入音量，0 dB 为原始音量")
+                    Text("调整麦克风输入音量，0 dB 为原始音量（功能开发中）")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
                 }
@@ -271,36 +273,45 @@ struct AudioEnhancementSection: View {
                 SettingsToggle(
                     title: "噪声抑制",
                     description: "自动减少背景噪声，提高语音识别准确率",
-                    isOn: $noiseReduction
+                    isOn: $configManager.audio.enableNoiseReduction
                 )
                 
                 SettingsToggle(
-                    title: "自动增益控制",
-                    description: "自动调整音频电平，保持一致的录音音量",
-                    isOn: $autoGainControl
+                    title: "音频增强",
+                    description: "启用音频信号增强处理，优化录音质量",
+                    isOn: $configManager.audio.enableAudioEnhancement
                 )
                 
-                SettingsToggle(
-                    title: "回声消除",
-                    description: "消除扬声器播放的音频反馈",
-                    isOn: $echoCancellation
-                )
+                // 注意：这些高级音频功能暂时使用临时状态，
+                // 后续可扩展 AudioConfiguration 来支持这些配置
                 
-                SettingsToggle(
-                    title: "语音活动检测",
-                    description: "自动检测语音开始和结束，节省处理资源",
-                    isOn: $voiceActivityDetection
-                )
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 12))
+                            .foregroundColor(.orange)
+                        
+                        Text("高级音频功能")
+                            .font(.system(size: 14, weight: .medium))
+                        
+                        Spacer()
+                        
+                        Text("开发中")
+                            .font(.system(size: 11))
+                            .foregroundColor(.orange)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Color.orange.opacity(0.1))
+                            .cornerRadius(4)
+                    }
+                    
+                    Text("自动增益控制、回声消除、语音活动检测等高级功能正在开发中，将在后续版本中提供。")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                }
             }
         }
     }
-    
-    // 临时状态变量，实际应该绑定到 configManager
-    @State private var inputGain: Double = 0.0
-    @State private var noiseReduction = true
-    @State private var autoGainControl = false
-    @State private var echoCancellation = true
-    @State private var voiceActivityDetection = true
 }
 
 // MARK: - Audio Test Section

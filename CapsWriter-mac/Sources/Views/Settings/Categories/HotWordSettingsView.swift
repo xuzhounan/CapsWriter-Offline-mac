@@ -19,6 +19,9 @@ struct HotWordSettingsView: View {
                 // 热词处理设置
                 HotWordProcessingSection(configManager: configManager)
                 
+                // 标点符号处理设置
+                PunctuationProcessingSection(configManager: configManager)
+                
                 // 热词文件监控设置
                 HotWordFileWatchingSection(configManager: configManager)
             }
@@ -298,6 +301,138 @@ struct HotWordProcessingSection: View {
                     }
                 }
             }
+        }
+    }
+}
+
+// MARK: - Punctuation Processing Section
+
+struct PunctuationProcessingSection: View {
+    @ObservedObject var configManager: ConfigurationManager
+    
+    var body: some View {
+        SettingsSection(
+            title: "标点符号处理",
+            description: "配置自动标点符号添加和处理参数"
+        ) {
+            VStack(spacing: 16) {
+                // 启用标点符号处理
+                SettingsToggle(
+                    title: "启用标点符号处理",
+                    description: "对识别结果进行自动标点符号添加",
+                    isOn: $configManager.textProcessing.enablePunctuation
+                )
+                
+                if configManager.textProcessing.enablePunctuation {
+                    Divider()
+                    
+                    // 标点符号强度
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("标点符号强度")
+                            .font(.system(size: 14, weight: .medium))
+                        
+                        Picker("标点符号强度", selection: $configManager.textProcessing.punctuationIntensity) {
+                            Text("轻量").tag("light")
+                            Text("中等").tag("medium")
+                            Text("重度").tag("heavy")
+                        }
+                        .pickerStyle(SegmentedPickerStyle())
+                        
+                        Text(punctuationIntensityDescription)
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Divider()
+                    
+                    // 智能标点符号
+                    SettingsToggle(
+                        title: "智能标点符号",
+                        description: "使用 AI 模型分析语义，添加更准确的标点符号",
+                        isOn: $configManager.textProcessing.enableSmartPunctuation
+                    )
+                    
+                    Divider()
+                    
+                    // 具体标点符号选项
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("标点符号类型")
+                            .font(.system(size: 14, weight: .medium))
+                        
+                        VStack(spacing: 8) {
+                            SettingsToggle(
+                                title: "自动添加句号",
+                                description: "在句子结尾自动添加句号",
+                                isOn: $configManager.textProcessing.autoAddPeriod
+                            )
+                            
+                            SettingsToggle(
+                                title: "自动添加逗号",
+                                description: "在适当位置自动添加逗号",
+                                isOn: $configManager.textProcessing.autoAddComma
+                            )
+                            
+                            SettingsToggle(
+                                title: "自动添加问号",
+                                description: "识别疑问句并添加问号",
+                                isOn: $configManager.textProcessing.autoAddQuestionMark
+                            )
+                            
+                            SettingsToggle(
+                                title: "自动添加感叹号",
+                                description: "识别感叹句并添加感叹号",
+                                isOn: $configManager.textProcessing.autoAddExclamationMark
+                            )
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    // 处理选项
+                    VStack(alignment: .leading, spacing: 12) {
+                        SettingsToggle(
+                            title: "跳过已有标点",
+                            description: "如果文本已包含标点符号，则跳过处理",
+                            isOn: $configManager.textProcessing.skipExistingPunctuation
+                        )
+                        
+                        // 标点处理超时
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("标点处理超时")
+                                    .font(.system(size: 14, weight: .medium))
+                                Spacer()
+                                Text("\(configManager.textProcessing.punctuationProcessingTimeout, specifier: "%.1f")秒")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Slider(
+                                value: $configManager.textProcessing.punctuationProcessingTimeout,
+                                in: 0.5...5.0,
+                                step: 0.1
+                            )
+                            
+                            Text("标点符号处理的最大等待时间")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private var punctuationIntensityDescription: String {
+        switch configManager.textProcessing.punctuationIntensity {
+        case "light":
+            return "仅添加基本的句号和逗号"
+        case "medium":
+            return "添加常用标点符号，平衡准确性和自然性"
+        case "heavy":
+            return "添加全面的标点符号，包括括号、引号等"
+        default:
+            return "标准标点符号处理"
         }
     }
 }

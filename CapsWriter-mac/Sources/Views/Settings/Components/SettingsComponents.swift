@@ -479,6 +479,225 @@ struct SuccessCard: View {
     .frame(width: 400)
 }
 
+// MARK: - Configuration Validation Components
+
+/// 配置验证组件 - 用于实时验证配置项
+struct ConfigurationValidator: View {
+    let title: String
+    let configurationName: String
+    let validationResult: ConfigurationValidationResult
+    let onRevalidate: (() -> Void)?
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(title)
+                    .font(.system(size: 14, weight: .medium))
+                
+                Spacer()
+                
+                Button("重新验证") {
+                    onRevalidate?()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+            
+            ValidateResultRow(result: validationResult)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(NSColor.controlBackgroundColor))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(validationResult.borderColor, lineWidth: 1)
+                )
+        )
+    }
+}
+
+/// 验证结果行
+struct ValidateResultRow: View {
+    let result: ConfigurationValidationResult
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: result.icon)
+                .font(.system(size: 14))
+                .foregroundColor(result.iconColor)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(result.message)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(result.textColor)
+                
+                if let suggestion = result.suggestion {
+                    Text(suggestion)
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Spacer()
+            
+            if result.isLoading {
+                ProgressView()
+                    .scaleEffect(0.7)
+            }
+        }
+    }
+}
+
+/// 配置验证结果
+struct ConfigurationValidationResult {
+    let isValid: Bool
+    let message: String
+    let suggestion: String?
+    let isLoading: Bool
+    
+    init(
+        isValid: Bool, 
+        message: String, 
+        suggestion: String? = nil, 
+        isLoading: Bool = false
+    ) {
+        self.isValid = isValid
+        self.message = message
+        self.suggestion = suggestion
+        self.isLoading = isLoading
+    }
+    
+    var icon: String {
+        if isLoading { return "clock.circle" }
+        return isValid ? "checkmark.circle" : "xmark.circle"
+    }
+    
+    var iconColor: Color {
+        if isLoading { return .blue }
+        return isValid ? .green : .red
+    }
+    
+    var textColor: Color {
+        return isValid ? .primary : .red
+    }
+    
+    var borderColor: Color {
+        if isLoading { return .blue.opacity(0.3) }
+        return isValid ? .green.opacity(0.3) : .red.opacity(0.3)
+    }
+    
+    // 预设的验证结果
+    static let validating = ConfigurationValidationResult(
+        isValid: true, 
+        message: "正在验证配置...", 
+        isLoading: true
+    )
+    
+    static let valid = ConfigurationValidationResult(
+        isValid: true, 
+        message: "配置有效"
+    )
+    
+    static func invalid(_ message: String, suggestion: String? = nil) -> ConfigurationValidationResult {
+        ConfigurationValidationResult(
+            isValid: false, 
+            message: message, 
+            suggestion: suggestion
+        )
+    }
+}
+
+/// 批量配置验证器
+struct BatchConfigurationValidator: View {
+    let title: String
+    let validationResults: [String: ConfigurationValidationResult]  // 配置名 -> 验证结果
+    let onRevalidateAll: (() -> Void)?
+    
+    var overallStatus: ConfigurationValidationResult {
+        let results = Array(validationResults.values)
+        
+        if results.isEmpty {
+            return .invalid("没有找到配置项")
+        }
+        
+        if results.contains(where: { $0.isLoading }) {
+            return .validating
+        }
+        
+        let invalidResults = results.filter { !$0.isValid }
+        if invalidResults.isEmpty {
+            return .valid
+        } else {
+            return .invalid(
+                "\(invalidResults.count) 个配置项无效",
+                suggestion: "请检查并修复无效的配置项"
+            )
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // 总体状态
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.system(size: 16, weight: .semibold))
+                    
+                    Text("配置验证状态")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Button("全部重新验证") {
+                    onRevalidateAll?()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+            
+            ValidateResultRow(result: overallStatus)
+            
+            if !validationResults.isEmpty {
+                Divider()
+                
+                // 详细结果
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("详细验证结果")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.secondary)
+                    
+                    VStack(spacing: 6) {
+                        ForEach(Array(validationResults.keys.sorted()), id: \.self) { configName in
+                            if let result = validationResults[configName] {
+                                HStack {
+                                    Text(configName)
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.secondary)
+                                        .frame(maxWidth: 120, alignment: .leading)
+                                    
+                                    ValidateResultRow(result: result)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(NSColor.controlBackgroundColor))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(overallStatus.borderColor, lineWidth: 1.5)
+                )
+        )
+    }
+}
+
 #Preview("Settings Section") {
     SettingsSection(
         title: "测试区块",
