@@ -43,39 +43,142 @@ struct ContentView: View {
                 }
                 .tag(3)
             
-            // 设置页面 - 任务4.2 (临时实现)
-            VStack(spacing: 20) {
-                Text("设置")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                
-                Text("完整的设置界面正在开发中")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("基本设置")
-                        .font(.headline)
+            // 设置页面 - 任务4.2 (内嵌设置界面)
+            TabView {
+                VStack(spacing: 20) {
+                    Text("通用设置")
+                        .font(.title2)
+                        .fontWeight(.bold)
                     
-                    Toggle("启用自动启动", isOn: .constant(false))
-                    Toggle("显示状态栏图标", isOn: .constant(true))
-                    Toggle("启用声音提示", isOn: .constant(true))
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("应用行为")
+                            .font(.headline)
+                        Toggle("启用自动启动", isOn: .constant(false))
+                        Toggle("显示状态栏图标", isOn: .constant(true))
+                        Toggle("启用声音提示", isOn: .constant(true))
+                        Toggle("显示录音指示器", isOn: .constant(true))
+                    }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.controlBackgroundColor))
+                    )
+                    
+                    Spacer()
                 }
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(.controlBackgroundColor))
-                )
+                .padding(40)
+                .tabItem {
+                    Image(systemName: "gearshape")
+                    Text("通用")
+                }
+                .tag(0)
                 
-                Text("完整设置界面包含7个分类：通用、音频、识别、热词、快捷键、高级、关于")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                VStack(spacing: 20) {
+                    Text("音频设置")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("音频配置")
+                            .font(.headline)
+                        
+                        VStack(alignment: .leading) {
+                            Text("采样率")
+                            Picker("采样率", selection: .constant(16000)) {
+                                Text("16 kHz").tag(16000)
+                                Text("44.1 kHz").tag(44100)
+                                Text("48 kHz").tag(48000)
+                            }
+                            .pickerStyle(.menu)
+                        }
+                        
+                        Toggle("启用降噪", isOn: .constant(false))
+                        Toggle("启用音频增强", isOn: .constant(false))
+                    }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.controlBackgroundColor))
+                    )
+                    
+                    Spacer()
+                }
+                .padding(40)
+                .tabItem {
+                    Image(systemName: "speaker.wave.2")
+                    Text("音频")
+                }
+                .tag(1)
                 
-                Spacer()
+                VStack(spacing: 20) {
+                    Text("识别设置")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("语音识别")
+                            .font(.headline)
+                        
+                        VStack(alignment: .leading) {
+                            Text("识别模型")
+                            Picker("识别模型", selection: .constant("paraformer-zh")) {
+                                Text("Paraformer 中文").tag("paraformer-zh")
+                                Text("Paraformer 流式").tag("paraformer-zh-streaming")
+                            }
+                            .pickerStyle(.menu)
+                        }
+                        
+                        Toggle("启用标点符号", isOn: .constant(true))
+                        Toggle("启用数字转换", isOn: .constant(true))
+                    }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.controlBackgroundColor))
+                    )
+                    
+                    Spacer()
+                }
+                .padding(40)
+                .tabItem {
+                    Image(systemName: "brain")
+                    Text("识别")
+                }
+                .tag(2)
+                
+                VStack(spacing: 20) {
+                    Text("关于 CapsWriter")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    VStack(spacing: 16) {
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .font(.system(size: 60))
+                            .foregroundColor(.accentColor)
+                        
+                        Text("CapsWriter-mac")
+                            .font(.title)
+                            .fontWeight(.medium)
+                        
+                        Text("版本 1.0.0")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Text("基于 Sherpa-ONNX 的离线语音转文字工具")
+                            .font(.body)
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                }
+                .padding(40)
+                .tabItem {
+                    Image(systemName: "info.circle")
+                    Text("关于")
+                }
+                .tag(3)
             }
-            .padding(40)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.windowBackgroundColor))
             .tabItem {
                 Image(systemName: "gearshape")
                 Text("设置")
