@@ -263,8 +263,14 @@ class DIContainer: DependencyInjectionProtocol {
         }
         
         // 注册热词服务（单例） - 任务2.3
+        let hotWordServiceInstance = HotWordService(configManager: ConfigurationManager.shared)
         registerSingleton(HotWordServiceProtocol.self) {
-            return HotWordService(configManager: ConfigurationManager.shared)
+            return hotWordServiceInstance
+        }
+        
+        // 注册热词服务具体类型（单例） - 用于UI组件，共享同一实例
+        registerSingleton(HotWordService.self) {
+            return hotWordServiceInstance
         }
         
         // 注册标点符号处理服务（单例） - 任务3.1
