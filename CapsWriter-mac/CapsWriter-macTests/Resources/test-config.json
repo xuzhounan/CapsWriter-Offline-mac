@@ -1,0 +1,69 @@
+{
+  "audio": {
+    "sampleRate": 16000,
+    "channels": 1,
+    "bufferSize": 1024,
+    "enableNoiseReduction": false,
+    "enableAudioEnhancement": false
+  },
+  "recognition": {
+    "modelPath": "models/test-paraformer",
+    "numThreads": 2,
+    "provider": "cpu",
+    "modelType": "paraformer",
+    "modelingUnit": "char",
+    "decodingMethod": "greedy_search",
+    "maxActivePaths": 4,
+    "enableEndpoint": true,
+    "rule1MinTrailingSilence": 2.4,
+    "rule2MinTrailingSilence": 1.2,
+    "rule3MinUtteranceLength": 20.0,
+    "hotwordsScore": 1.5,
+    "debug": false,
+    "modelName": "test-paraformer",
+    "language": "zh",
+    "enablePunctuation": true,
+    "enableNumberConversion": true
+  },
+  "general": {
+    "language": "zh",
+    "enableStartup": false,
+    "enableDebug": true,
+    "enableAutoUpdate": false,
+    "logLevel": "debug",
+    "configVersion": "1.0.0"
+  },
+  "hotwords": {
+    "enableChineseHotwords": true,
+    "enableEnglishHotwords": true,
+    "enableRuleReplacement": true,
+    "hotwordFiles": [
+      "test-hot-zh.txt",
+      "test-hot-en.txt",
+      "test-hot-rule.txt"
+    ],
+    "enableRuntimeHotwords": true,
+    "caseSensitive": false,
+    "maxHotwordLength": 100,
+    "hotwordCacheSize": 1000
+  },
+  "shortcuts": {
+    "recordingShortcut": "O+O+O",
+    "enableGlobalShortcuts": true,
+    "shortcutTriggerCount": 3,
+    "shortcutTimeout": 800,
+    "enableKeyboardMonitor": true,
+    "keyDebounceDelay": 100
+  },
+  "ui": {
+    "theme": "system",
+    "enableFloatingWindow": true,
+    "windowOpacity": 0.95,
+    "enableAnimations": true,
+    "enableNotifications": true,
+    "enableStatusBar": true,
+    "enableTrayIcon": true,
+    "windowPosition": "center",
+    "fontSize": 14
+  }
+}
