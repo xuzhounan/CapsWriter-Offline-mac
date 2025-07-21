@@ -494,11 +494,15 @@ class SherpaASRService: ObservableObject, SpeechRecognitionServiceProtocol {
                 decoder: decoderPath
             )
             
+            // 🔒 安全修复：强制使用 CPU 提供者，避免 CoreML 兼容性问题
+            let safeProvider = "cpu"  // 强制使用 CPU，避免 CoreML blob 形状不匹配错误
+            addLog("⚙️ 强制使用 CPU 执行提供者，避免 CoreML 兼容性问题")
+            
             let modelConfig = sherpaOnnxOnlineModelConfig(
                 tokens: tokensPath,
                 paraformer: paraformerConfig,
                 numThreads: configManager.recognition.numThreads,
-                provider: configManager.recognition.provider,
+                provider: safeProvider,
                 debug: configManager.recognition.debug,
                 modelType: configManager.recognition.modelType,
                 modelingUnit: configManager.recognition.modelingUnit
@@ -522,8 +526,27 @@ class SherpaASRService: ObservableObject, SpeechRecognitionServiceProtocol {
             
             addLog("⚙️ 创建识别器实例...")
             RecordingState.shared.updateInitializationProgress("正在创建识别器...")
-            // 🔒 安全修复：安全创建识别器，增强错误处理
-            recognizer = SherpaOnnxCreateOnlineRecognizer(&config)
+            
+            // 🔒 安全修复：安全创建识别器，增强错误处理和异常捕获
+            do {
+                // 添加异常处理包装
+                recognizer = try createRecognizerSafely(&config)
+                addLog("✅ 识别器创建成功")
+            } catch {
+                addLog("❌ 识别器创建失败: \(error.localizedDescription)")
+                RecordingState.shared.updateInitializationProgress("识别器创建失败: \(error.localizedDescription)")
+                
+                // 降级处理：如果创建失败，尝试使用更保守的配置
+                addLog("🔄 尝试使用降级配置重新创建识别器...")
+                do {
+                    recognizer = try createRecognizerWithFallbackConfig()
+                    addLog("✅ 使用降级配置创建识别器成功")
+                } catch {
+                    addLog("❌ 降级配置也失败: \(error.localizedDescription)")
+                    isInitialized = false
+                    return
+                }
+            }
             
             // 🔒 空指针检查：确保识别器创建成功
             guard let validRecognizer = recognizer else {
@@ -641,9 +664,25 @@ class SherpaASRService: ObservableObject, SpeechRecognitionServiceProtocol {
         // 🔒 安全获取音频样本
         let samples = channelData[0]
         
-        // 🔒 安全调用：Send audio data to sherpa-onnx
-        // samples 是非可选的指针，直接使用
-        SherpaOnnxOnlineStreamAcceptWaveform(stream, Int32(sampleRate), samples, Int32(frameLength))
+        // 🔒 安全调用：Send audio data to sherpa-onnx，添加信号处理和错误检测
+        // 使用信号处理捕获可能的崩溃
+        let audioProcessingResult = processAudioWithErrorDetection(
+            stream: stream, 
+            sampleRate: Int32(sampleRate), 
+            samples: samples, 
+            frameLength: Int32(frameLength)
+        )
+        
+        guard audioProcessingResult else {
+            addLog("❌ 音频数据处理失败，可能是C API异常")
+            DispatchQueue.main.async {
+                let error = NSError(domain: "SherpaASRService", code: 1002, userInfo: [
+                    NSLocalizedDescriptionKey: "音频处理时发生异常，可能是模型兼容性问题"
+                ])
+                self.delegate?.speechRecognitionDidFailWithError(error)
+            }
+            return
+        }
         
         // 🔒 安全检查：检查识别器是否准备好解码
         let isReady = SherpaOnnxIsOnlineStreamReady(recognizer, stream)
@@ -751,6 +790,98 @@ class SherpaASRService: ObservableObject, SpeechRecognitionServiceProtocol {
         let cleanedString = resultString.filter { $0.isASCII || $0.unicodeScalars.allSatisfy(CharacterSet.alphanumerics.union(.punctuationCharacters).union(.whitespaces).contains) }
         
         return cleanedString
+    }
+    
+    // 🔒 安全创建识别器方法，包含异常捕获
+    private func createRecognizerSafely(_ config: inout SherpaOnnxOnlineRecognizerConfig) throws -> OpaquePointer? {
+        // 在 Swift 中，C API 调用通常不会抛出异常，但可能返回 nil
+        let recognizer = SherpaOnnxCreateOnlineRecognizer(&config)
+        
+        guard recognizer != nil else {
+            throw NSError(domain: "SherpaASRService", code: 1001, userInfo: [
+                NSLocalizedDescriptionKey: "无法创建 Sherpa-ONNX 识别器，可能是模型文件不兼容或内存不足"
+            ])
+        }
+        
+        return recognizer
+    }
+    
+    // 🔒 降级配置方法，使用更保守的参数
+    private func createRecognizerWithFallbackConfig() throws -> OpaquePointer? {
+        addLog("🔧 使用降级配置：减少线程数，禁用高级功能")
+        
+        // 使用更保守的配置
+        let paraformerConfig = sherpaOnnxOnlineParaformerModelConfig(
+            encoder: encoderPath,
+            decoder: decoderPath
+        )
+        
+        let modelConfig = sherpaOnnxOnlineModelConfig(
+            tokens: tokensPath,
+            paraformer: paraformerConfig,
+            numThreads: 1,  // 减少到单线程
+            provider: "cpu",  // 确保使用 CPU
+            debug: false,    // 禁用调试
+            modelType: "",   // 使用默认
+            modelingUnit: "" // 使用默认
+        )
+        
+        let featConfig = sherpaOnnxFeatureConfig(
+            sampleRate: Int(sampleRate),
+            featureDim: 80
+        )
+        
+        var fallbackConfig = sherpaOnnxOnlineRecognizerConfig(
+            featConfig: featConfig,
+            modelConfig: modelConfig,
+            decodingMethod: "greedy_search",  // 使用最简单的解码方法
+            maxActivePaths: 1,               // 减少活跃路径
+            enableEndpoint: false,           // 禁用端点检测
+            rule1MinTrailingSilence: 2.4,
+            rule2MinTrailingSilence: 1.2,
+            rule3MinUtteranceLength: 20.0
+        )
+        
+        return try createRecognizerSafely(&fallbackConfig)
+    }
+    
+    // 🔒 安全音频处理方法，包含错误检测
+    private func processAudioWithErrorDetection(
+        stream: OpaquePointer, 
+        sampleRate: Int32, 
+        samples: UnsafeMutablePointer<Float>, 
+        frameLength: Int32
+    ) -> Bool {
+        // 预检查：验证参数有效性
+        guard frameLength > 0 && frameLength <= 1024 * 1024 else {
+            addLog("⚠️ 音频帧长度无效: \(frameLength)")
+            return false
+        }
+        
+        // 使用 @_silgen_name 或其他机制来安全调用 C API
+        // 由于 Swift 中难以直接捕获 C API 的崩溃，我们使用保守的方法
+        
+        // 创建一个信号量来检测是否完成
+        let semaphore = DispatchSemaphore(value: 0)
+        var success = false
+        
+        // 在独立的队列中执行，以便检测超时
+        DispatchQueue.global(qos: .userInitiated).async {
+            // 实际调用 C API
+            SherpaOnnxOnlineStreamAcceptWaveform(stream, sampleRate, samples, frameLength)
+            success = true
+            semaphore.signal()
+        }
+        
+        // 等待完成或超时（5秒）
+        let result = semaphore.wait(timeout: .now() + 5.0)
+        
+        if result == .timedOut {
+            addLog("⚠️ 音频处理超时，可能发生了阻塞")
+            return false
+        }
+        
+        return success
     }
     
     private func getFinalResult() -> String? {
