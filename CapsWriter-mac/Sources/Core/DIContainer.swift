@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// 依赖注入协议
 protocol DependencyInjectionProtocol {
@@ -290,6 +291,11 @@ class DIContainer: DependencyInjectionProtocol {
         registerSingleton(LogExportServiceProtocol.self) {
             return LogExportService.shared
         }
+        
+        // TODO: 注册状态管理器（单例） - 暂时禁用等待文件包含到项目
+        // registerSingleton(StateManager.self) {
+        //     return StateManager.shared
+        // }
         
         // TODO: 注册权限监控服务（单例） - 响应式权限管理
         // registerSingleton(PermissionMonitorServiceProtocol.self) {

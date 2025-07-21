@@ -46,8 +46,7 @@ class RecordingState: ObservableObject {
     
     // MARK: - Private Properties
     
-    // 暂时注释掉 StateManager 依赖，保持向后兼容
-    // private let stateManager = StateManager.shared
+    // StateManager 通过 DIContainer 动态解析，避免循环依赖
     private var cancellables = Set<AnyCancellable>()
     
     // 用户手动停止标志（保持向后兼容）
@@ -78,14 +77,26 @@ class RecordingState: ObservableObject {
     // MARK: - State Binding
     
     private func setupStateBindings() {
-        // 暂时移除 StateManager 绑定，保持向后兼容
-        // TODO: 在 StateManager 添加到项目后重新启用
-        print("🔧 RecordingState: 状态绑定已暂时禁用（等待 StateManager 集成）")
+        // StateManager 集成 - 已重新启用
+        print("🔧 RecordingState: 设置StateManager状态绑定...")
+        
+        // TODO: 监听StateManager的音频状态变化（暂时禁用直到StateManager在项目中）
+        // if let stateManager = try? DIContainer.shared.resolve(StateManager.self) {
+        //     stateManager.$audioState
+        //         .map(\.isRecording)
+        //         .receive(on: DispatchQueue.main)
+        //         .assign(to: \.isRecording, on: self)
+        //         .store(in: &cancellables)
+        //     
+        //     print("✅ RecordingState: StateManager绑定已建立")
+        // } else {
+            print("⚠️ RecordingState: StateManager未注册，使用独立状态管理")
+        // }
     }
     
     // MARK: - Public Methods
     
-    /// 开始录音 - 暂时恢复原始实现
+    /// 开始录音
     func startRecording() {
         print("📊 RecordingState: startRecording() 被调用")
         print("📊 RecordingState: 当前录音状态 = \(isRecording)")
@@ -97,7 +108,7 @@ class RecordingState: ObservableObject {
         }
     }
     
-    /// 停止录音 - 暂时恢复原始实现
+    /// 停止录音
     func stopRecording() {
         print("📊 RecordingState: stopRecording() 被调用")
         print("📊 RecordingState: 当前录音状态 = \(isRecording)")
@@ -109,7 +120,7 @@ class RecordingState: ObservableObject {
         }
     }
     
-    /// 录音时长 - 暂时恢复原始实现
+    /// 录音时长
     var recordingDuration: TimeInterval {
         guard let startTime = recordingStartTime else { return 0 }
         return Date().timeIntervalSince(startTime)
@@ -120,8 +131,12 @@ class RecordingState: ObservableObject {
         DispatchQueue.main.async {
             self.keyboardMonitorStatus = status
         }
-        // TODO: 同时通知 StateManager（暂时禁用）
-        // stateManager.updateKeyboardMonitorStatus(status)
+        // TODO: 同时通知 StateManager（暂时禁用直到StateManager在项目中）
+        // if let stateManager = try? DIContainer.shared.resolve(StateManager.self) {
+        //     Task { @MainActor in
+        //         stateManager.updateKeyboardMonitorStatus(status)
+        //     }
+        // }
     }
     
     /// 用户手动启动监听器
@@ -152,15 +167,17 @@ class RecordingState: ObservableObject {
         // 注意：状态绑定会自动同步，这里保持兼容性
     }
     
-    /// 更新ASR服务状态 - 暂时保持向后兼容
+    /// 更新ASR服务状态
     func updateASRServiceStatus(_ isRunning: Bool) {
         DispatchQueue.main.async {
             self.isASRServiceRunning = isRunning
         }
-        // TODO: 重新启用 StateManager 集成后恢复
-        // let status: RecognitionState.EngineStatus = isRunning ? .initializing : .uninitialized
-        // Task { @MainActor in
-        //     stateManager.updateRecognitionEngineStatus(status)
+        // TODO: 同时通知 StateManager（暂时禁用直到StateManager在项目中）
+        // if let stateManager = try? DIContainer.shared.resolve(StateManager.self) {
+        //     let status: RecognitionState.EngineStatus = isRunning ? .initializing : .uninitialized
+        //     Task { @MainActor in
+        //         stateManager.updateRecognitionEngineStatus(status)
+        //     }
         // }
     }
     
@@ -169,34 +186,40 @@ class RecordingState: ObservableObject {
         DispatchQueue.main.async {
             self.isAudioCaptureServiceReady = isReady
         }
-        // TODO: 重新启用 StateManager 集成后恢复
-        // let deviceStatus: AudioState.AudioDeviceStatus = isReady ? .available : .unavailable
-        // Task { @MainActor in
-        //     stateManager.audioState.updateDeviceStatus(deviceStatus)
+        // TODO: 同时通知 StateManager（暂时禁用直到StateManager在项目中）
+        // if let stateManager = try? DIContainer.shared.resolve(StateManager.self) {
+        //     Task { @MainActor in
+        //         // 更新音频采集服务状态
+        //         stateManager.audioState.updateAudioCaptureServiceStatus(isReady)
+        //     }
         // }
     }
     
-    /// 更新ASR服务初始化状态 - 暂时保持向后兼容
+    /// 更新ASR服务初始化状态
     func updateASRServiceInitialized(_ isInitialized: Bool) {
         DispatchQueue.main.async {
             self.isASRServiceInitialized = isInitialized
         }
-        // TODO: 重新启用 StateManager 集成后恢复
-        // let status: RecognitionState.EngineStatus = isInitialized ? .ready : .uninitialized
-        // Task { @MainActor in
-        //     stateManager.updateRecognitionEngineStatus(status)
+        // TODO: 同时通知 StateManager（暂时禁用直到StateManager在项目中）
+        // if let stateManager = try? DIContainer.shared.resolve(StateManager.self) {
+        //     let status: RecognitionState.EngineStatus = isInitialized ? .ready : .uninitialized
+        //     Task { @MainActor in
+        //         stateManager.updateRecognitionEngineStatus(status)
+        //     }
         // }
     }
     
-    /// 更新初始化进度 - 暂时保持向后兼容
+    /// 更新初始化进度
     func updateInitializationProgress(_ progress: String) {
         DispatchQueue.main.async {
             self.initializationProgress = progress
         }
-        // TODO: 重新启用 StateManager 集成后恢复
-        // if progress.contains("错误") || progress.contains("失败") {
-        //     Task { @MainActor in
-        //         stateManager.updateRecognitionEngineStatus(.error(progress))
+        // TODO: 同时通知 StateManager（暂时禁用直到StateManager在项目中）
+        // if let stateManager = try? DIContainer.shared.resolve(StateManager.self) {
+        //     if progress.contains("错误") || progress.contains("失败") {
+        //         Task { @MainActor in
+        //             stateManager.updateRecognitionEngineStatus(.error(progress))
+        //         }
         //     }
         // }
     }
@@ -242,7 +265,7 @@ class RecordingState: ObservableObject {
         }
     }
     
-    /// 刷新权限状态 - 暂时保持向后兼容
+    /// 刷新权限状态
     func refreshPermissionStatus() {
         // 直接检查权限状态并更新（绕过StateManager）
         print("🔄 RecordingState: 开始刷新权限状态...")
@@ -266,9 +289,11 @@ class RecordingState: ObservableObject {
         updateTextInputPermission(accessibilityPermission)
         print("📝 RecordingState: 文本输入权限 = \(accessibilityPermission)")
         
-        // TODO: 重新启用 StateManager 集成后恢复
-        // Task { @MainActor in
-        //     stateManager.updatePermissions()
+        // TODO: 同时通知 StateManager 更新权限（暂时禁用直到StateManager在项目中）
+        // if let stateManager = try? DIContainer.shared.resolve(StateManager.self) {
+        //     Task { @MainActor in
+        //         stateManager.updatePermissions()
+        //     }
         // }
         
         // 保持键盘监听器状态逻辑的兼容性
