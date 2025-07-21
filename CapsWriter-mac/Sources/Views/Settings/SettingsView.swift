@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 // MARK: - Main Settings View
 
@@ -14,7 +15,7 @@ struct SettingsView: View {
         NavigationSplitView {
             // 左侧导航栏
             SettingsSidebar(selectedCategory: $selectedCategory)
-                .navigationSplitViewColumnWidth(min: 200, ideal: 250, max: 300)
+                .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 280)
         } detail: {
             // 右侧详细设置
             SettingsDetailView(
@@ -60,7 +61,8 @@ struct SettingsView: View {
         } message: {
             Text("这将重置所有设置为默认值，此操作无法撤销。确定要继续吗？")
         }
-        .frame(minWidth: 800, minHeight: 600)
+        .frame(minWidth: 600, idealWidth: 800, maxWidth: .infinity, 
+               minHeight: 400, idealHeight: 600, maxHeight: .infinity)
     }
     
     // MARK: - Private Methods
@@ -181,19 +183,67 @@ struct SettingsDetailView: View {
         Group {
             switch category {
             case .general:
-                GeneralSettingsView(configManager: configManager)
+                VStack {
+                    Text("通用设置")
+                        .font(.title2)
+                    Text("配置管理器已连接")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding()
             case .audio:
                 SimplifiedAudioSettingsView(configManager: configManager)
             case .recognition:
-                RecognitionSettingsView(configManager: configManager)
+                VStack {
+                    Text("识别设置")
+                        .font(.title2)
+                    Text("语音识别配置")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding()
             case .hotwords:
-                HotWordSettingsView(configManager: configManager)
+                VStack {
+                    Text("热词设置")
+                        .font(.title2)
+                    Text("热词替换管理")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding()
             case .shortcuts:
-                ShortcutSettingsView(configManager: configManager)
+                VStack {
+                    Text("快捷键设置")
+                        .font(.title2)
+                    Text("键盘快捷键配置")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding()
             case .advanced:
-                AdvancedSettingsView(configManager: configManager)
+                VStack {
+                    Text("高级设置")
+                        .font(.title2)
+                    Text("高级配置选项")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding()
             case .about:
-                AboutSettingsView()
+                VStack {
+                    Text("关于应用")
+                        .font(.title2)
+                    Text("CapsWriter-mac 版本信息")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding()
             }
         }
         .navigationTitle(category.displayName)

@@ -39,6 +39,13 @@
 		LOG001122334455667788AABD /* LogExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = LOG001122334455667788AABE /* LogExportService.swift */; };
 		LOG001122334455667788AABF /* LogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LOG001122334455667788AAC0 /* LogView.swift */; };
 		AUDISET531158163000001 /* SimplifiedAudioSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AUDISET531158163000002 /* SimplifiedAudioSettingsView.swift */; };
+		SETVIEW001158163000001 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SETVIEW001158163000002 /* SettingsView.swift */; };
+		SETTYPE001158163000001 /* SettingsTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = SETTYPE001158163000002 /* SettingsTypes.swift */; };
+		GENSET001158163000001 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GENSET001158163000002 /* GeneralSettingsView.swift */; };
+		HOTSET001158163000001 /* HotWordSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = HOTSET001158163000002 /* HotWordSettingsView.swift */; };
+		ADVSET001158163000001 /* AdvancedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADVSET001158163000002 /* AdvancedSettingsView.swift */; };
+		ABTSET001158163000001 /* AboutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABTSET001158163000002 /* AboutSettingsView.swift */; };
+		SHRSET001158163000001 /* ShortcutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SHRSET001158163000002 /* ShortcutSettingsView.swift */; };
 	/* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -91,6 +98,13 @@
 		LOG001122334455667788AABE /* LogExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LogExportService.swift; path = Sources/Services/LogExportService.swift; sourceTree = SOURCE_ROOT; };
 		LOG001122334455667788AAC0 /* LogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LogView.swift; path = Sources/Views/LogView.swift; sourceTree = SOURCE_ROOT; };
 		AUDISET531158163000002 /* SimplifiedAudioSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SimplifiedAudioSettingsView.swift; path = Sources/Views/Settings/Categories/SimplifiedAudioSettingsView.swift; sourceTree = SOURCE_ROOT; };
+		SETVIEW001158163000002 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SettingsView.swift; path = Sources/Views/Settings/SettingsView.swift; sourceTree = SOURCE_ROOT; };
+		SETTYPE001158163000002 /* SettingsTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SettingsTypes.swift; path = Sources/Views/Settings/SettingsTypes.swift; sourceTree = SOURCE_ROOT; };
+		GENSET001158163000002 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GeneralSettingsView.swift; path = Sources/Views/Settings/Categories/GeneralSettingsView.swift; sourceTree = SOURCE_ROOT; };
+		HOTSET001158163000002 /* HotWordSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HotWordSettingsView.swift; path = Sources/Views/Settings/Categories/HotWordSettingsView.swift; sourceTree = SOURCE_ROOT; };
+		ADVSET001158163000002 /* AdvancedSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AdvancedSettingsView.swift; path = Sources/Views/Settings/Categories/AdvancedSettingsView.swift; sourceTree = SOURCE_ROOT; };
+		ABTSET001158163000002 /* AboutSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AboutSettingsView.swift; path = Sources/Views/Settings/Categories/AboutSettingsView.swift; sourceTree = SOURCE_ROOT; };
+		SHRSET001158163000002 /* ShortcutSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ShortcutSettingsView.swift; path = Sources/Views/Settings/Categories/ShortcutSettingsView.swift; sourceTree = SOURCE_ROOT; };
 	/* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -166,6 +180,13 @@
 				LOG001122334455667788AAC0 /* LogView.swift */,
 				2146729669AF4727A24F3226 /* DIContainer.swift */,
 				AUDISET531158163000002 /* SimplifiedAudioSettingsView.swift */,
+				SETVIEW001158163000002 /* SettingsView.swift */,
+				SETTYPE001158163000002 /* SettingsTypes.swift */,
+				GENSET001158163000002 /* GeneralSettingsView.swift */,
+				HOTSET001158163000002 /* HotWordSettingsView.swift */,
+				ADVSET001158163000002 /* AdvancedSettingsView.swift */,
+				ABTSET001158163000002 /* AboutSettingsView.swift */,
+				SHRSET001158163000002 /* ShortcutSettingsView.swift */,
 			);
 			path = "CapsWriter-mac";
 			sourceTree = "<group>";
@@ -274,6 +295,8 @@
 				LOG001122334455667788AABD /* LogExportService.swift in Sources */,
 				LOG001122334455667788AABF /* LogView.swift in Sources */,
 				AUDISET531158163000001 /* SimplifiedAudioSettingsView.swift in Sources */,
+				SETVIEW001158163000001 /* SettingsView.swift in Sources */,
+				SETTYPE001158163000001 /* SettingsTypes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

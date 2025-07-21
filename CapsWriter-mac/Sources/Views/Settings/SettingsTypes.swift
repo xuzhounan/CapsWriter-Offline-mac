@@ -88,56 +88,9 @@ struct SettingGroup: Identifiable {
 
 // MARK: - Hot Word Types
 
-/// 热词分类
-enum HotWordCategory: String, CaseIterable, Identifiable {
-    case chinese = "中文热词"
-    case english = "英文热词"
-    case rules = "替换规则"
-    case custom = "自定义"
-    
-    var id: String { rawValue }
-    
-    var displayName: String { rawValue }
-    
-    var icon: String {
-        switch self {
-        case .chinese: return "textformat.abc"
-        case .english: return "textformat.alt"
-        case .rules: return "arrow.triangle.2.circlepath"
-        case .custom: return "plus.circle"
-        }
-    }
-    
-    var fileName: String {
-        switch self {
-        case .chinese: return "hot-zh.txt"
-        case .english: return "hot-en.txt" 
-        case .rules: return "hot-rule.txt"
-        case .custom: return "hot-custom.txt"
-        }
-    }
-}
+// HotWordCategory 现在在 HotWordService.swift 中定义
 
-/// 热词条目
-struct HotWordEntry: Identifiable, Codable {
-    let id = UUID()
-    var originalText: String
-    var replacementText: String
-    var isEnabled: Bool = true
-    var priority: Int = 0
-    var category: HotWordCategory
-    var isCaseSensitive: Bool = false
-    var isWholeWordMatch: Bool = true
-    var createdDate: Date = Date()
-    var lastModified: Date = Date()
-    
-    /// 验证热词条目有效性
-    func isValid() -> Bool {
-        return !originalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-               !replacementText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-               originalText != replacementText
-    }
-}
+// HotWordEntry 现在在 HotWordService.swift 中定义
 
 /// 热词排序方式
 enum HotWordSortBy: String, CaseIterable {

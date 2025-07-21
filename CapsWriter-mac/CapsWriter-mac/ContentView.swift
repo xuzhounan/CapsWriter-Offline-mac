@@ -44,8 +44,8 @@ struct ContentView: View {
                 }
                 .tag(3)
             
-            // 设置页面 - 任务4.2 (响应式设置界面)
-            SettingsPlaceholderView()
+            // 设置页面 - 使用NavigationSplitView替代嵌套TabView
+            SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape")
                     Text("设置")

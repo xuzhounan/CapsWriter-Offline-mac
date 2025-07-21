@@ -53,20 +53,108 @@ enum HotWordType: String, CaseIterable {
     }
 }
 
+/// 热词分类
+enum HotWordCategory: String, CaseIterable, Identifiable, Codable {
+    case chinese = "中文热词"
+    case english = "英文热词"
+    case rules = "替换规则"
+    case custom = "自定义"
+    
+    var id: String { rawValue }
+    
+    var displayName: String { rawValue }
+    
+    var icon: String {
+        switch self {
+        case .chinese: return "textformat.abc"
+        case .english: return "textformat.alt"
+        case .rules: return "arrow.triangle.2.circlepath"
+        case .custom: return "plus.circle"
+        }
+    }
+    
+    var fileName: String {
+        switch self {
+        case .chinese: return "hot-zh.txt"
+        case .english: return "hot-en.txt" 
+        case .rules: return "hot-rule.txt"
+        case .custom: return "hot-custom.txt"
+        }
+    }
+}
+
 /// 热词条目
-struct HotWordEntry {
-    let original: String
-    let replacement: String
-    let type: HotWordType
-    let priority: Int
+struct HotWordEntry: Identifiable, Codable {
+    let id = UUID()
+    var originalText: String
+    var replacementText: String
+    var isEnabled: Bool = true
+    var priority: Int = 0
+    var category: HotWordCategory
+    var isCaseSensitive: Bool = false
+    var isWholeWordMatch: Bool = true
     var usage: Int = 0
-    let createdAt: Date = Date()
+    var createdDate: Date = Date()
+    var lastModified: Date = Date()
+    
+    // 向后兼容的计算属性
+    var original: String { 
+        get { originalText }
+        set { originalText = newValue }
+    }
+    
+    var replacement: String { 
+        get { replacementText }
+        set { replacementText = newValue }
+    }
+    
+    var type: HotWordType {
+        get {
+            switch category {
+            case .chinese: return .chinese
+            case .english: return .english  
+            case .rules: return .rule
+            case .custom: return .runtime
+            }
+        }
+        set {
+            switch newValue {
+            case .chinese: category = .chinese
+            case .english: category = .english
+            case .rule: category = .rules
+            case .runtime: category = .custom
+            }
+        }
+    }
+    
+    var createdAt: Date { createdDate }
     
     init(original: String, replacement: String, type: HotWordType) {
-        self.original = original
-        self.replacement = replacement
-        self.type = type
+        self.originalText = original
+        self.replacementText = replacement
+        self.category = {
+            switch type {
+            case .chinese: return .chinese
+            case .english: return .english
+            case .rule: return .rules
+            case .runtime: return .custom
+            }
+        }()
         self.priority = type.priority
+    }
+    
+    init(originalText: String, replacementText: String, category: HotWordCategory) {
+        self.originalText = originalText
+        self.replacementText = replacementText
+        self.category = category
+        self.priority = 0
+    }
+    
+    /// 验证热词条目有效性
+    func isValid() -> Bool {
+        return !originalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+               !replacementText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+               originalText != replacementText
     }
 }
 
