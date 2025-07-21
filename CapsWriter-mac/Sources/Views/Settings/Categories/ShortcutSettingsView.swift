@@ -33,10 +33,7 @@ struct KeyboardMonitoringSection: View {
     @State private var monitoringStatus: KeyboardMonitoringStatus = .unknown
     
     var body: some View {
-        SettingsSection(
-            title: "键盘监听",
-            description: "配置系统级键盘事件监听和权限设置"
-        ) {
+        SettingsSection(title: "键盘监听") {
             VStack(spacing: 16) {
                 // 监听状态
                 HStack {
@@ -119,10 +116,7 @@ struct PrimaryShortcutSection: View {
     @ObservedObject var configManager: ConfigurationManager
     
     var body: some View {
-        SettingsSection(
-            title: "主要快捷键",
-            description: "配置录音触发和窗口控制的快捷键"
-        ) {
+        SettingsSection(title: "主要快捷键") {
             VStack(spacing: 16) {
                 // 主键码设置
                 VStack(alignment: .leading, spacing: 8) {
@@ -149,7 +143,7 @@ struct PrimaryShortcutSection: View {
                         Spacer()
                         
                         Text("键码: \(configManager.keyboard.primaryKeyCode)")
-                            .font(.system(size: 12, family: .monospaced))
+                            .font(.system(size: 12, design: .monospaced))
                             .foregroundColor(.secondary)
                     }
                     
@@ -271,10 +265,7 @@ struct ShortcutBehaviorSection: View {
     @ObservedObject var configManager: ConfigurationManager
     
     var body: some View {
-        SettingsSection(
-            title: "快捷键行为",
-            description: "配置快捷键的触发行为和反馈设置"
-        ) {
+        SettingsSection(title: "快捷键行为") {
             VStack(spacing: 16) {
                 // 启用快捷键
                 SettingsToggle(
@@ -373,10 +364,7 @@ struct ShortcutBehaviorSection: View {
 
 struct ShortcutHelpSection: View {
     var body: some View {
-        SettingsSection(
-            title: "快捷键帮助",
-            description: "了解如何使用和自定义快捷键"
-        ) {
+        SettingsSection(title: "快捷键帮助") {
             VStack(spacing: 16) {
                 // 使用说明
                 InfoCard(
@@ -427,7 +415,7 @@ struct ShortcutHelpSection: View {
                                 Text(key)
                                     .font(.system(size: 12, weight: .medium))
                                 Text("\(code)")
-                                    .font(.system(size: 10, family: .monospaced))
+                                    .font(.system(size: 10, design: .monospaced))
                                     .foregroundColor(.secondary)
                             }
                             .padding(.vertical, 4)

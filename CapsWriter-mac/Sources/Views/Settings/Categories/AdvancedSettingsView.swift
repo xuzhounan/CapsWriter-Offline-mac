@@ -35,10 +35,7 @@ struct DebugSection: View {
     @ObservedObject var configManager: ConfigurationManager
     
     var body: some View {
-        SettingsSection(
-            title: "调试设置",
-            description: "配置调试输出和性能监控选项"
-        ) {
+        SettingsSection(title: "调试设置") {
             VStack(spacing: 16) {
                 // 启用详细日志
                 SettingsToggle(
@@ -120,10 +117,7 @@ struct DeveloperSection: View {
     @State private var showingDeveloperMode = false
     
     var body: some View {
-        SettingsSection(
-            title: "开发者选项",
-            description: "面向开发者和高级用户的特殊功能"
-        ) {
+        SettingsSection(title: "开发者选项") {
             VStack(spacing: 16) {
                 // 开发者模式开关
                 HStack {
@@ -252,10 +246,7 @@ struct SystemIntegrationSection: View {
     @State private var servicesInstalled = false
     
     var body: some View {
-        SettingsSection(
-            title: "系统集成",
-            description: "与 macOS 系统功能的深度集成选项"
-        ) {
+        SettingsSection(title: "系统集成") {
             VStack(spacing: 16) {
                 // Automator 集成
                 HStack {
@@ -354,7 +345,7 @@ struct SystemIntegrationSection: View {
                     
                     HStack {
                         Text("capswriter://")
-                            .font(.system(size: 12, family: .monospaced))
+                            .font(.system(size: 12, design: .monospaced))
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                             .background(
@@ -446,10 +437,7 @@ struct ExperimentalFeaturesSection: View {
     @State private var enableVoiceCommands = false
     
     var body: some View {
-        SettingsSection(
-            title: "实验性功能",
-            description: "处于开发阶段的新功能，可能不稳定"
-        ) {
+        SettingsSection(title: "实验性功能") {
             VStack(spacing: 16) {
                 InfoCard(
                     title: "实验性功能说明",
@@ -563,10 +551,7 @@ struct MaintenanceSection: View {
     @State private var isCleaningUp = false
     
     var body: some View {
-        SettingsSection(
-            title: "维护工具",
-            description: "清理缓存、重置设置和系统维护功能"
-        ) {
+        SettingsSection(title: "维护工具") {
             VStack(spacing: 16) {
                 // 缓存管理
                 VStack(alignment: .leading, spacing: 12) {

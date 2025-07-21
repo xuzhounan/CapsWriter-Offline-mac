@@ -69,8 +69,8 @@ struct AppInfoSection: View {
                         .foregroundColor(.secondary)
                     
                     Text("版本 \(appVersion) (构建 \(buildNumber))")
-                        .font(.system(size: 13, family: .monospaced))
-                        .foregroundColor(.tertiary)
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundColor(Color.secondary.opacity(0.6))
                 }
             }
             
@@ -94,10 +94,7 @@ struct AppInfoSection: View {
 
 struct DevelopmentTeamSection: View {
     var body: some View {
-        SettingsSection(
-            title: "开发团队",
-            description: "感谢所有为 CapsWriter 做出贡献的开发者们"
-        ) {
+        SettingsSection(title: "开发团队") {
             VStack(spacing: 16) {
                 // 主要开发者
                 VStack(spacing: 12) {
@@ -186,10 +183,7 @@ struct OpenSourceSection: View {
     @Binding var showingLicenses: Bool
     
     var body: some View {
-        SettingsSection(
-            title: "开源组件",
-            description: "CapsWriter 基于以下优秀的开源项目构建"
-        ) {
+        SettingsSection(title: "开源组件") {
             VStack(spacing: 16) {
                 // 主要组件
                 VStack(spacing: 8) {
@@ -265,7 +259,7 @@ struct OpenSourceComponent: View {
                         .font(.system(size: 13, weight: .medium))
                     
                     Text("v\(version)")
-                        .font(.system(size: 11, family: .monospaced))
+                        .font(.system(size: 11, design: .monospaced))
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
@@ -281,7 +275,7 @@ struct OpenSourceComponent: View {
                 
                 Text("许可证: \(license)")
                     .font(.system(size: 10))
-                    .foregroundColor(.tertiary)
+                    .foregroundColor(Color.secondary.opacity(0.6))
             }
             
             Spacer()
@@ -296,10 +290,7 @@ struct VersionInfoSection: View {
     @Binding var showingChangelog: Bool
     
     var body: some View {
-        SettingsSection(
-            title: "版本信息",
-            description: "查看版本历史和更新日志"
-        ) {
+        SettingsSection(title: "版本信息") {
             VStack(spacing: 16) {
                 // 系统信息
                 VStack(spacing: 8) {
@@ -404,7 +395,7 @@ struct SystemInfoRow: View {
                 .frame(width: 100, alignment: .leading)
             
             Text(value)
-                .font(.system(size: 12, family: .monospaced))
+                .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(.primary)
             
             Spacer()
@@ -416,10 +407,7 @@ struct SystemInfoRow: View {
 
 struct SupportSection: View {
     var body: some View {
-        SettingsSection(
-            title: "支持与反馈",
-            description: "获取帮助、报告问题或提供反馈建议"
-        ) {
+        SettingsSection(title: "支持与反馈") {
             VStack(spacing: 16) {
                 // 支持选项
                 VStack(spacing: 8) {
@@ -553,7 +541,7 @@ struct SupportOption: View {
                 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12))
-                    .foregroundColor(.tertiary)
+                    .foregroundColor(Color.secondary.opacity(0.6))
             }
             .padding(.vertical, 4)
         }
@@ -565,10 +553,7 @@ struct SupportOption: View {
 
 struct LegalSection: View {
     var body: some View {
-        SettingsSection(
-            title: "法律信息",
-            description: "隐私政策、服务条款和法律声明"
-        ) {
+        SettingsSection(title: "法律信息") {
             VStack(spacing: 16) {
                 // 法律文档
                 VStack(spacing: 8) {
@@ -601,7 +586,7 @@ struct LegalSection: View {
                     
                     Text("CapsWriter 是在 MIT 许可证下发布的开源软件")
                         .font(.system(size: 10))
-                        .foregroundColor(.tertiary)
+                        .foregroundColor(Color.secondary.opacity(0.6))
                 }
             }
         }
@@ -651,7 +636,7 @@ struct LegalDocument: View {
                 
                 Image(systemName: "arrow.up.right")
                     .font(.system(size: 10))
-                    .foregroundColor(.tertiary)
+                    .foregroundColor(Color.secondary.opacity(0.6))
             }
         }
         .buttonStyle(PlainButtonStyle())
