@@ -115,142 +115,59 @@ class StatusBarController: ObservableObject {
             )
             settingsWindow.title = "设置"
             
-            // 创建内嵌的设置界面
-            let settingsContent = TabView {
-                VStack(spacing: 20) {
-                    Text("通用设置")
-                        .font(.title2)
-                        .fontWeight(.bold)
+            // 创建设置界面 - 使用响应式配置管理
+            let configManager = ConfigurationManager.shared
+            let settingsContent = VStack(spacing: 20) {
+                Text("CapsWriter 设置")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("应用行为")
+                        .font(.headline)
                     
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("应用行为")
-                            .font(.headline)
-                        Toggle("启用自动启动", isOn: .constant(false))
-                        Toggle("显示状态栏图标", isOn: .constant(true))
-                        Toggle("启用声音提示", isOn: .constant(true))
-                        Toggle("显示录音指示器", isOn: .constant(true))
-                    }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(.controlBackgroundColor))
+                    // 使用实际的配置绑定而非 .constant()
+                    SettingsToggleRow(
+                        title: "启用自动启动",
+                        isOn: Binding(
+                            get: { configManager.appBehavior.enableAutoLaunch },
+                            set: { configManager.appBehavior.enableAutoLaunch = $0 }
+                        )
                     )
                     
-                    Spacer()
-                }
-                .padding(40)
-                .tabItem {
-                    Image(systemName: "gearshape")
-                    Text("通用")
-                }
-                .tag(0)
-                
-                VStack(spacing: 20) {
-                    Text("音频设置")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("音频配置")
-                            .font(.headline)
-                        
-                        VStack(alignment: .leading) {
-                            Text("采样率")
-                            Picker("采样率", selection: .constant(16000)) {
-                                Text("16 kHz").tag(16000)
-                                Text("44.1 kHz").tag(44100)
-                                Text("48 kHz").tag(48000)
-                            }
-                            .pickerStyle(.menu)
-                        }
-                        
-                        Toggle("启用降噪", isOn: .constant(false))
-                        Toggle("启用音频增强", isOn: .constant(false))
-                    }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(.controlBackgroundColor))
+                    SettingsToggleRow(
+                        title: "显示状态栏图标",
+                        isOn: Binding(
+                            get: { configManager.ui.showStatusBarIcon },
+                            set: { configManager.ui.showStatusBarIcon = $0 }
+                        )
                     )
                     
-                    Spacer()
-                }
-                .padding(40)
-                .tabItem {
-                    Image(systemName: "speaker.wave.2")
-                    Text("音频")
-                }
-                .tag(1)
-                
-                VStack(spacing: 20) {
-                    Text("识别设置")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("语音识别")
-                            .font(.headline)
-                        
-                        VStack(alignment: .leading) {
-                            Text("识别模型")
-                            Picker("识别模型", selection: .constant("paraformer-zh")) {
-                                Text("Paraformer 中文").tag("paraformer-zh")
-                                Text("Paraformer 流式").tag("paraformer-zh-streaming")
-                            }
-                            .pickerStyle(.menu)
-                        }
-                        
-                        Toggle("启用标点符号", isOn: .constant(true))
-                        Toggle("启用数字转换", isOn: .constant(true))
-                    }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(.controlBackgroundColor))
+                    SettingsToggleRow(
+                        title: "启用声音提示",
+                        isOn: Binding(
+                            get: { configManager.ui.enableSoundEffects },
+                            set: { configManager.ui.enableSoundEffects = $0 }
+                        )
                     )
                     
-                    Spacer()
+                    SettingsToggleRow(
+                        title: "显示录音指示器",
+                        isOn: Binding(
+                            get: { configManager.ui.showRecordingIndicator },
+                            set: { configManager.ui.showRecordingIndicator = $0 }
+                        )
+                    )
                 }
-                .padding(40)
-                .tabItem {
-                    Image(systemName: "brain")
-                    Text("识别")
-                }
-                .tag(2)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.controlBackgroundColor))
+                )
                 
-                VStack(spacing: 20) {
-                    Text("关于 CapsWriter")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    
-                    VStack(spacing: 16) {
-                        Image(systemName: "doc.text.magnifyingglass")
-                            .font(.system(size: 60))
-                            .foregroundColor(.accentColor)
-                        
-                        Text("CapsWriter-mac")
-                            .font(.title)
-                            .fontWeight(.medium)
-                        
-                        Text("版本 1.0.0")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        Text("基于 Sherpa-ONNX 的离线语音转文字工具")
-                            .font(.body)
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Spacer()
-                }
-                .padding(40)
-                .tabItem {
-                    Image(systemName: "info.circle")
-                    Text("关于")
-                }
-                .tag(3)
+                Spacer()
             }
+            .padding(40)
             .frame(minWidth: 500, minHeight: 400)
             
             settingsWindow.contentView = NSHostingView(rootView: settingsContent)
@@ -266,5 +183,20 @@ class StatusBarController: ObservableObject {
     
     deinit {
         statusItem = nil
+    }
+}
+
+// MARK: - Settings UI Components
+struct SettingsToggleRow: View {
+    let title: String
+    @Binding var isOn: Bool
+    
+    var body: some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Toggle("", isOn: $isOn)
+                .labelsHidden()
+        }
     }
 }
