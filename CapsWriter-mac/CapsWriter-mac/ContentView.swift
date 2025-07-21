@@ -782,56 +782,457 @@ struct RealTimeTranscriptionView: View {
 
 struct SettingsPlaceholderView: View {
     @StateObject private var configManager = ConfigurationManager.shared
+    @State private var selectedTab = 0
     
     var body: some View {
-        VStack(spacing: 20) {
-            Text("设置")
-                .font(.title)
-                .fontWeight(.bold)
+        TabView(selection: $selectedTab) {
+            // 通用设置
+            GeneralSettingsView()
+                .tabItem {
+                    Image(systemName: "gear")
+                    Text("通用")
+                }
+                .tag(0)
             
-            VStack(alignment: .leading, spacing: 16) {
-                Text("应用行为")
-                    .font(.headline)
+            // 音频设置
+            AudioSettingsView()
+                .tabItem {
+                    Image(systemName: "speaker.wave.2")
+                    Text("音频")
+                }
+                .tag(1)
+            
+            // 识别设置
+            RecognitionSettingsView()
+                .tabItem {
+                    Image(systemName: "brain")
+                    Text("识别")
+                }
+                .tag(2)
+            
+            // 快捷键设置
+            KeyboardSettingsView()
+                .tabItem {
+                    Image(systemName: "keyboard")
+                    Text("快捷键")
+                }
+                .tag(3)
+            
+            // 文本处理设置
+            TextProcessingSettingsView()
+                .tabItem {
+                    Image(systemName: "textformat")
+                    Text("文本处理")
+                }
+                .tag(4)
+            
+            // 关于
+            AboutView()
+                .tabItem {
+                    Image(systemName: "info.circle")
+                    Text("关于")
+                }
+                .tag(5)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.windowBackgroundColor))
+    }
+}
+
+// MARK: - Settings Views
+
+struct GeneralSettingsView: View {
+    @StateObject private var configManager = ConfigurationManager.shared
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                Text("通用设置")
+                    .font(.title2)
+                    .fontWeight(.bold)
                 
-                HStack {
-                    Text("启用自动启动")
-                    Spacer()
-                    Toggle("", isOn: $configManager.appBehavior.enableAutoLaunch)
-                        .labelsHidden()
+                // 应用行为
+                SettingsSection(title: "应用行为") {
+                    SettingsToggleRow(title: "启用自动启动", isOn: $configManager.appBehavior.enableAutoLaunch)
+                    SettingsToggleRow(title: "自动启动键盘监听", isOn: $configManager.appBehavior.autoStartKeyboardMonitor)
+                    SettingsToggleRow(title: "自动启动识别服务", isOn: $configManager.appBehavior.autoStartASRService)
+                    SettingsToggleRow(title: "后台模式", isOn: $configManager.appBehavior.backgroundMode)
                 }
                 
-                HStack {
-                    Text("显示状态栏图标")
-                    Spacer()
-                    Toggle("", isOn: $configManager.ui.showStatusBarIcon)
-                        .labelsHidden()
+                // UI 配置
+                SettingsSection(title: "界面设置") {
+                    SettingsToggleRow(title: "显示状态栏图标", isOn: $configManager.ui.showStatusBarIcon)
+                    SettingsToggleRow(title: "显示主窗口", isOn: $configManager.ui.showMainWindow)
+                    SettingsToggleRow(title: "启用声音提示", isOn: $configManager.ui.enableSoundEffects)
+                    SettingsToggleRow(title: "显示录音指示器", isOn: $configManager.ui.showRecordingIndicator)
+                    SettingsToggleRow(title: "深色模式", isOn: $configManager.ui.darkMode)
                 }
                 
-                HStack {
-                    Text("启用声音提示")
-                    Spacer()
-                    Toggle("", isOn: $configManager.ui.enableSoundEffects)
-                        .labelsHidden()
+                // 日志设置
+                SettingsSection(title: "日志设置") {
+                    SettingsToggleRow(title: "启用日志", isOn: $configManager.ui.enableLogging)
+                    
+                    VStack(alignment: .leading) {
+                        Text("日志级别")
+                        Picker("日志级别", selection: $configManager.ui.logLevel) {
+                            Text("无").tag(0)
+                            Text("基本").tag(1)
+                            Text("详细").tag(2)
+                            Text("调试").tag(3)
+                        }
+                        .pickerStyle(.menu)
+                    }
+                    
+                    VStack(alignment: .leading) {
+                        Text("最大日志条目: \(configManager.ui.maxLogEntries)")
+                        Slider(value: Binding(
+                            get: { Double(configManager.ui.maxLogEntries) },
+                            set: { configManager.ui.maxLogEntries = Int($0) }
+                        ), in: 50...1000, step: 50) {
+                            Text("最大日志条目")
+                        }
+                    }
                 }
                 
-                HStack {
-                    Text("显示录音指示器")
-                    Spacer()
-                    Toggle("", isOn: $configManager.ui.showRecordingIndicator)
-                        .labelsHidden()
-                }
+                Spacer()
             }
             .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.controlBackgroundColor))
-            )
+        }
+    }
+}
+
+struct AudioSettingsView: View {
+    @StateObject private var configManager = ConfigurationManager.shared
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                Text("音频设置")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                SettingsSection(title: "音频配置") {
+                    VStack(alignment: .leading) {
+                        Text("采样率")
+                        Picker("采样率", selection: $configManager.audio.sampleRate) {
+                            Text("16 kHz").tag(16000.0)
+                            Text("22.05 kHz").tag(22050.0)
+                            Text("44.1 kHz").tag(44100.0)
+                            Text("48 kHz").tag(48000.0)
+                        }
+                        .pickerStyle(.menu)
+                    }
+                    
+                    VStack(alignment: .leading) {
+                        Text("声道数")
+                        Picker("声道数", selection: $configManager.audio.channels) {
+                            Text("单声道").tag(1)
+                            Text("立体声").tag(2)
+                        }
+                        .pickerStyle(.menu)
+                    }
+                    
+                    VStack(alignment: .leading) {
+                        Text("缓冲区大小: \(configManager.audio.bufferSize)")
+                        Slider(value: Binding(
+                            get: { Double(configManager.audio.bufferSize) },
+                            set: { configManager.audio.bufferSize = UInt32($0) }
+                        ), in: 256...4096, step: 256) {
+                            Text("缓冲区大小")
+                        }
+                    }
+                    
+                    SettingsToggleRow(title: "启用噪音抑制", isOn: $configManager.audio.enableNoiseReduction)
+                    SettingsToggleRow(title: "启用音频增强", isOn: $configManager.audio.enableAudioEnhancement)
+                }
+                
+                Spacer()
+            }
+            .padding()
+        }
+    }
+}
+
+struct RecognitionSettingsView: View {
+    @StateObject private var configManager = ConfigurationManager.shared
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                Text("识别设置")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                SettingsSection(title: "语音识别") {
+                    VStack(alignment: .leading) {
+                        Text("识别模型")
+                        Picker("识别模型", selection: $configManager.recognition.modelName) {
+                            Text("Paraformer 中文").tag("paraformer-zh")
+                            Text("Paraformer 流式").tag("paraformer-zh-streaming")
+                            Text("Whisper 多语言").tag("whisper-multilingual")
+                        }
+                        .pickerStyle(.menu)
+                    }
+                    
+                    VStack(alignment: .leading) {
+                        Text("识别语言")
+                        Picker("识别语言", selection: $configManager.recognition.language) {
+                            Text("中文").tag("zh")
+                            Text("英文").tag("en")
+                            Text("自动检测").tag("auto")
+                        }
+                        .pickerStyle(.menu)
+                    }
+                    
+                    VStack(alignment: .leading) {
+                        Text("线程数: \(configManager.recognition.numThreads)")
+                        Slider(value: Binding(
+                            get: { Double(configManager.recognition.numThreads) },
+                            set: { configManager.recognition.numThreads = Int($0) }
+                        ), in: 1...8, step: 1) {
+                            Text("线程数")
+                        }
+                    }
+                    
+                    SettingsToggleRow(title: "启用标点符号", isOn: $configManager.recognition.enablePunctuation)
+                    SettingsToggleRow(title: "启用数字转换", isOn: $configManager.recognition.enableNumberConversion)
+                    SettingsToggleRow(title: "调试模式", isOn: $configManager.recognition.debug)
+                }
+                
+                SettingsSection(title: "高级设置") {
+                    VStack(alignment: .leading) {
+                        Text("最大激活路径: \(configManager.recognition.maxActivePaths)")
+                        Slider(value: Binding(
+                            get: { Double(configManager.recognition.maxActivePaths) },
+                            set: { configManager.recognition.maxActivePaths = Int($0) }
+                        ), in: 1...10, step: 1) {
+                            Text("最大激活路径")
+                        }
+                    }
+                    
+                    VStack(alignment: .leading) {
+                        Text("热词分数: \(String(format: "%.1f", configManager.recognition.hotwordsScore))")
+                        Slider(value: $configManager.recognition.hotwordsScore, in: 0.0...5.0, step: 0.1) {
+                            Text("热词分数")
+                        }
+                    }
+                }
+                
+                Spacer()
+            }
+            .padding()
+        }
+    }
+}
+
+struct KeyboardSettingsView: View {
+    @StateObject private var configManager = ConfigurationManager.shared
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                Text("快捷键设置")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                SettingsSection(title: "快捷键配置") {
+                    SettingsToggleRow(title: "启用快捷键", isOn: $configManager.keyboard.enabled)
+                    
+                    VStack(alignment: .leading) {
+                        Text("需要点击次数: \(configManager.keyboard.requiredClicks)")
+                        Slider(value: Binding(
+                            get: { Double(configManager.keyboard.requiredClicks) },
+                            set: { configManager.keyboard.requiredClicks = Int($0) }
+                        ), in: 1...5, step: 1) {
+                            Text("需要点击次数")
+                        }
+                    }
+                    
+                    VStack(alignment: .leading) {
+                        Text("点击间隔: \(String(format: "%.1f", configManager.keyboard.clickInterval))秒")
+                        Slider(value: $configManager.keyboard.clickInterval, in: 0.2...2.0, step: 0.1) {
+                            Text("点击间隔")
+                        }
+                    }
+                    
+                    VStack(alignment: .leading) {
+                        Text("防抖间隔: \(String(format: "%.2f", configManager.keyboard.debounceInterval))秒")
+                        Slider(value: $configManager.keyboard.debounceInterval, in: 0.05...0.5, step: 0.05) {
+                            Text("防抖间隔")
+                        }
+                    }
+                }
+                
+                SettingsSection(title: "快捷键说明") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: "keyboard")
+                                .foregroundColor(.blue)
+                            Text("当前快捷键：连击 \(configManager.keyboard.requiredClicks) 下 O 键")
+                        }
+                        
+                        HStack {
+                            Image(systemName: "timer")
+                                .foregroundColor(.orange)
+                            Text("点击间隔：\(String(format: "%.1f", configManager.keyboard.clickInterval)) 秒内完成")
+                        }
+                        
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle")
+                                .foregroundColor(.red)
+                            Text("需要辅助功能权限才能正常工作")
+                        }
+                    }
+                    .font(.caption)
+                }
+                
+                Spacer()
+            }
+            .padding()
+        }
+    }
+}
+
+struct TextProcessingSettingsView: View {
+    @StateObject private var configManager = ConfigurationManager.shared
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                Text("文本处理设置")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                SettingsSection(title: "基本设置") {
+                    SettingsToggleRow(title: "启用热词替换", isOn: $configManager.textProcessing.enableHotwordReplacement)
+                    SettingsToggleRow(title: "启用标点符号", isOn: $configManager.textProcessing.enablePunctuation)
+                    SettingsToggleRow(title: "自动大写", isOn: $configManager.textProcessing.autoCapitalization)
+                    SettingsToggleRow(title: "修剪空白", isOn: $configManager.textProcessing.trimWhitespace)
+                }
+                
+                SettingsSection(title: "标点符号设置") {
+                    VStack(alignment: .leading) {
+                        Text("标点强度")
+                        Picker("标点强度", selection: $configManager.textProcessing.punctuationIntensity) {
+                            Text("轻").tag("light")
+                            Text("中").tag("medium")
+                            Text("重").tag("heavy")
+                        }
+                        .pickerStyle(.menu)
+                    }
+                    
+                    SettingsToggleRow(title: "智能标点符号", isOn: $configManager.textProcessing.enableSmartPunctuation)
+                    SettingsToggleRow(title: "自动添加句号", isOn: $configManager.textProcessing.autoAddPeriod)
+                    SettingsToggleRow(title: "自动添加逗号", isOn: $configManager.textProcessing.autoAddComma)
+                    SettingsToggleRow(title: "自动添加问号", isOn: $configManager.textProcessing.autoAddQuestionMark)
+                    SettingsToggleRow(title: "自动添加感叹号", isOn: $configManager.textProcessing.autoAddExclamationMark)
+                }
+                
+                SettingsSection(title: "热词文件设置") {
+                    SettingsToggleRow(title: "启用文件监控", isOn: $configManager.textProcessing.enableHotWordFileWatching)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("中文热词文件: \(configManager.textProcessing.hotWordChinesePath)")
+                            .font(.caption)
+                        Text("英文热词文件: \(configManager.textProcessing.hotWordEnglishPath)")
+                            .font(.caption)
+                        Text("规则热词文件: \(configManager.textProcessing.hotWordRulePath)")
+                            .font(.caption)
+                    }
+                    .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+            }
+            .padding()
+        }
+    }
+}
+
+struct AboutView: View {
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "doc.text.magnifyingglass")
+                .font(.system(size: 80))
+                .foregroundColor(.accentColor)
+            
+            Text("CapsWriter for macOS")
+                .font(.title)
+                .fontWeight(.medium)
+            
+            Text("版本 1.0.0")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            
+            Text("基于 Sherpa-ONNX 的离线语音转文字工具")
+                .font(.body)
+                .multilineTextAlignment(.center)
+                .foregroundColor(.secondary)
+            
+            VStack(spacing: 12) {
+                Text("功能特点")
+                    .font(.headline)
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    FeatureRow(icon: "mic.fill", text: "离线语音识别", color: .blue)
+                    FeatureRow(icon: "keyboard", text: "快捷键触发", color: .green)
+                    FeatureRow(icon: "textformat", text: "智能文本处理", color: .orange)
+                    FeatureRow(icon: "gear", text: "丰富配置选项", color: .purple)
+                }
+            }
             
             Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.windowBackgroundColor))
+    }
+}
+
+// MARK: - Helper Views
+
+struct SettingsSection<Content: View>: View {
+    let title: String
+    let content: Content
+    
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(title)
+                .font(.headline)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                content
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.controlBackgroundColor))
+        )
+    }
+}
+
+// SettingsToggleRow 已在 StatusBarController.swift 中定义
+
+struct FeatureRow: View {
+    let icon: String
+    let text: String
+    let color: Color
+    
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .foregroundColor(color)
+                .frame(width: 20)
+            Text(text)
+            Spacer()
+        }
+        .font(.subheadline)
     }
 }
 
