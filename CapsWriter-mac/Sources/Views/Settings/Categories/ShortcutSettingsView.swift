@@ -296,21 +296,21 @@ struct ShortcutBehaviorSection: View {
                             SettingsToggle(
                                 title: "播放系统提示音",
                                 description: "快捷键触发时播放系统提示音",
-                                isOn: .constant(true) // 临时绑定，需要添加到配置
+                                isOn: $configManager.ui.enableSoundEffects
                             )
                             
                             // 视觉反馈
                             SettingsToggle(
                                 title: "显示录音指示器",
                                 description: "快捷键触发时显示录音状态指示器",
-                                isOn: .constant(true) // 临时绑定，需要添加到配置
+                                isOn: $configManager.ui.showRecordingIndicator
                             )
                             
                             // 菜单栏反馈
                             SettingsToggle(
                                 title: "菜单栏图标变化",
                                 description: "录音时改变菜单栏图标样式",
-                                isOn: .constant(true) // 临时绑定，需要添加到配置
+                                isOn: $configManager.ui.enableMenuBarIconChange
                             )
                         }
                     }
@@ -328,7 +328,7 @@ struct ShortcutBehaviorSection: View {
                                 Text("录音模式")
                                     .font(.system(size: 13, weight: .medium))
                                 
-                                Picker("录音模式", selection: .constant("toggle")) {
+                                Picker("录音模式", selection: $configManager.keyboard.recordingMode) {
                                     Text("切换模式").tag("toggle")
                                     Text("按住模式").tag("hold")
                                     Text("单次模式").tag("once")
@@ -346,12 +346,16 @@ struct ShortcutBehaviorSection: View {
                                     Text("最大录音时长")
                                         .font(.system(size: 13, weight: .medium))
                                     Spacer()
-                                    Text("30 秒")  // 临时硬编码
+                                    Text("\(Int(configManager.keyboard.maxRecordingDuration)) 秒")
                                         .font(.system(size: 12))
                                         .foregroundColor(.secondary)
                                 }
                                 
-                                Slider(value: .constant(30), in: 5...120, step: 5)
+                                Slider(
+                                    value: $configManager.keyboard.maxRecordingDuration,
+                                    in: 5...120,
+                                    step: 5
+                                )
                                 
                                 Text("录音的最大持续时间，超过后自动停止")
                                     .font(.system(size: 11))

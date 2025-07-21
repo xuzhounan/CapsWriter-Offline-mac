@@ -13,9 +13,36 @@ struct AudioConfiguration: Codable {
     var bufferSize: UInt32 = 1024
     var enableNoiseReduction: Bool = false
     var enableAudioEnhancement: Bool = false
+    var inputGain: Double = 0.0  // 输入增益 (-20.0 到 20.0 dB)
+    
+    // 用户友好的音频质量设置
+    var audioQuality: String = "balanced"  // "low_latency", "balanced", "stable"
+    
+    /// 根据音频质量设置更新技术参数
+    mutating func applyQualityPreset() {
+        switch audioQuality {
+        case "low_latency":
+            bufferSize = 256
+            sampleRate = 16000
+        case "balanced":
+            bufferSize = 1024
+            sampleRate = 16000
+        case "stable":
+            bufferSize = 2048
+            sampleRate = 16000
+        default:
+            break
+        }
+    }
     
     func isValid() -> Bool {
-        return sampleRate > 0 && channels > 0 && bufferSize > 0
+        let validQualities = ["low_latency", "balanced", "stable"]
+        return sampleRate > 0 && 
+               channels > 0 && 
+               bufferSize > 0 && 
+               inputGain >= -20.0 && 
+               inputGain <= 20.0 &&
+               validQualities.contains(audioQuality)
     }
 }
 
@@ -56,10 +83,20 @@ struct KeyboardConfiguration: Codable {
     var debounceInterval: Double = 0.1  // 100ms
     var enabled: Bool = true
     
+    // 快捷键行为配置
+    var enableSystemNotifications: Bool = true
+    var enableCustomKeyBindings: Bool = true
+    var enableGlobalShortcuts: Bool = true
+    var recordingMode: String = "toggle"  // "toggle", "hold", "click"
+    var maxRecordingDuration: Double = 30.0  // 最大录音时长（秒）
+    
     func isValid() -> Bool {
+        let validRecordingModes = ["toggle", "hold", "click"]
         return requiredClicks > 0 && 
                clickInterval > 0 && 
-               debounceInterval > 0
+               debounceInterval > 0 &&
+               validRecordingModes.contains(recordingMode) &&
+               maxRecordingDuration > 0
     }
 }
 
@@ -109,6 +146,7 @@ struct UIConfiguration: Codable {
     var darkMode: Bool = false
     var enableSoundEffects: Bool = true
     var showRecordingIndicator: Bool = true
+    var enableMenuBarIconChange: Bool = true
     
     func isValid() -> Bool {
         return logLevel >= 0 && 
@@ -126,6 +164,8 @@ struct AppBehaviorConfiguration: Codable {
     var recognitionStartDelay: Double = 1.0
     var permissionCheckDelay: Double = 2.0
     var enableAutoLaunch: Bool = false
+    var minimizeOnStartup: Bool = true
+    var checkUpdatesOnStartup: Bool = false
     
     func isValid() -> Bool {
         return startupDelay >= 0 && 

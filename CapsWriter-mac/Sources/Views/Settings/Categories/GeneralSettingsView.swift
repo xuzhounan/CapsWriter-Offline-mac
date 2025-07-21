@@ -272,14 +272,14 @@ struct StartupSection: View {
                 SettingsToggle(
                     title: "启动时最小化到托盘",
                     description: "应用启动时不显示窗口，仅在状态栏显示图标",
-                    isOn: .constant(true) // 临时绑定，需要添加到配置中
+                    isOn: $configManager.appBehavior.minimizeOnStartup
                 )
                 
                 // 启动时检查更新
                 SettingsToggle(
                     title: "启动时检查更新",
                     description: "应用启动时自动检查是否有新版本可用",
-                    isOn: .constant(false) // 临时绑定，需要添加到配置中
+                    isOn: $configManager.appBehavior.checkUpdatesOnStartup
                 )
             }
         }

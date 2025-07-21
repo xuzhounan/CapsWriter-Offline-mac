@@ -444,15 +444,17 @@ struct AudioEnhancementSection: View {
                         Text("输入增益")
                             .font(.system(size: 14, weight: .medium))
                         Spacer()
-                        Text("0.0 dB")  // 临时显示，后续可扩展配置
+                        Text("\(configManager.audio.inputGain, specifier: "%.1f") dB")
                             .font(.system(size: 12))
                             .foregroundColor(.secondary)
                             .monospacedDigit()
                     }
                     
-                    // 临时禁用滑块，后续可绑定到配置
-                    Slider(value: .constant(0.0), in: -20...20, step: 0.5)
-                        .disabled(true)
+                    Slider(
+                        value: $configManager.audio.inputGain,
+                        in: -20...20,
+                        step: 0.5
+                    )
                     
                     HStack {
                         Text("-20 dB")

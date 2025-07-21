@@ -183,7 +183,7 @@ struct SettingsDetailView: View {
             case .general:
                 GeneralSettingsView(configManager: configManager)
             case .audio:
-                AudioSettingsView(configManager: configManager)
+                SimplifiedAudioSettingsView(configManager: configManager)
             case .recognition:
                 RecognitionSettingsView(configManager: configManager)
             case .hotwords:
