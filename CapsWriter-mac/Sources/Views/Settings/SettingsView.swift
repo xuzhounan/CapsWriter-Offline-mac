@@ -183,15 +183,7 @@ struct SettingsDetailView: View {
         Group {
             switch category {
             case .general:
-                VStack {
-                    Text("通用设置")
-                        .font(.title2)
-                    Text("配置管理器已连接")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                }
-                .padding()
+                SimpleGeneralSettingsView(configManager: configManager)
             case .audio:
                 SimplifiedAudioSettingsView(configManager: configManager)
             case .recognition:

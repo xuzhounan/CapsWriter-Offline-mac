@@ -2,51 +2,6 @@ import SwiftUI
 
 // MARK: - Settings Components
 
-/// 设置区块容器
-struct SettingsSection<Content: View>: View {
-    let title: String
-    let description: String?
-    let content: Content
-    
-    init(title: String, description: String? = nil, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.description = description
-        self.content = content()
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // 区块标题
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
-                
-                if let description = description {
-                    Text(description)
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            
-            // 内容区域
-            VStack(alignment: .leading, spacing: 12) {
-                content
-            }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(NSColor.controlBackgroundColor))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color(NSColor.separatorColor), lineWidth: 0.5)
-                    )
-            )
-        }
-    }
-}
-
 /// 设置开关组件
 struct SettingsToggle: View {
     let title: String
@@ -238,7 +193,7 @@ struct SettingsTextField: View {
                     RoundedRectangle(cornerRadius: 6)
                         .stroke(isValid ? Color.clear : Color.red, lineWidth: 1)
                 )
-                .onChange(of: text) { newValue in
+                .onChange(of: text) { _, newValue in
                     validateText(newValue)
                 }
             
@@ -301,7 +256,7 @@ struct SettingsButton: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             
-            Button(action: action) {
+            styledButton {
                 HStack(spacing: 6) {
                     if let icon = icon {
                         Image(systemName: icon)
@@ -311,55 +266,45 @@ struct SettingsButton: View {
                     Text(title)
                         .font(.system(size: 13, weight: .medium))
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
             }
-            .buttonStyle(swiftUIButtonStyle)
         }
     }
     
-    private var swiftUIButtonStyle: some SwiftUI.ButtonStyle {
+    @ViewBuilder
+    private func styledButton<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         switch style {
-        case .primary:
-            return AnyButtonStyle(.borderedProminent)
+        case .primary, .bordered:
+            Button(action: action) {
+                content()
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.accentColor)
+            .foregroundColor(.white)
+            .cornerRadius(6)
+            
         case .secondary:
-            return AnyButtonStyle(.bordered)
+            Button(action: action) {
+                content()
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(6)
+            
         case .destructive:
-            return AnyButtonStyle(DestructiveButtonStyle())
-        case .bordered:
-            return AnyButtonStyle(.bordered)
+            Button(action: action) {
+                content()
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.red)
+            .foregroundColor(.white)
+            .cornerRadius(6)
         }
-    }
-}
-
-/// 破坏性按钮样式
-struct DestructiveButtonStyle: SwiftUI.ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundColor(.red)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(configuration.isPressed ? Color.red.opacity(0.1) : Color.clear)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.red, lineWidth: 1)
-                    )
-            )
-    }
-}
-
-/// 类型擦除的按钮样式
-struct AnyButtonStyle: SwiftUI.ButtonStyle {
-    private let _makeBody: (Configuration) -> AnyView
-    
-    init<S: SwiftUI.ButtonStyle>(_ style: S) {
-        _makeBody = { configuration in
-            AnyView(style.makeBody(configuration: configuration))
-        }
-    }
-    
-    func makeBody(configuration: Configuration) -> some View {
-        _makeBody(configuration)
     }
 }
 
@@ -699,10 +644,7 @@ struct BatchConfigurationValidator: View {
 }
 
 #Preview("Settings Section") {
-    SettingsSection(
-        title: "测试区块",
-        description: "这是一个测试设置区块，展示了各种设置组件"
-    ) {
+    SettingsSection(title: "测试区块") {
         VStack(spacing: 16) {
             SettingsToggle(
                 title: "开关设置",
