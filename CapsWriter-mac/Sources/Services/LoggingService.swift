@@ -362,7 +362,7 @@ class LoggingService: LoggingServiceProtocol, ObservableObject {
     /// 更新配置（避免初始化时的循环依赖）
     func updateConfiguration() {
         // 在系统完全初始化后调用，更新日志配置
-        if let configManager = DIContainer.shared.resolve(ConfigurationManagerProtocol.self) {
+        if let configManager = DIContainer.shared.resolve(ConfigurationManager.self) as (any ConfigurationManagerProtocol)? {
             let debugMode = configManager.debug.enableVerboseLogging
             
             if debugMode {

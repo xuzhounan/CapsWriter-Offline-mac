@@ -12,7 +12,11 @@ protocol HotWordServiceProtocol: ServiceLifecycleProtocol {
     /// 重新加载热词文件
     func reloadHotWords()
     
-    /// 获取热词统计信息
+    /// 获取热词统计信息（异步版本）
+    func getStatistics(completion: @escaping (HotWordStatistics) -> Void)
+    
+    /// 获取热词统计信息（同步版本，已弃用）
+    @available(*, deprecated, message: "使用异步版本 getStatistics(completion:) 以避免阻塞线程")
     func getStatistics() -> HotWordStatistics
     
     /// 添加运行时热词
@@ -98,7 +102,7 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
     // MARK: - Dependencies
     
     private let configManager: any ConfigurationManagerProtocol
-    private let errorHandler: ErrorHandlerProtocol
+    private let errorHandler: any ErrorHandlerProtocol
     private let logger = Logger(subsystem: "com.capswriter.hotword", category: "HotWordService")
     
     // MARK: - Published Properties
@@ -166,7 +170,7 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
     
     init(
         configManager: any ConfigurationManagerProtocol = DIContainer.shared.resolve(ConfigurationManager.self),
-        errorHandler: ErrorHandlerProtocol = DIContainer.shared.resolve(ErrorHandlerProtocol.self)
+        errorHandler: any ErrorHandlerProtocol = DIContainer.shared.resolve(ErrorHandler.self)
     ) {
         self.configManager = configManager
         self.errorHandler = errorHandler
@@ -556,19 +560,14 @@ class HotWordService: ObservableObject, HotWordServiceProtocol {
         
         // 在后台队列执行正则表达式
         DispatchQueue.global(qos: .utility).async {
-            do {
-                // 检查是否有匹配
-                if regex.firstMatch(in: text, options: [], range: range) != nil {
-                    result = regex.stringByReplacingMatches(
-                        in: text,
-                        options: [],
-                        range: range,
-                        withTemplate: replacement
-                    )
-                }
-            } catch {
-                // 捕获任何异常
-                print("⚠️ 正则表达式执行异常: \(error)")
+            // 检查是否有匹配
+            if regex.firstMatch(in: text, options: [], range: range) != nil {
+                result = regex.stringByReplacingMatches(
+                    in: text,
+                    options: [],
+                    range: range,
+                    withTemplate: replacement
+                )
             }
             semaphore.signal()
         }

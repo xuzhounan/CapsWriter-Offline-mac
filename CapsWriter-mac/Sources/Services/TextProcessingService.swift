@@ -111,7 +111,7 @@ class TextProcessingService: ObservableObject, TextProcessingServiceProtocol {
     // MARK: - Initialization
     
     init(
-        configManager: any ConfigurationManagerProtocol = DIContainer.shared.resolve(ConfigurationManagerProtocol.self),
+        configManager: any ConfigurationManagerProtocol = DIContainer.shared.resolve(ConfigurationManager.self),
         hotWordService: (any HotWordServiceProtocol)? = nil,
         punctuationService: (any PunctuationServiceProtocol)? = nil
     ) {

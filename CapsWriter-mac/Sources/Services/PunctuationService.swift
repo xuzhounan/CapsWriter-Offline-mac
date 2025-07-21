@@ -180,7 +180,7 @@ class PunctuationService: ObservableObject, PunctuationServiceProtocol {
     
     // MARK: - Initialization
     
-    init(configManager: any ConfigurationManagerProtocol = DIContainer.shared.resolve(ConfigurationManagerProtocol.self)) {
+    init(configManager: any ConfigurationManagerProtocol = DIContainer.shared.resolve(ConfigurationManager.self)) {
         self.configManager = configManager
         
         // 初始化统计信息
@@ -196,21 +196,14 @@ class PunctuationService: ObservableObject, PunctuationServiceProtocol {
     func initialize() throws {
         logger.info("🚀 初始化标点符号处理服务...")
         
-        do {
-            // 设置配置监听
-            setupConfigurationObserver()
-            
-            // 从配置中获取处理强度
-            loadIntensityFromConfiguration()
-            
-            isInitialized = true
-            logger.info("✅ 标点符号处理服务初始化成功 (强度: \(self.currentIntensity.displayName))")
-            
-        } catch {
-            logger.error("❌ 标点符号处理服务初始化失败: \(error.localizedDescription)")
-            lastError = error
-            throw error
-        }
+        // 设置配置监听
+        setupConfigurationObserver()
+        
+        // 从配置中获取处理强度
+        loadIntensityFromConfiguration()
+        
+        isInitialized = true
+        logger.info("✅ 标点符号处理服务初始化成功 (强度: \(self.currentIntensity.displayName))")
     }
     
     func start() throws {
@@ -501,8 +494,9 @@ class PunctuationService: ObservableObject, PunctuationServiceProtocol {
     }
     
     private func findNearbySpaceOrPause(in text: String, around index: String.Index) -> String.Index? {
-        let range = max(0, text.distance(from: text.startIndex, to: index) - 5)...
-                   min(text.count - 1, text.distance(from: text.startIndex, to: index) + 5)
+        let startOffset = max(0, text.distance(from: text.startIndex, to: index) - 5)
+        let endOffset = min(text.count - 1, text.distance(from: text.startIndex, to: index) + 5)
+        let range = startOffset...endOffset
         
         for offset in range {
             let currentIndex = text.index(text.startIndex, offsetBy: offset)

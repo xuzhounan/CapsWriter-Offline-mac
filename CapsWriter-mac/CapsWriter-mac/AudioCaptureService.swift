@@ -529,7 +529,7 @@ class AudioCaptureService: ObservableObject, AudioCaptureServiceProtocol {
             return nil
             
         @unknown default:
-            addLog("⚠️ 音频转换返回未知状态")
+            addLog("⚠️ 音频转换遇到未知状态: \(status)")
             return nil
         }
     }
