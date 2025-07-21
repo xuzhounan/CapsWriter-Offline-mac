@@ -4,12 +4,14 @@ import Foundation
 
 struct ContentView: View {
     @StateObject private var recordingState = RecordingState.shared
+    @StateObject private var errorHandler = ErrorHandler.shared
     @State private var animationScale: CGFloat = 1.0
     @State private var selectedTab = 0
     @State private var permissionCheckTimer: Timer?
     
     var body: some View {
-        TabView(selection: $selectedTab) {
+        ZStack(alignment: .top) {
+            TabView(selection: $selectedTab) {
             // 主页面 - 原有内容
             MainDashboardView(recordingState: recordingState, animationScale: $animationScale)
                 .tabItem {
@@ -49,16 +51,62 @@ struct ContentView: View {
                     Text("设置")
                 }
                 .tag(4)
-        }
-        .onAppear {
-            animationScale = 1.2
-            checkPermissionStatus()
-            startPeriodicStatusCheck()
-        }
-        .onDisappear {
-            // 停止定时器避免内存泄漏
-            permissionCheckTimer?.invalidate()
-            permissionCheckTimer = nil
+            }
+            .onAppear {
+                animationScale = 1.2
+                checkPermissionStatus()
+                startPeriodicStatusCheck()
+            }
+            .onDisappear {
+                // 停止定时器避免内存泄漏
+                permissionCheckTimer?.invalidate()
+                permissionCheckTimer = nil
+            }
+            
+            // 错误通知覆盖层
+            VStack {
+                if let currentError = errorHandler.currentHighestSeverityError,
+                   !currentError.isResolved && errorHandler.shouldShowErrorNotification {
+                    HStack(spacing: 12) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                            .font(.title2)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(currentError.error.localizedDescription)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                                .lineLimit(2)
+                            
+                            Text("\(currentError.context.component) - \(currentError.context.operation)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Button("关闭") {
+                            errorHandler.shouldShowErrorNotification = false
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.orange.opacity(0.1))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                            )
+                    )
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .animation(.easeInOut(duration: 0.3), value: errorHandler.shouldShowErrorNotification)
+                }
+                Spacer()
+            }
         }
     }
     
