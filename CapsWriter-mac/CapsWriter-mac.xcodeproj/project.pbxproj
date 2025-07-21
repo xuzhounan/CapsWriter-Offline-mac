@@ -310,6 +310,9 @@
 				SIMGEN001158163000001 /* SimpleGeneralSettingsView.swift in Sources */,
 				RECSET001158163000001 /* RecognitionSettingsView.swift in Sources */,
 				HOTSET001158163000001 /* HotWordSettingsView.swift in Sources */,
+				SHRSET001158163000001 /* ShortcutSettingsView.swift in Sources */,
+				ADVSET001158163000001 /* AdvancedSettingsView.swift in Sources */,
+				ABTSET001158163000001 /* AboutSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

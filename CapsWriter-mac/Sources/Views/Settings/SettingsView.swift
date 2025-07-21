@@ -191,35 +191,11 @@ struct SettingsDetailView: View {
             case .hotwords:
                 HotWordSettingsView(configManager: configManager)
             case .shortcuts:
-                VStack {
-                    Text("快捷键设置")
-                        .font(.title2)
-                    Text("键盘快捷键配置")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                }
-                .padding()
+                ShortcutSettingsView(configManager: configManager)
             case .advanced:
-                VStack {
-                    Text("高级设置")
-                        .font(.title2)
-                    Text("高级配置选项")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                }
-                .padding()
+                AdvancedSettingsView(configManager: configManager)
             case .about:
-                VStack {
-                    Text("关于应用")
-                        .font(.title2)
-                    Text("CapsWriter-mac 版本信息")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                }
-                .padding()
+                AboutSettingsView()
             }
         }
         .navigationTitle(category.displayName)
