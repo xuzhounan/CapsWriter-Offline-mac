@@ -263,11 +263,11 @@ class DIContainer: DependencyInjectionProtocol {
         }
         
         // 注册热词服务（单例） - 任务2.3
-        // 🔧 修复循环依赖：使用延迟创建，避免在容器初始化时立即创建实例
+        // 🔧 修复循环依赖：直接使用共享实例，避免容器内部递归调用
         registerSingleton(HotWordServiceProtocol.self) {
             return HotWordService(
                 configManager: ConfigurationManager.shared,
-                errorHandler: DIContainer.shared.resolve(ErrorHandlerProtocol.self)
+                errorHandler: ErrorHandler.shared
             )
         }
         

@@ -122,7 +122,7 @@ class TextProcessingService: ObservableObject, TextProcessingServiceProtocol {
             self.hotWordService = providedService
         } else {
             // 创建热词服务实例
-            self.hotWordService = HotWordService(configManager: configManager)
+            self.hotWordService = HotWordService(configManager: configManager, errorHandler: ErrorHandler.shared)
         }
         
         // 如果没有提供标点服务，通过DI容器获取
