@@ -263,22 +263,30 @@ class DIContainer: DependencyInjectionProtocol {
         }
         
         // 注册热词服务（单例） - 任务2.3
-        let hotWordServiceInstance = HotWordService(configManager: ConfigurationManager.shared)
+        // 🔧 修复循环依赖：使用延迟创建，避免在容器初始化时立即创建实例
         registerSingleton(HotWordServiceProtocol.self) {
-            return hotWordServiceInstance
+            return HotWordService(
+                configManager: ConfigurationManager.shared,
+                errorHandler: DIContainer.shared.resolve(ErrorHandlerProtocol.self)
+            )
         }
         
-        // 注册热词服务具体类型（单例） - 用于UI组件，共享同一实例
+        // 注册热词服务具体类型（单例） - 用于UI组件
+        // 🔧 修复循环依赖：使用延迟创建，确保实例共享
         registerSingleton(HotWordService.self) {
-            return hotWordServiceInstance
+            // 复用协议注册的实例，确保单例模式
+            let service: HotWordServiceProtocol = DIContainer.shared.resolve(HotWordServiceProtocol.self)
+            return service as! HotWordService
         }
         
         // 注册标点符号处理服务（单例） - 任务3.1
+        // 🔧 修复潜在循环依赖：使用延迟创建模式
         registerSingleton(PunctuationServiceProtocol.self) {
             return PunctuationService(configManager: ConfigurationManager.shared)
         }
         
         // 注册文本处理服务（单例） - 任务2.3
+        // 🔧 修复潜在循环依赖：使用延迟创建模式
         registerSingleton(TextProcessingServiceProtocol.self) {
             return TextProcessingService(configManager: ConfigurationManager.shared)
         }
