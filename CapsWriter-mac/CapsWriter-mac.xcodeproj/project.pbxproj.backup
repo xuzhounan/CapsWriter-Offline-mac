@@ -35,6 +35,9 @@
 		E3650C89A39849E386EB3AFB /* hot-zh.txt in Resources */ = {isa = PBXBuildFile; fileRef = 1EAA0F6CBEB144F8A22253CD /* hot-zh.txt */; };
 		0092F3398EA64AA6A8D9F47F /* hot-en.txt in Resources */ = {isa = PBXBuildFile; fileRef = D3DCC9EC6131407E8BE9BC0E /* hot-en.txt */; };
 		7D9736A584CB4845A46A0ADD /* hot-rule.txt in Resources */ = {isa = PBXBuildFile; fileRef = 88E3AF5B0AD740F79D2EA438 /* hot-rule.txt */; };
+		LOG001122334455667788AABB /* LoggingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = LOG001122334455667788AABC /* LoggingService.swift */; };
+		LOG001122334455667788AABD /* LogExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = LOG001122334455667788AABE /* LogExportService.swift */; };
+		LOG001122334455667788AABF /* LogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LOG001122334455667788AAC0 /* LogView.swift */; };
 	/* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -83,6 +86,9 @@
 		1EAA0F6CBEB144F8A22253CD /* hot-zh.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "hot-zh.txt"; sourceTree = "<group>"; };
 		D3DCC9EC6131407E8BE9BC0E /* hot-en.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "hot-en.txt"; sourceTree = "<group>"; };
 		88E3AF5B0AD740F79D2EA438 /* hot-rule.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "hot-rule.txt"; sourceTree = "<group>"; };
+		LOG001122334455667788AABC /* LoggingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LoggingService.swift; path = Sources/Services/LoggingService.swift; sourceTree = SOURCE_ROOT; };
+		LOG001122334455667788AABE /* LogExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LogExportService.swift; path = Sources/Services/LogExportService.swift; sourceTree = SOURCE_ROOT; };
+		LOG001122334455667788AAC0 /* LogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LogView.swift; path = Sources/Views/LogView.swift; sourceTree = SOURCE_ROOT; };
 	/* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -257,6 +263,9 @@
 				C0711444E47048E2934B5F38 /* PunctuationService.swift in Sources */,
 				9DB2D0740940412BBE1F9EDE /* HotWordService.swift in Sources */,
 				278C1CA8D79A423E8C16D6AD /* TextProcessingService.swift in Sources */,
+				LOG001122334455667788AABB /* LoggingService.swift in Sources */,
+				LOG001122334455667788AABD /* LogExportService.swift in Sources */,
+				LOG001122334455667788AABF /* LogView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
