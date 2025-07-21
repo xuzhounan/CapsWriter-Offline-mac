@@ -11,6 +11,8 @@ struct AudioConfiguration: Codable {
     var sampleRate: Double = 16000
     var channels: Int = 1
     var bufferSize: UInt32 = 1024
+    var enableNoiseReduction: Bool = false
+    var enableAudioEnhancement: Bool = false
     
     func isValid() -> Bool {
         return sampleRate > 0 && channels > 0 && bufferSize > 0
@@ -32,6 +34,10 @@ struct RecognitionConfiguration: Codable {
     var rule3MinUtteranceLength: Float = 20.0
     var hotwordsScore: Float = 1.5
     var debug: Bool = false
+    var modelName: String = "paraformer-zh-streaming"
+    var language: String = "zh"
+    var enablePunctuation: Bool = true
+    var enableNumberConversion: Bool = true
     
     func isValid() -> Bool {
         return numThreads > 0 && 
@@ -101,6 +107,8 @@ struct UIConfiguration: Codable {
     var logLevel: Int = 1  // 0: 无日志, 1: 基本, 2: 详细, 3: 调试
     var maxLogEntries: Int = 100
     var darkMode: Bool = false
+    var enableSoundEffects: Bool = true
+    var showRecordingIndicator: Bool = true
     
     func isValid() -> Bool {
         return logLevel >= 0 && 
@@ -117,6 +125,7 @@ struct AppBehaviorConfiguration: Codable {
     var startupDelay: Double = 0.5
     var recognitionStartDelay: Double = 1.0
     var permissionCheckDelay: Double = 2.0
+    var enableAutoLaunch: Bool = false
     
     func isValid() -> Bool {
         return startupDelay >= 0 && 
