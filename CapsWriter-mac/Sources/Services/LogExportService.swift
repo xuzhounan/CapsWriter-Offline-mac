@@ -134,7 +134,7 @@ final class LogExportService: LogExportServiceProtocol, @unchecked Sendable {
     
     func exportLogs(_ logs: [LogEntry], configuration: LogExportConfiguration) async -> LogExportResult {
         return await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            DispatchQueue.global(qos: .userInitiated).async { @Sendable [weak self] in
                 do {
                     guard let self = self else {
                         continuation.resume(returning: .failure(error: NSError(domain: "LogExportService", code: -1, userInfo: [NSLocalizedDescriptionKey: "服务已释放"])))

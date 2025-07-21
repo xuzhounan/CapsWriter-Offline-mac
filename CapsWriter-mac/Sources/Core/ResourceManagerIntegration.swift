@@ -519,6 +519,8 @@ class ManagedHotWordService: ResourceManageable {
     }
     
     func getResourceInfo() -> ResourceInfo {
+        // 在同步上下文中使用已弃用但仍需要的同步方法
+        // 由于无法在此上下文中使用异步调用，暂时保留此用法
         let statistics = hotWordService.getStatistics()
         
         return ResourceInfo(

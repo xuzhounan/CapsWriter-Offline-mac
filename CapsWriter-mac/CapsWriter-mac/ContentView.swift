@@ -565,7 +565,7 @@ struct ASRServicePlaceholderView: View {
     
     // 使用统一的ASR服务实例 - 通过AppDelegate获取
     private var asrService: SherpaASRService? {
-        if CapsWriterApp.sharedAppDelegate != nil || (NSApplication.shared.delegate as? AppDelegate) != nil {
+        if CapsWriterApp.sharedAppDelegate != nil {
             // 由于AppDelegate现在使用VoiceInputController，我们需要通过其他方式获取
             // 暂时返回nil，使用RecordingState作为主要状态来源
             return nil
@@ -821,7 +821,7 @@ struct RealTimeTranscriptionView: View {
         .navigationTitle("实时转录")
         .onAppear {
             // 尝试获取ASR服务实例
-            if CapsWriterApp.sharedAppDelegate != nil || (NSApplication.shared.delegate as? AppDelegate) != nil {
+            if CapsWriterApp.sharedAppDelegate != nil {
                 // 暂时不直接访问，使用RecordingState
             }
         }
