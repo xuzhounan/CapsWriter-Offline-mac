@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct CapsWriterApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @StateObject private var configManager = ConfigurationManager.shared
     
     // 创建静态引用来保存appDelegate
     static var sharedAppDelegate: AppDelegate?
@@ -15,6 +16,7 @@ struct CapsWriterApp: App {
     var body: some Scene {
         Window("CapsWriter-mac", id: "main") {
             ContentView()
+                .preferredColorScheme(configManager.ui.darkMode ? .dark : .light)
                 .onAppear {
                     // 保存appDelegate到静态变量
                     CapsWriterApp.sharedAppDelegate = appDelegate

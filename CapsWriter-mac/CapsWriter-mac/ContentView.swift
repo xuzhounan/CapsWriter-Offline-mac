@@ -5,6 +5,7 @@ import Foundation
 struct ContentView: View {
     @StateObject private var recordingState = RecordingState.shared
     @StateObject private var errorHandler = ErrorHandler.shared
+    @StateObject private var configManager = ConfigurationManager.shared
     @State private var animationScale: CGFloat = 1.0
     @State private var selectedTab = 0
     @State private var permissionCheckTimer: Timer?
@@ -52,6 +53,7 @@ struct ContentView: View {
                 }
                 .tag(4)
             }
+            .preferredColorScheme(configManager.ui.darkMode ? .dark : .light)
             .onAppear {
                 animationScale = 1.2
                 checkPermissionStatus()
